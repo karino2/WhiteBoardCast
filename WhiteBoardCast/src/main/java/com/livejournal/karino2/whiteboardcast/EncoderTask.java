@@ -38,13 +38,8 @@ public class EncoderTask extends TimerTask {
         encoder = new Encoder();
     }
 
-    static final int FOURCC = 0x30385056;
     static final int FPS_NUM = 24;
     static final int FPS_DENOM = 1;
-    /*
-    static final int FPS_NUM = 24000;
-    static final int FPS_DENOM = 1001;
-    */
 
     public boolean initEncoder() {
         boolean res = encoder.initEncoder(Environment.getExternalStorageDirectory() + "/temp.webm", width, height, FPS_NUM, FPS_DENOM, errorBuf);
