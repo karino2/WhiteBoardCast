@@ -68,7 +68,7 @@ public class EncoderTask extends TimerTask {
     public boolean encodeFrame(int[] frame) {
         long curr = System.currentTimeMillis();
         long diff = curr-beginMillis;
-        return encoder.encodeFrames(frame,  (int)(diff*60/1000), LibVpxEnc.FOURCC_24BG, errorBuf);
+        return encoder.encodeFrames(frame,  (int)(diff*FPS_NUM/1000), LibVpxEnc.FOURCC_24BG, errorBuf);
     }
 
     // when call doneEncoder, you do not need to call finalizeEncoder()

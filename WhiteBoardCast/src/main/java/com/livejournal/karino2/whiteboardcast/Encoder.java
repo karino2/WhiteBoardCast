@@ -1,5 +1,7 @@
 package com.livejournal.karino2.whiteboardcast;
 
+import android.util.Log;
+
 import com.google.libvpx.LibVpxEnc;
 import com.google.libvpx.LibVpxEncConfig;
 import com.google.libvpx.LibVpxException;
@@ -15,7 +17,16 @@ import java.util.ArrayList;
  * Created by karino on 6/27/13.
  */
 public class Encoder {
+    boolean pendingDone = false;
     public boolean doneEncoder(StringBuilder error) {
+        if(duringEncoding) {
+            pendingDone = true;
+            return true;
+        }
+        return doneEncoderCore(error);
+    }
+
+    private boolean doneEncoderCore(StringBuilder error) {
         try {
             if (!muxerSegment.finalizeSegment()) {
                 error.append("Finalization of segment failed.");
@@ -39,13 +50,27 @@ public class Encoder {
         }
     }
 
+    private boolean duringEncoding = false;
+
     public boolean encodeFrames(int[] srcFrame,int framesToEncode, long fourcc, StringBuilder error) {
-        while (framesIn < framesToEncode) {
-            if(!encodeOneFrame(srcFrame, fourcc, error))
-                return false;
-            framesIn++;
+        duringEncoding = true;
+        try {
+            Log.d("WBCast", "begin encode");
+            while (framesIn < framesToEncode) {
+                if(!encodeOneFrame(srcFrame, fourcc, error))
+                     return false;
+                framesIn++;
+            }
+
+            Log.d("WBCast", "end encode");
+            if(pendingDone) {
+                pendingDone = false;
+                return doneEncoderCore(error);
+            }
+            return true;
+        }finally {
+            duringEncoding = false;
         }
-        return true;
     }
 
     LibVpxEncConfig encoderConfig = null;
@@ -123,84 +148,4 @@ public class Encoder {
         return true;
     }
 
-    static public boolean encodeIntRgbFrameExample(String webmOutputName,
-                                                   int[] srcFrame, long fourcc, int width, int height, int rate, int scale,
-                                                   int framesToEncode, StringBuilder error) {
-        LibVpxEncConfig encoderConfig = null;
-        LibVpxEnc encoder = null;
-        MkvWriter mkvWriter = null;
-
-        try {
-            encoderConfig = new LibVpxEncConfig(width, height);
-            encoder = new LibVpxEnc(encoderConfig);
-
-            // libwebm expects nanosecond units
-            encoderConfig.setTimebase(1, 1000000000);
-            Rational timeBase = encoderConfig.getTimebase();
-            Rational frameRate = new Rational(rate, scale);
-            Rational timeMultiplier = timeBase.multiply(frameRate).reciprocal();
-            int framesIn = 1;
-
-            mkvWriter = new MkvWriter();
-            if (!mkvWriter.open(webmOutputName)) {
-                error.append("WebM Output name is invalid or error while opening.");
-                return false;
-            }
-
-            Segment muxerSegment = new Segment();
-            if (!muxerSegment.init(mkvWriter)) {
-                error.append("Could not initialize muxer segment.");
-                return false;
-            }
-
-            SegmentInfo muxerSegmentInfo = muxerSegment.getSegmentInfo();
-            muxerSegmentInfo.setWritingApp("y4mEncodeSample");
-
-            long newVideoTrackNumber = muxerSegment.addVideoTrack(width, height, 0);
-            if (newVideoTrackNumber == 0) {
-                error.append("Could not add video track.");
-                return false;
-            }
-
-            while (framesIn < framesToEncode) {
-                long frameStart = timeMultiplier.multiply(framesIn - 1).toLong();
-                long nextFrameStart = timeMultiplier.multiply(framesIn).toLong();
-
-                ArrayList<VpxCodecCxPkt> encPkt = encoder.convertIntEncodeFrame(
-                        srcFrame, frameStart, nextFrameStart - frameStart, fourcc);
-                for (int i = 0; i < encPkt.size(); i++) {
-                    VpxCodecCxPkt pkt = encPkt.get(i);
-                    final boolean isKey = (pkt.flags & 0x1) == 1;
-
-                    if (!muxerSegment.addFrame(pkt.buffer, newVideoTrackNumber, pkt.pts, isKey)) {
-                        error.append("Could not add frame.");
-                        return false;
-                    }
-                }
-
-                ++framesIn;
-            }
-
-            if (!muxerSegment.finalizeSegment()) {
-                error.append("Finalization of segment failed.");
-                return false;
-            }
-
-        } catch (LibVpxException e) {
-            error.append("Encoder error : " + e);
-            return false;
-        } finally {
-            if (encoder != null) {
-                encoder.close();
-            }
-            if (encoderConfig != null) {
-                encoderConfig.close();
-            }
-            if (mkvWriter != null) {
-                mkvWriter.close();
-            }
-        }
-
-        return true;
-    }
 }
