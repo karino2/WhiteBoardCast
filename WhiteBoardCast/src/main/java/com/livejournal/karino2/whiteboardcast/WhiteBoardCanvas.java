@@ -177,9 +177,7 @@ public class WhiteBoardCanvas extends View implements FrameRetrieval {
             inval.set(invalRegion);
             int stride = mBitmap.getWidth();
             int offset = inval.left+inval.top*stride;
-            Log.d("WBCast", "mWidth=" + mWidth + ", mHeight=" + mHeight);
             mBitmap.getPixels(pixelBufs, offset, stride,  inval.left, inval.top, inval.width(), inval.height());
-//            mBitmap.getPixels(pixelBufs, 0, mWidth,  0, 0, mWidth, mHeight);
 
             invalRegion.set(0, 0, 0, 0);
         }

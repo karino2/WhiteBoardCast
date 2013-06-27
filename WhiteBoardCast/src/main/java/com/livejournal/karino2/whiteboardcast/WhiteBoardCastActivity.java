@@ -158,14 +158,9 @@ public class WhiteBoardCastActivity extends Activity {
                 handler.postDelayed(new Runnable(){
                     @Override
                     public void run() {
-                        /*
-                        if(!encoderTask.doneEncoder()) {
-                            showMessage("done encoder fail");
-                        }
-                        */
                         // for debug.
                         if(encoderTask.getErrorBuf().length() != 0) {
-                            showMessage("error: " + encoderTask.getErrorBuf().toString());
+                            showMessage("deb error: " + encoderTask.getErrorBuf().toString());
                         }
 
                     }
@@ -185,7 +180,7 @@ public class WhiteBoardCastActivity extends Activity {
         return super.dispatchKeyEvent(event);
     }
 
-    private final int FPS = 3;
+    private final int FPS = 12;
 
     private Button findButton(int id) {
         return (Button)findViewById(id);

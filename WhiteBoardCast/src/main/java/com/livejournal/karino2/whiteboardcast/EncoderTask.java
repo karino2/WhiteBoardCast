@@ -58,7 +58,6 @@ public class EncoderTask extends TimerTask {
         bitmap = Bitmap.createBitmap(parentBmp);
         width = bitmap.getWidth();
         height = bitmap.getHeight();
-        Log.d("WBCast", "width=" + width + ", height=" + height);
         int bufLen = width*height;
         stride = width;
         if(pixelBuf == null || pixelBuf.length != bufLen) {

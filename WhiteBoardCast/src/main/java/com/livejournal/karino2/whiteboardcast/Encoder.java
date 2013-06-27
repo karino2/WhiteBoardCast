@@ -55,12 +55,10 @@ public class Encoder {
     public boolean encodeFrames(int[] srcFrame,int framesToEncode, long fourcc, StringBuilder error) {
         duringEncoding = true;
         try {
-            Log.d("WBCast", "begin encode");
             if(!encodeOneFrame(srcFrame,  framesToEncode, fourcc, error))
                 return false;
             framesIn = framesToEncode;
 
-            Log.d("WBCast", "end encode");
             if(pendingDone) {
                 pendingDone = false;
                 return doneEncoderCore(error);
