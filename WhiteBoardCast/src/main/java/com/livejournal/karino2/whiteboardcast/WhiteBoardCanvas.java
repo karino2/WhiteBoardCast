@@ -156,7 +156,17 @@ public class WhiteBoardCanvas extends View implements FrameRetrieval {
     private void updateInvalRegion() {
         mPath.computeBounds(invalF, false);
         invalF.roundOut(tmpInval);
+        widen(tmpInval);
         invalRegion.union(tmpInval);
+    }
+
+    static final int BRUSH_WIDTH = 6;
+    private void widen(Rect tmpInval) {
+        int newLeft = Math.max(0, tmpInval.left-BRUSH_WIDTH);
+        int newTop = Math.max(0, tmpInval.top - BRUSH_WIDTH);
+        int newRight = Math.min(mWidth, tmpInval.right+BRUSH_WIDTH);
+        int newBottom = Math.min(mHeight, tmpInval.bottom+BRUSH_WIDTH);
+        tmpInval.set(newLeft, newTop, newRight, newBottom);
     }
 
     public Bitmap getBitmap() { return mBitmap;}
