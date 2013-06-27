@@ -8,9 +8,13 @@ import android.app.Activity;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
+import android.view.KeyEvent;
 import android.view.MotionEvent;
 import android.view.View;
+import android.widget.Button;
 import android.widget.Toast;
+
+import java.util.Timer;
 
 /**
  * An example full-screen activity that shows and hides the system UI (i.e.
@@ -47,7 +51,15 @@ public class WhiteBoardCastActivity extends Activity {
      */
     private SystemUiHider mSystemUiHider;
 
-    private Handler handler = new Handler();
+    private Timer timer = null;
+    private EncoderTask encoderTask = null;
+
+    public void showMessage(String msg) {
+        Toast.makeText(this, msg, Toast.LENGTH_LONG ).show();
+
+    }
+
+    Handler handler = new Handler();
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -69,7 +81,7 @@ public class WhiteBoardCastActivity extends Activity {
                 handler.postDelayed(new Runnable() {
                     @Override
                     public void run() {
-                        Toast.makeText(WhiteBoardCastActivity.this, outStr, Toast.LENGTH_LONG ).show();
+                        showMessage(outStr);
                     }
                 }, 5000);
 
@@ -138,7 +150,77 @@ public class WhiteBoardCastActivity extends Activity {
         // Upon interacting with UI controls, delay any scheduled hide()
         // operations to prevent the jarring behavior of controls going away
         // while interacting with the UI.
-        findViewById(R.id.dummy_button).setOnTouchListener(mDelayHideTouchListener);
+        findViewById(R.id.record_start_button).setOnTouchListener(mDelayHideTouchListener);
+        findViewById(R.id.record_stop_button).setOnTouchListener(mDelayHideTouchListener);
+
+        findButton(R.id.record_start_button).setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                timer = new Timer();
+                WhiteBoardCanvas wb = (WhiteBoardCanvas)findViewById(R.id.fullscreen_content);
+                encoderTask = new EncoderTask(wb, wb.getBitmap());
+                if(!encoderTask.initEncoder()) {
+                    showMessage("init encode fail");
+                    return;
+                }
+
+                timer.scheduleAtFixedRate(encoderTask, 0, 1000/FPS);
+                showMessage("record start");
+            }
+        });
+        findButton(R.id.record_stop_button).setOnClickListener(new View.OnClickListener(){
+            @Override
+            public void onClick(View view) {
+                showMessage("record end");
+                timer.cancel();
+
+                handler.postDelayed(new Runnable(){
+                    @Override
+                    public void run() {
+                        /*
+                        if(!encoderTask.doneEncoder()) {
+                            showMessage("done encoder fail");
+                        }
+                        // for debug.
+                        if(encoderTask.getErrorBuf().length() != 0) {
+                            showMessage("error: " + encoderTask.getErrorBuf().toString());
+                        }
+                        */
+
+                    }
+                }, 5000);
+
+            }
+        });
+        findButton(R.id.record_done_button).setOnClickListener(new View.OnClickListener(){
+            @Override
+            public void onClick(View view) {
+                if(!encoderTask.doneEncoder()) {
+                    showMessage("done encoder fail");
+                }
+                // for debug.
+                if(encoderTask.getErrorBuf().length() != 0) {
+                    showMessage("error: " + encoderTask.getErrorBuf().toString());
+                }
+
+            }
+        });
+    }
+
+    @Override
+    public boolean dispatchKeyEvent(KeyEvent event) {
+        if(event.getAction() == KeyEvent.ACTION_DOWN &&
+                event.getKeyCode() == KeyEvent.KEYCODE_MENU) {
+            mSystemUiHider.toggle();
+            return true;
+        }
+        return super.dispatchKeyEvent(event);
+    }
+
+    private final int FPS = 3;
+
+    private Button findButton(int id) {
+        return (Button)findViewById(id);
     }
 
     @Override

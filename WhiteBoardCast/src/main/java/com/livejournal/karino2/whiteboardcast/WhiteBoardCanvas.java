@@ -3,9 +3,11 @@ package com.livejournal.karino2.whiteboardcast;
 import android.content.Context;
 import android.graphics.Bitmap;
 import android.graphics.Canvas;
+import android.graphics.Color;
 import android.graphics.DashPathEffect;
 import android.graphics.Paint;
 import android.graphics.Path;
+import android.graphics.Rect;
 import android.graphics.RectF;
 import android.util.AttributeSet;
 import android.view.MotionEvent;
@@ -14,7 +16,7 @@ import android.view.View;
 /**
  * Created by karino on 6/26/13.
  */
-public class WhiteBoardCanvas extends View {
+public class WhiteBoardCanvas extends View implements FrameRetrieval {
 
     private Bitmap mBitmap;
     private Canvas mCanvas;
@@ -22,6 +24,7 @@ public class WhiteBoardCanvas extends View {
     private Paint mBitmapPaint;
     private Paint       mPaint;
     private Paint mCursorPaint;
+    private Rect invalRegion;
 
     public WhiteBoardCanvas(Context context, AttributeSet attrs) {
         super(context, attrs);
@@ -36,6 +39,7 @@ public class WhiteBoardCanvas extends View {
         mPaint.setStrokeJoin(Paint.Join.ROUND);
         mPaint.setStrokeCap(Paint.Cap.ROUND);
         mPaint.setStrokeWidth(12);
+        invalRegion = new Rect(0, 0, 0, 0);
 
         mCursorPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
         mCursorPaint.setStyle(Paint.Style.STROKE);
@@ -64,13 +68,16 @@ public class WhiteBoardCanvas extends View {
     }
     public void resetCanvas(int w, int h) {
         mBitmap = Bitmap.createBitmap(w, h, Bitmap.Config.ARGB_8888);
+        mBitmap.eraseColor(Color.WHITE);
         mCanvas = new Canvas(mBitmap);
     }
 
     protected void onDraw(Canvas canvas) {
         canvas.drawColor(0xFFFFFFFF);
 
-        canvas.drawBitmap(mBitmap, 0, 0, mBitmapPaint);
+        synchronized(mBitmap) {
+            canvas.drawBitmap(mBitmap, 0, 0, mBitmapPaint);
+        }
 
         canvas.drawPath(mPath, mPaint);
         canvas.drawOval(mBrushCursorRegion, mCursorPaint);
@@ -100,6 +107,8 @@ public class WhiteBoardCanvas extends View {
 
 
     boolean mDownHandled = false;
+    private RectF invalF = new RectF();
+    private Rect tmpInval = new Rect();
 
     public boolean onTouchEvent(MotionEvent event) {
         float x = event.getX();
@@ -131,6 +140,9 @@ public class WhiteBoardCanvas extends View {
                     break;
                 mDownHandled = false;
                 mPath.lineTo(mX, mY);
+                mPath.computeBounds(invalF, false);
+                invalF.roundOut(tmpInval);
+                invalRegion.union(tmpInval);
                 mCanvas.drawPath(mPath, mPaint);
                 mPath.reset();
                 invalidate();
@@ -138,5 +150,20 @@ public class WhiteBoardCanvas extends View {
         }
         return true;
 
+    }
+
+    public Bitmap getBitmap() { return mBitmap;}
+
+    @Override
+    public void pullUpdateRegion(int[] pixelBufs, Rect inval) {
+        synchronized(mBitmap) {
+            inval.set(invalRegion);
+            int stride = mBitmap.getWidth();
+            int offset = inval.left+inval.top*stride;
+            mBitmap.getPixels(pixelBufs, offset, stride,  inval.left, inval.top, inval.width(), inval.height());
+//            mBitmap.getPixels(pixelBufs, 0, mWidth,  0, 0, mWidth, mHeight);
+
+            invalRegion.set(0, 0, 0, 0);
+        }
     }
 }

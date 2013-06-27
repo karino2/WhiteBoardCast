@@ -2,7 +2,7 @@
 <resources>
 
     <string name="app_name">WhiteBoardCast</string>
-    <string name="dummy_button">Dummy Button</string>
-    <string name="dummy_content">DUMMY\nCONTENT</string>
+    <string name="record_start_button">Rec Start</string>
+    <string name="record_stop_button">Rec Stop</string>
 
 </resources>
