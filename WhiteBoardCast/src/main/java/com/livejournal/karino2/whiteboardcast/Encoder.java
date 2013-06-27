@@ -56,11 +56,9 @@ public class Encoder {
         duringEncoding = true;
         try {
             Log.d("WBCast", "begin encode");
-            while (framesIn < framesToEncode) {
-                if(!encodeOneFrame(srcFrame, fourcc, error))
-                     return false;
-                framesIn++;
-            }
+            if(!encodeOneFrame(srcFrame,  framesToEncode, fourcc, error))
+                return false;
+            framesIn = framesToEncode;
 
             Log.d("WBCast", "end encode");
             if(pendingDone) {
@@ -123,10 +121,10 @@ public class Encoder {
         return true;
     }
 
-    private boolean encodeOneFrame(int[] srcFrame, long fourcc,
+    private boolean encodeOneFrame(int[] srcFrame, int endFrame,  long fourcc,
                                    StringBuilder error) {
         long frameStart = timeMultiplier.multiply(framesIn - 1).toLong();
-        long nextFrameStart = timeMultiplier.multiply(framesIn).toLong();
+        long nextFrameStart = timeMultiplier.multiply(endFrame).toLong();
 
         ArrayList<VpxCodecCxPkt> encPkt = null;
         try {

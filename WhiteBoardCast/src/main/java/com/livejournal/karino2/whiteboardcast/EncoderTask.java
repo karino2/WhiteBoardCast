@@ -3,6 +3,7 @@ package com.livejournal.karino2.whiteboardcast;
 import android.graphics.Bitmap;
 import android.graphics.Rect;
 import android.os.Environment;
+import android.util.Log;
 
 import com.google.libvpx.LibVpxEnc;
 import com.google.libvpx.LibVpxEncConfig;
@@ -57,6 +58,7 @@ public class EncoderTask extends TimerTask {
         bitmap = Bitmap.createBitmap(parentBmp);
         width = bitmap.getWidth();
         height = bitmap.getHeight();
+        Log.d("WBCast", "width=" + width + ", height=" + height);
         int bufLen = width*height;
         stride = width;
         if(pixelBuf == null || pixelBuf.length != bufLen) {

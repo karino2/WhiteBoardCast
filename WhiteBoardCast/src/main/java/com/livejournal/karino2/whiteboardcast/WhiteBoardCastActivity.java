@@ -65,28 +65,6 @@ public class WhiteBoardCastActivity extends Activity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
-        new Thread(new Runnable(){
-
-            @Override
-            public void run() {
-                int[] major = new int[2];
-                int[] minor = new int[2];
-                int[] build = new int[2];
-                int[] revision = new int[2];
-                // MkvMuxer.makeUid(20);
-                MkvMuxer.getVersion(major, minor, build, revision);
-                final String outStr = "libwebm:" + Integer.toString(major[0]) + "." +
-                        Integer.toString(minor[0]) + "." + Integer.toString(build[0]) + "." +
-                        Integer.toString(revision[0]);
-                handler.postDelayed(new Runnable() {
-                    @Override
-                    public void run() {
-                        showMessage(outStr);
-                    }
-                }, 5000);
-
-            }
-        }).start();
 
         setContentView(R.layout.activity_whiteboardcast);
 
@@ -174,6 +152,9 @@ public class WhiteBoardCastActivity extends Activity {
                 showMessage("record end");
                 timer.cancel();
 
+                if(!encoderTask.doneEncoder()) {
+                    showMessage("done encoder fail");
+                }
                 handler.postDelayed(new Runnable(){
                     @Override
                     public void run() {
@@ -181,27 +162,14 @@ public class WhiteBoardCastActivity extends Activity {
                         if(!encoderTask.doneEncoder()) {
                             showMessage("done encoder fail");
                         }
+                        */
                         // for debug.
                         if(encoderTask.getErrorBuf().length() != 0) {
                             showMessage("error: " + encoderTask.getErrorBuf().toString());
                         }
-                        */
 
                     }
                 }, 5000);
-
-            }
-        });
-        findButton(R.id.record_done_button).setOnClickListener(new View.OnClickListener(){
-            @Override
-            public void onClick(View view) {
-                if(!encoderTask.doneEncoder()) {
-                    showMessage("done encoder fail");
-                }
-                // for debug.
-                if(encoderTask.getErrorBuf().length() != 0) {
-                    showMessage("error: " + encoderTask.getErrorBuf().toString());
-                }
 
             }
         });

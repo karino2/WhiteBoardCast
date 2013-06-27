@@ -10,6 +10,7 @@ import android.graphics.Path;
 import android.graphics.Rect;
 import android.graphics.RectF;
 import android.util.AttributeSet;
+import android.util.Log;
 import android.view.MotionEvent;
 import android.view.View;
 
@@ -132,6 +133,8 @@ public class WhiteBoardCanvas extends View implements FrameRetrieval {
                     mPath.quadTo(mX, mY, (x + mX)/2, (y + mY)/2);
                     mX = x;
                     mY = y;
+                    updateInvalRegion();
+                    mCanvas.drawPath(mPath, mPaint);
                 }
                 invalidate();
                 break;
@@ -140,9 +143,7 @@ public class WhiteBoardCanvas extends View implements FrameRetrieval {
                     break;
                 mDownHandled = false;
                 mPath.lineTo(mX, mY);
-                mPath.computeBounds(invalF, false);
-                invalF.roundOut(tmpInval);
-                invalRegion.union(tmpInval);
+                updateInvalRegion();
                 mCanvas.drawPath(mPath, mPaint);
                 mPath.reset();
                 invalidate();
@@ -150,6 +151,12 @@ public class WhiteBoardCanvas extends View implements FrameRetrieval {
         }
         return true;
 
+    }
+
+    private void updateInvalRegion() {
+        mPath.computeBounds(invalF, false);
+        invalF.roundOut(tmpInval);
+        invalRegion.union(tmpInval);
     }
 
     public Bitmap getBitmap() { return mBitmap;}
@@ -160,6 +167,7 @@ public class WhiteBoardCanvas extends View implements FrameRetrieval {
             inval.set(invalRegion);
             int stride = mBitmap.getWidth();
             int offset = inval.left+inval.top*stride;
+            Log.d("WBCast", "mWidth=" + mWidth + ", mHeight=" + mHeight);
             mBitmap.getPixels(pixelBufs, offset, stride,  inval.left, inval.top, inval.width(), inval.height());
 //            mBitmap.getPixels(pixelBufs, 0, mWidth,  0, 0, mWidth, mHeight);
 
