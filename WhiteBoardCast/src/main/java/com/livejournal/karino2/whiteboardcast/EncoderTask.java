@@ -67,9 +67,10 @@ public class EncoderTask extends TimerTask {
         return encoder.encodeFrames(frame,  (int)(diff*FPS_NUM/1000), LibVpxEnc.FOURCC_ARGB, errorBuf);
     }
 
+
     // when call doneEncoder, you do not need to call finalizeEncoder()
-    public boolean doneEncoder() {
-        return encoder.doneEncoder(errorBuf);
+    public boolean doneEncoder(Encoder.FinalizeListener listener) {
+        return encoder.doneEncoder(errorBuf, listener);
     }
 
     public void finalizeEncoder() {

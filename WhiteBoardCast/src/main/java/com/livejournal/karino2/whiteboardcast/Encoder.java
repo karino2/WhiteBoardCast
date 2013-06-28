@@ -17,8 +17,15 @@ import java.util.ArrayList;
  * Created by karino on 6/27/13.
  */
 public class Encoder {
+    public interface FinalizeListener {
+        void done();
+    }
+
     boolean pendingDone = false;
-    public boolean doneEncoder(StringBuilder error) {
+
+    FinalizeListener listener;
+    public boolean doneEncoder(StringBuilder error, FinalizeListener listen) {
+        listener = listen;
         if(duringEncoding) {
             pendingDone = true;
             return true;
@@ -35,6 +42,7 @@ public class Encoder {
         } finally {
             finalizeEncoder();
         }
+        listener.done();
         return true;
     }
 

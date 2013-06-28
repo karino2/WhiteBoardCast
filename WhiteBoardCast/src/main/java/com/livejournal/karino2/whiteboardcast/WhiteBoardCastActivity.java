@@ -170,19 +170,24 @@ public class WhiteBoardCastActivity extends Activity {
                 recorder.stop();
                 recorder.release();
 
-                if(!encoderTask.doneEncoder()) {
-                    showMessage("done encoder fail");
-                }
-                handler.postDelayed(new Runnable(){
+                if(!encoderTask.doneEncoder(new Encoder.FinalizeListener(){
                     @Override
-                    public void run() {
-                        // for debug.
-                        if(encoderTask.getErrorBuf().length() != 0) {
-                            showMessage("deb error: " + encoderTask.getErrorBuf().toString());
-                        }
+                    public void done() {
+                        handler.postDelayed(new Runnable(){
+                            @Override
+                            public void run() {
+                                // for debug.
+                                if(encoderTask.getErrorBuf().length() != 0) {
+                                    showMessage("deb error: " + encoderTask.getErrorBuf().toString());
+                                }
+
+                            }
+                        }, 500);
 
                     }
-                }, 5000);
+                })) {
+                    showMessage("done encoder fail");
+                }
 
             }
         });
