@@ -5,6 +5,7 @@ import com.livejournal.karino2.whiteboardcast.util.SystemUiHider;
 
 import android.annotation.TargetApi;
 import android.app.Activity;
+import android.app.ProgressDialog;
 import android.media.MediaRecorder;
 import android.os.Build;
 import android.os.Bundle;
@@ -62,8 +63,9 @@ public class WhiteBoardCastActivity extends Activity {
 
     }
 
+
     Handler handler = new Handler();
-    MediaRecorder recorder;
+    ExtAudioRecorder recorder;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -145,17 +147,22 @@ public class WhiteBoardCastActivity extends Activity {
                     showMessage("init encode fail");
                     return;
                 }
-                recorder = new MediaRecorder();
-                recorder.setAudioSource(MediaRecorder.AudioSource.MIC);
-                recorder.setOutputFormat(MediaRecorder.OutputFormat.THREE_GPP);
-                recorder.setAudioEncoder(MediaRecorder.AudioEncoder.AMR_NB);
-                recorder.setOutputFile(Environment.getExternalStorageDirectory() + "/temp.3gpp");
+                recorder = ExtAudioRecorder.getInstanse(false);
+
+                /* recorder.setAudioSource(MediaRecorder.AudioSource.MIC);
+                recorder.setOutputFormat(MediaRecorder.OutputFormat.DEFAULT);
+                recorder.setAudioEncoder(MediaRecorder.AudioEncoder.DEFAULT);
+                */
+                recorder.setOutputFile(Environment.getExternalStorageDirectory() + "/temp.wav");
+                recorder.prepare();
+                /*
                 try {
                     recorder.prepare();
                 } catch (IOException e) {
                     showMessage("MediaRecoder prepare fail");
                     return;
                 }
+                */
                 recorder.start();   // Recording is now started
 
                 timer.scheduleAtFixedRate(encoderTask, 0, 1000/FPS);
@@ -173,6 +180,7 @@ public class WhiteBoardCastActivity extends Activity {
                 if(!encoderTask.doneEncoder(new Encoder.FinalizeListener(){
                     @Override
                     public void done() {
+                        new AudioVideoMergeTask(WhiteBoardCastActivity.this).execute(Environment.getExternalStorageDirectory() + "/temp.webm", Environment.getExternalStorageDirectory() + "/temp.wav", Environment.getExternalStorageDirectory() + "/result.webm");
                         handler.postDelayed(new Runnable(){
                             @Override
                             public void run() {
@@ -182,7 +190,7 @@ public class WhiteBoardCastActivity extends Activity {
                                 }
 
                             }
-                        }, 500);
+                        }, 0);
 
                     }
                 })) {
