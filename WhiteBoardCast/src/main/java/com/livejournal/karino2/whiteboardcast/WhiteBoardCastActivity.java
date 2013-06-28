@@ -5,8 +5,10 @@ import com.livejournal.karino2.whiteboardcast.util.SystemUiHider;
 
 import android.annotation.TargetApi;
 import android.app.Activity;
+import android.media.MediaRecorder;
 import android.os.Build;
 import android.os.Bundle;
+import android.os.Environment;
 import android.os.Handler;
 import android.view.KeyEvent;
 import android.view.MotionEvent;
@@ -14,6 +16,7 @@ import android.view.View;
 import android.widget.Button;
 import android.widget.Toast;
 
+import java.io.IOException;
 import java.util.Timer;
 
 /**
@@ -60,6 +63,7 @@ public class WhiteBoardCastActivity extends Activity {
     }
 
     Handler handler = new Handler();
+    MediaRecorder recorder;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -141,6 +145,18 @@ public class WhiteBoardCastActivity extends Activity {
                     showMessage("init encode fail");
                     return;
                 }
+                recorder = new MediaRecorder();
+                recorder.setAudioSource(MediaRecorder.AudioSource.MIC);
+                recorder.setOutputFormat(MediaRecorder.OutputFormat.THREE_GPP);
+                recorder.setAudioEncoder(MediaRecorder.AudioEncoder.AMR_NB);
+                recorder.setOutputFile(Environment.getExternalStorageDirectory() + "/temp.3gpp");
+                try {
+                    recorder.prepare();
+                } catch (IOException e) {
+                    showMessage("MediaRecoder prepare fail");
+                    return;
+                }
+                recorder.start();   // Recording is now started
 
                 timer.scheduleAtFixedRate(encoderTask, 0, 1000/FPS);
                 showMessage("record start");
@@ -151,6 +167,8 @@ public class WhiteBoardCastActivity extends Activity {
             public void onClick(View view) {
                 showMessage("record end");
                 timer.cancel();
+                recorder.stop();
+                recorder.release();
 
                 if(!encoderTask.doneEncoder()) {
                     showMessage("done encoder fail");
