@@ -8,7 +8,6 @@ import com.google.libwebm.mkvparser.Frame;
 import com.google.libwebm.mkvparser.MkvReader;
 import com.google.libwebm.mkvparser.Track;
 import com.google.libwebm.mkvparser.Tracks;
-import com.google.libwebm.mkvparser.VideoTrack;
 
 /**
  * Created by karino on 6/28/13.
@@ -50,8 +49,6 @@ public class WebmReader {
 
         // VideoTrack firstTrack = (VideoTrack)parserTracks.getTrackByIndex(0);
         currentTrackNumber = 0;
-        newVideoTrackNumber = 0;
-        newAudioTrackNumber = 0;
 
         return true;
     }
@@ -64,19 +61,17 @@ public class WebmReader {
 
     private void updateCurrentTrack() {
         Track track = parserTracks.getTrackByIndex(currentTrackNumber);
-        if(track.getType() != Track.Type.kVideo)
-            throw new RuntimeException("only support video only webm now");
-        currentTrack = (VideoTrack)track;
+        currentTrack = track;
     }
 
     Tracks parserTracks;
-    VideoTrack currentTrack;
+    Track currentTrack;
 
     public long getTracksCount() {
         return parserTracks.getTracksCount();
     }
 
-    public VideoTrack getCurrentTrack() {
+    public Track getCurrentTrack() {
         return currentTrack;
     }
 
@@ -188,8 +183,6 @@ public class WebmReader {
     */
 
     long currentTrackNumber;
-    long newVideoTrackNumber;
-    long newAudioTrackNumber;
 
     public void close() {
         reader.close();

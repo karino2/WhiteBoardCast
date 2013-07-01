@@ -1,5 +1,6 @@
 package com.livejournal.karino2.whiteboardcast;
 
+import com.google.libvorbis.VorbisException;
 import com.google.libwebm.mkvmuxer.MkvMuxer;
 import com.livejournal.karino2.whiteboardcast.util.SystemUiHider;
 
@@ -49,6 +50,7 @@ public class WhiteBoardCastActivity extends Activity {
      * The flags to pass to {@link SystemUiHider#getInstance}.
      */
     private static final int HIDER_FLAGS = SystemUiHider.FLAG_HIDE_NAVIGATION;
+    private static final String AUDIO_FNAME = "temp.mkv";
 
     /**
      * The instance of the {@link SystemUiHider} for this activity.
@@ -65,7 +67,7 @@ public class WhiteBoardCastActivity extends Activity {
 
 
     Handler handler = new Handler();
-    ExtAudioRecorder recorder;
+    VorbisMediaRecorder recorder;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -147,14 +149,28 @@ public class WhiteBoardCastActivity extends Activity {
                     showMessage("init encode fail");
                     return;
                 }
-                recorder = ExtAudioRecorder.getInstanse(false);
+                // recorder = ExtAudioRecorder.getInstanse(false);
+                recorder = new VorbisMediaRecorder();
 
-                /* recorder.setAudioSource(MediaRecorder.AudioSource.MIC);
+                /*
+                recorder.setAudioSource(MediaRecorder.AudioSource.MIC);
+                recorder.setOutputFormat(MediaRecorder.OutputFormat.THREE_GPP);
+                recorder.setAudioEncoder(MediaRecorder.AudioEncoder.AMR_NB);
+                */
+                /*
                 recorder.setOutputFormat(MediaRecorder.OutputFormat.DEFAULT);
                 recorder.setAudioEncoder(MediaRecorder.AudioEncoder.DEFAULT);
                 */
-                recorder.setOutputFile(Environment.getExternalStorageDirectory() + "/temp.wav");
-                recorder.prepare();
+                recorder.setOutputFile(Environment.getExternalStorageDirectory() + "/" + AUDIO_FNAME);
+                try {
+                    recorder.prepare();
+                } catch (IOException e) {
+                    showMessage("IOException: MediaRecoder prepare fail: " + e.getMessage());
+                    return;
+                } catch (VorbisException e) {
+                    showMessage("VorbisException: MediaRecoder prepare fail: " + e.getMessage());
+                    return;
+                }
                 /*
                 try {
                     recorder.prepare();
@@ -180,7 +196,7 @@ public class WhiteBoardCastActivity extends Activity {
                 if(!encoderTask.doneEncoder(new Encoder.FinalizeListener(){
                     @Override
                     public void done() {
-                        new AudioVideoMergeTask(WhiteBoardCastActivity.this).execute(Environment.getExternalStorageDirectory() + "/temp.webm", Environment.getExternalStorageDirectory() + "/temp.wav", Environment.getExternalStorageDirectory() + "/result.webm");
+                        new AudioVideoMergeTask(WhiteBoardCastActivity.this).execute(Environment.getExternalStorageDirectory() + "/temp.webm", Environment.getExternalStorageDirectory() + "/" + AUDIO_FNAME, Environment.getExternalStorageDirectory() + "/result.webm");
                         handler.postDelayed(new Runnable(){
                             @Override
                             public void run() {

@@ -2,6 +2,7 @@ package com.livejournal.karino2.whiteboardcast;
 
 import android.app.ProgressDialog;
 import android.content.Context;
+import android.media.AudioRecord;
 import android.os.AsyncTask;
 import android.util.Log;
 import android.widget.Toast;
@@ -82,8 +83,10 @@ public class AudioVideoMergeTask extends AsyncTask<String, Integer, String> {
 
         LibVpxEncConfig vpxConfig = null;
         LibVpxEnc vpxEncoder = null;
+        /*
         VorbisEncoderC vorbisEncoder = null;
         VorbisEncConfig vorbisConfig = null;
+        */
         MkvWriter mkvWriter = null;
 
         try {
@@ -93,7 +96,7 @@ public class AudioVideoMergeTask extends AsyncTask<String, Integer, String> {
                 return new String("Input file is invalid or error while opening.");
             }
             webmReader.initTracks();
-            com.google.libwebm.mkvparser.VideoTrack firstTrack = webmReader.getCurrentTrack();
+            com.google.libwebm.mkvparser.VideoTrack firstTrack = (com.google.libwebm.mkvparser.VideoTrack)webmReader.getCurrentTrack();
 
 
             vpxConfig = new LibVpxEncConfig((int)firstTrack.getWidth(), (int)firstTrack.getHeight());
@@ -107,28 +110,36 @@ public class AudioVideoMergeTask extends AsyncTask<String, Integer, String> {
 
             Log.d("WBCast", "audioPath=" + audioPath);
 
-            File pcmFile = new File(audioPath);
-            WavReader wavReader = null;
-            try {
-                wavReader = new WavReader(pcmFile);
-            } catch (Exception e) {
-                return new String("Error creating wav file:" + audioPath);
+            WebmReader audioReader = new WebmReader();
+            if(!audioReader.open(audioPath)) {
+                return new String("Error opening ogg file:" + audioPath);
             }
-
-            int channels = wavReader.nChannels();
-            int sampleRate = wavReader.nSamplesPerSec();
+            audioReader.initTracks();
             /*
-            int channels = 2;
+            try {
+                audioReader.open(audioPath);
+            } catch (IOException e) {
+                return new String("Error opening ogg file:" + audioPath);
+            }
+            */
+
+            /*
+            int channels = audioReader.nChannels();
+            int sampleRate = audioReader.nSamplesPerSec();
+            int bitsPerSample = audioReader.wBitsPerSample();
+            */
+            /*
+            int channels = 1;
             int sampleRate = 44100;
             int bitsPerSample = 16;
-            */
-            int bitsPerSample = wavReader.wBitsPerSample();
 
             Log.d("WBCast", "channels="+channels +", sampleRate=" + sampleRate + ", bitsPerSample=" + bitsPerSample);
+
             vorbisConfig = new VorbisEncConfig(channels, sampleRate, bitsPerSample);
             vorbisConfig.setTimebase(1, 1000000000);
 
             vorbisEncoder = new VorbisEncoderC(vorbisConfig);
+            */
 
             mkvWriter = new MkvWriter();
             if (!mkvWriter.open(resultPath)) {
@@ -175,7 +186,11 @@ public class AudioVideoMergeTask extends AsyncTask<String, Integer, String> {
             }
 
             // Add audio Track
-            long newAudioTrackNumber = muxerSegment.addAudioTrack(sampleRate, channels, 0);
+
+            com.google.libwebm.mkvparser.AudioTrack firstAudioTrack = (com.google.libwebm.mkvparser.AudioTrack)audioReader.getCurrentTrack();
+
+//            long newAudioTrackNumber = muxerSegment.addAudioTrack(sampleRate, channels, 0);
+            long newAudioTrackNumber = muxerSegment.addAudioTrack((int)firstAudioTrack.getSamplingRate(), (int)firstAudioTrack.getChannels(), 0);
             if (newAudioTrackNumber == 0) {
                 return new String("Could not add audio track.");
             }
@@ -185,6 +200,19 @@ public class AudioVideoMergeTask extends AsyncTask<String, Integer, String> {
                 return new String("Could not get audio track.");
             }
 
+            long[] outputPrivateSize = {0};
+            byte[] privateData = firstAudioTrack.getCodecPrivate(outputPrivateSize);
+            long privateSize = outputPrivateSize[0];
+            if (privateSize > 0 && !muxerAudioTrack.setCodecPrivate(privateData)) {
+                return new String("Could not add audio private data.");
+            }
+
+            long bitDepth = firstAudioTrack.getBitDepth();
+            if (bitDepth > 0) {
+                muxerAudioTrack.setBitDepth(bitDepth);
+            }
+
+            /*
             byte[] buffer = vorbisEncoder.CodecPrivate();
             if (buffer == null) {
                 return new String("Could not get audio private data.");
@@ -192,6 +220,7 @@ public class AudioVideoMergeTask extends AsyncTask<String, Integer, String> {
             if (!muxerAudioTrack.setCodecPrivate(buffer)) {
                 return new String("Could not add audio private data.");
             }
+            */
 
             muxerSegment.cuesTrack(newVideoTrackNumber);
             muxerSegment.cuesTrack(newAudioTrackNumber);
@@ -201,6 +230,12 @@ public class AudioVideoMergeTask extends AsyncTask<String, Integer, String> {
             }
             if (!webmReader.initFrameQueue()) {
                 return new String("initFrameQueue fail. invalid webm");
+            }
+            if (!audioReader.initCluster() ) {
+                return new String("initCluster fail. invalid audio mkv");
+            }
+            if (!audioReader.initFrameQueue()) {
+                return new String("initFrameQueue fail. invalid audio mkv");
             }
 
 
@@ -214,64 +249,44 @@ public class AudioVideoMergeTask extends AsyncTask<String, Integer, String> {
             boolean audioDone = false;
             boolean videoDone = false;
             boolean encoding = true;
+            vorbisFrame = audioReader.popFrame();
+            webmFrame = webmReader.popFrame();
             while (encoding) {
-                // Prime the audio encoder.
-                while (vorbisFrame == null) {
-                    final int samplesLeft = wavReader.samplesRemaining();
-                    final int samplesToRead = Math.min(samplesLeft, maxSamplesToRead);
-                    if (samplesToRead > 0) {
-                        // Read raw audio data.
-                        byte[] pcmArray = null;
-                        try {
-                            pcmArray = wavReader.readSamples(samplesToRead);
-                        } catch (Exception e) {
-                            return new String("Could not read audio samples.");
+                if(vorbisFrame == null) {
+                    audioDone = true;
+                    audioReader.close();
+                }
+                if(webmFrame == null) {
+                    videoDone = true;
+                    webmReader.close();
+                }
+                if(!audioDone && !videoDone) {
+                    if(webmReader.getBlockTimeNS() > audioReader.getBlockTimeNS()) {
+                        if (!muxerSegment.addFrame(vorbisFrame, newAudioTrackNumber, audioReader.getBlockTimeNS(), audioReader.isKey())) {
+                            return new String("Could not add audio frame1.");
                         }
-
-                        if (!vorbisEncoder.Encode(pcmArray))
-                            return new String("Error encoding audio samples.");
-
-                        vorbisFrame = vorbisEncoder.ReadCompressedAudio(returnTimestamp);
-
-                        // Matroska is in nanoseconds.
-                        if (vorbisFrame != null) {
-                            vorbisTimestamp = returnTimestamp[0] * 1000000;
-                        }
+                        vorbisFrame = audioReader.popFrame();
                     } else {
-                        audioDone = true;
-                        break;
+                        if (!muxerSegment.addFrame(webmFrame, newVideoTrackNumber, webmReader.getBlockTimeNS(), webmReader.isKey())) {
+                            return new String("Could not add video frame1.");
+                        }
+                        webmFrame = webmReader.popFrame();
                     }
-                }
-
-                if (webmFrame == null) {
-                    // Read raw video data.
-                    webmFrame = webmReader.popFrame();
-                    if (webmFrame == null) {
-                        videoDone = true;
+                }else if(!audioDone) {
+                    if (!muxerSegment.addFrame(vorbisFrame, newAudioTrackNumber, audioReader.getBlockTimeNS(), audioReader.isKey())) {
+                        return new String("Could not add audio frame2.");
                     }
-                }
-
-                if ((audioDone && videoDone)) break;
-
-                if (!videoDone && (audioDone || webmReader.getBlockTimeNS() <= vorbisTimestamp)) {
+                    vorbisFrame = audioReader.popFrame();
+                }else if(!videoDone) {
                     if (!muxerSegment.addFrame(webmFrame, newVideoTrackNumber, webmReader.getBlockTimeNS(), webmReader.isKey())) {
-                        return new String("Could not add video frame.");
+                        return new String("Could not add video frame2.");
                     }
                     webmFrame = webmReader.popFrame();
-                    if (webmFrame == null) {
-                        videoDone = true;
-                    }
-                } else if (!audioDone) {
-                    if (!muxerSegment.addFrame(vorbisFrame, newAudioTrackNumber, vorbisTimestamp, true)) {
-                        return new String("Could not add audio frame.");
-                    }
-
-                    // Read the next compressed audio frame.
-                    vorbisFrame = vorbisEncoder.ReadCompressedAudio(returnTimestamp);
-                    if (vorbisFrame != null) {
-                        vorbisTimestamp = returnTimestamp[0] * 1000000;
-                    }
+                } else {
+                    encoding = false;
+                    break;
                 }
+
             }
 
             if (!muxerSegment.finalizeSegment()) {

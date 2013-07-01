@@ -210,6 +210,7 @@ public class ExtAudioRecorder
 
                 audioRecorder = new AudioRecord(audioSource, sampleRate, channelConfig, audioFormat, bufferSize);
 
+
                 if (audioRecorder.getState() != AudioRecord.STATE_INITIALIZED)
                     throw new Exception("AudioRecord initialization failed");
                 audioRecorder.setRecordPositionUpdateListener(updateListener);
