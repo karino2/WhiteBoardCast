@@ -178,7 +178,7 @@ public class WhiteBoardCastActivity extends Activity {
                 if(!encoderTask.doneEncoder(new Encoder.FinalizeListener(){
                     @Override
                     public void done() {
-                        new AudioVideoMergeTask(WhiteBoardCastActivity.this).execute(Environment.getExternalStorageDirectory() + "/temp.webm", Environment.getExternalStorageDirectory() + "/" + AUDIO_FNAME, Environment.getExternalStorageDirectory() + "/result.webm");
+                        beginAudioVideoMergeTask();
                         handler.postDelayed(new Runnable(){
                             @Override
                             public void run() {
@@ -197,6 +197,16 @@ public class WhiteBoardCastActivity extends Activity {
 
             }
         });
+        findButton(R.id.merge_start_button).setOnClickListener(new View.OnClickListener(){
+            @Override
+            public void onClick(View view) {
+                beginAudioVideoMergeTask();
+            }
+        });
+    }
+
+    private void beginAudioVideoMergeTask() {
+        new AudioVideoMergeTask(this).execute(Environment.getExternalStorageDirectory() + "/temp.webm", Environment.getExternalStorageDirectory() + "/" + AUDIO_FNAME, Environment.getExternalStorageDirectory() + "/result.webm");
     }
 
     @Override

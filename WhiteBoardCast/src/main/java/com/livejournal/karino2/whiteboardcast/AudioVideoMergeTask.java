@@ -187,23 +187,31 @@ public class AudioVideoMergeTask extends AsyncTask<String, Integer, String> {
             while (encoding) {
                 if(vorbisFrame == null) {
                     audioDone = true;
-                    audioReader.close();
                 }
                 if(webmFrame == null) {
                     videoDone = true;
-                    webmReader.close();
                 }
                 if(!audioDone && !videoDone) {
                     if(webmReader.getBlockTimeNS() > audioReader.getBlockTimeNS()) {
-                        if (!muxerSegment.addFrame(vorbisFrame, newAudioTrackNumber, audioReader.getBlockTimeNS(), audioReader.isKey())) {
-                            return new String("Could not add audio frame1.");
+                        while(!audioDone && webmReader.getBlockTimeNS() > audioReader.getBlockTimeNS()) {
+                            if (!muxerSegment.addFrame(vorbisFrame, newAudioTrackNumber, audioReader.getBlockTimeNS(), audioReader.isKey())) {
+                                return new String("Could not add audio frame1.");
+                            }
+                            vorbisFrame = audioReader.popFrame();
+                            if(vorbisFrame == null) {
+                                audioDone = true;
+                            }
                         }
-                        vorbisFrame = audioReader.popFrame();
                     } else {
-                        if (!muxerSegment.addFrame(webmFrame, newVideoTrackNumber, webmReader.getBlockTimeNS(), webmReader.isKey())) {
-                            return new String("Could not add video frame1.");
+                        while(!videoDone && webmReader.getBlockTimeNS() <= audioReader.getBlockTimeNS()) {
+                            if (!muxerSegment.addFrame(webmFrame, newVideoTrackNumber, webmReader.getBlockTimeNS(), webmReader.isKey())) {
+                                return new String("Could not add video frame1.");
+                            }
+                            webmFrame = webmReader.popFrame();
+                            if(webmFrame == null) {
+                                videoDone = true;
+                            }
                         }
-                        webmFrame = webmReader.popFrame();
                     }
                 }else if(!audioDone) {
                     if (!muxerSegment.addFrame(vorbisFrame, newAudioTrackNumber, audioReader.getBlockTimeNS(), audioReader.isKey())) {
@@ -221,6 +229,8 @@ public class AudioVideoMergeTask extends AsyncTask<String, Integer, String> {
                 }
 
             }
+            audioReader.close();
+            webmReader.close();
 
             if (!muxerSegment.finalizeSegment()) {
                 return new String("Finalization of segment failed.");

@@ -152,7 +152,7 @@ public class WebmReader {
             if(!gotoNextBlockEntry()){
                 if(!gotoNextCluster())
                     return null;
-                if(!initBlockEntry())
+                if(!initFrameQueue())
                      return null;
                 // fall through
             }

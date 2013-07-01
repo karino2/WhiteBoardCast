@@ -15,18 +15,6 @@
             >
 
     </com.livejournal.karino2.whiteboardcast.WhiteBoardCanvas>
-    <!--
-    <TextView android:id="@+id/fullscreen_content"
-        android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:keepScreenOn="true"
-        android:textColor="#33b5e5"
-        android:textStyle="bold"
-        android:textSize="50sp"
-        android:gravity="center"
-        android:text="@string/dummy_content" />
-        -->
-
     <!-- This FrameLayout insets its children based on system windows using
          android:fitsSystemWindows. -->
     <FrameLayout android:layout_width="match_parent"
@@ -54,6 +42,12 @@
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
                 android:text="@string/record_stop_button" />
+            <Button android:id="@+id/merge_start_button"
+                    style="?buttonBarButtonStyle"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:text="Merge Audio Video" />
 
         </LinearLayout>
     </FrameLayout>
