@@ -37,7 +37,6 @@ public class VorbisMediaRecorder {
     State state;
     String filePath;
 
-    // private RandomAccessFile randomAccessWriter;
     long newAudioTrackNumber;
     Segment muxerSegment;
     MkvWriter mkvWriter;
@@ -50,7 +49,6 @@ public class VorbisMediaRecorder {
         {
             bufferSize = AudioRecord.getMinBufferSize(sampleRate, AUDIO_FORMAT, AUDIO_SOURCE);
             framePeriod = bufferSize / ( 2 * bSamples * nChannels / 8 );
-            Log.w(ExtAudioRecorder.class.getName(), "Increasing buffer size to " + Integer.toString(bufferSize));
         }
 
         audioRecorder = new AudioRecord(AUDIO_SOURCE, sampleRate, AudioFormat.CHANNEL_IN_MONO, AUDIO_FORMAT, bufferSize);
@@ -72,10 +70,6 @@ public class VorbisMediaRecorder {
 
             vorbisEncoder = new VorbisEncoderC(vorbisConf);
 
-            /*
-            randomAccessWriter = new RandomAccessFile(filePath, "rw");
-            randomAccessWriter.setLength(0);
-            */
 
             mkvWriter = new MkvWriter();
             if (!mkvWriter.open(filePath)) {
@@ -130,15 +124,6 @@ public class VorbisMediaRecorder {
         if(state == State.RECORDING) {
             audioRecorder.stop();
 
-            /*
-            if(randomAccessWriter != null) {
-                try {
-                    randomAccessWriter.close();
-                } catch (IOException e) {
-                    Log.d("WBCast", "close fail. " + e.getMessage());
-                }
-            }
-            */
             if (!muxerSegment.finalizeSegment()) {
                 throw new RuntimeException("Finalization of segment failed.");
             }
@@ -174,14 +159,6 @@ public class VorbisMediaRecorder {
 
             AudioFrame frame = null;
             while ((frame = vorbisEncoder.ReadCompressedFrame()) != null) {
-                /*
-                try {
-                    randomAccessWriter.write(frame.buffer);
-                } catch (IOException e) {
-                    Log.d("WBCast", "Could not add audio frame. " + e.getMessage());
-                    return;
-                }
-                */
                 if (!muxerSegment.addFrame(
                         frame.buffer, newAudioTrackNumber, frame.pts, true)) {
                     Log.d("WBCast", "Could not add audio frame.");

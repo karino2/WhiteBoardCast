@@ -81,12 +81,6 @@ public class AudioVideoMergeTask extends AsyncTask<String, Integer, String> {
         String audioPath = files[1];
         String resultPath = files[2];
 
-        LibVpxEncConfig vpxConfig = null;
-        LibVpxEnc vpxEncoder = null;
-        /*
-        VorbisEncoderC vorbisEncoder = null;
-        VorbisEncConfig vorbisConfig = null;
-        */
         MkvWriter mkvWriter = null;
 
         try {
@@ -99,47 +93,11 @@ public class AudioVideoMergeTask extends AsyncTask<String, Integer, String> {
             com.google.libwebm.mkvparser.VideoTrack firstTrack = (com.google.libwebm.mkvparser.VideoTrack)webmReader.getCurrentTrack();
 
 
-            vpxConfig = new LibVpxEncConfig((int)firstTrack.getWidth(), (int)firstTrack.getHeight());
-            vpxEncoder = new LibVpxEnc(vpxConfig);
-
-            // libwebm expects nanosecond units
-            vpxConfig.setTimebase(1, 1000000000);
-            Rational timeBase = vpxConfig.getTimebase();
-            Rational timeMultiplier = timeBase.multiply(new Rational((long)(100000*firstTrack.getFrameRate()), 100000)).reciprocal();
-            int framesIn = 1;
-
-            Log.d("WBCast", "audioPath=" + audioPath);
-
             WebmReader audioReader = new WebmReader();
             if(!audioReader.open(audioPath)) {
                 return new String("Error opening ogg file:" + audioPath);
             }
             audioReader.initTracks();
-            /*
-            try {
-                audioReader.open(audioPath);
-            } catch (IOException e) {
-                return new String("Error opening ogg file:" + audioPath);
-            }
-            */
-
-            /*
-            int channels = audioReader.nChannels();
-            int sampleRate = audioReader.nSamplesPerSec();
-            int bitsPerSample = audioReader.wBitsPerSample();
-            */
-            /*
-            int channels = 1;
-            int sampleRate = 44100;
-            int bitsPerSample = 16;
-
-            Log.d("WBCast", "channels="+channels +", sampleRate=" + sampleRate + ", bitsPerSample=" + bitsPerSample);
-
-            vorbisConfig = new VorbisEncConfig(channels, sampleRate, bitsPerSample);
-            vorbisConfig.setTimebase(1, 1000000000);
-
-            vorbisEncoder = new VorbisEncoderC(vorbisConfig);
-            */
 
             mkvWriter = new MkvWriter();
             if (!mkvWriter.open(resultPath)) {
@@ -154,7 +112,6 @@ public class AudioVideoMergeTask extends AsyncTask<String, Integer, String> {
             SegmentInfo muxerSegmentInfo = muxerSegment.getSegmentInfo();
             muxerSegmentInfo.setWritingApp("MergeAudioVideo");
 
-            long i = 0;
             long newVideoTrackNumber = 0;
 
             String trackName = firstTrack.getNameAsUtf8();
@@ -173,23 +130,13 @@ public class AudioVideoMergeTask extends AsyncTask<String, Integer, String> {
             if (trackName != null) {
                 muxerTrack.setName(trackName);
             }
-
-            /*
-            VideoTrack.StereoMode stereoMode = ;
-            if (stereoMode != com.google.libwebm.mkvmuxer.VideoTrack.StereoMode.kMono) {
-                muxerTrack.setStereoMode(stereoMode);
-            }
-            */
             double rate = firstTrack.getFrameRate();
             if (rate > 0) {
                 muxerTrack.setFrameRate(rate);
             }
 
-            // Add audio Track
-
             com.google.libwebm.mkvparser.AudioTrack firstAudioTrack = (com.google.libwebm.mkvparser.AudioTrack)audioReader.getCurrentTrack();
 
-//            long newAudioTrackNumber = muxerSegment.addAudioTrack(sampleRate, channels, 0);
             long newAudioTrackNumber = muxerSegment.addAudioTrack((int)firstAudioTrack.getSamplingRate(), (int)firstAudioTrack.getChannels(), 0);
             if (newAudioTrackNumber == 0) {
                 return new String("Could not add audio track.");
@@ -212,15 +159,6 @@ public class AudioVideoMergeTask extends AsyncTask<String, Integer, String> {
                 muxerAudioTrack.setBitDepth(bitDepth);
             }
 
-            /*
-            byte[] buffer = vorbisEncoder.CodecPrivate();
-            if (buffer == null) {
-                return new String("Could not get audio private data.");
-            }
-            if (!muxerAudioTrack.setCodecPrivate(buffer)) {
-                return new String("Could not add audio private data.");
-            }
-            */
 
             muxerSegment.cuesTrack(newVideoTrackNumber);
             muxerSegment.cuesTrack(newAudioTrackNumber);
@@ -239,13 +177,8 @@ public class AudioVideoMergeTask extends AsyncTask<String, Integer, String> {
             }
 
 
-            final int maxSamplesToRead = 1000;
-            long[] returnTimestamp = new long[2];
-            long vorbisTimestamp = 0;
             byte[] vorbisFrame = null;
             byte[] webmFrame = null;
-            VpxCodecCxPkt pkt = null;
-            int pktIndex = 0;
             boolean audioDone = false;
             boolean videoDone = false;
             boolean encoding = true;

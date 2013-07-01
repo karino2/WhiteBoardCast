@@ -149,18 +149,8 @@ public class WhiteBoardCastActivity extends Activity {
                     showMessage("init encode fail");
                     return;
                 }
-                // recorder = ExtAudioRecorder.getInstanse(false);
                 recorder = new VorbisMediaRecorder();
 
-                /*
-                recorder.setAudioSource(MediaRecorder.AudioSource.MIC);
-                recorder.setOutputFormat(MediaRecorder.OutputFormat.THREE_GPP);
-                recorder.setAudioEncoder(MediaRecorder.AudioEncoder.AMR_NB);
-                */
-                /*
-                recorder.setOutputFormat(MediaRecorder.OutputFormat.DEFAULT);
-                recorder.setAudioEncoder(MediaRecorder.AudioEncoder.DEFAULT);
-                */
                 recorder.setOutputFile(Environment.getExternalStorageDirectory() + "/" + AUDIO_FNAME);
                 try {
                     recorder.prepare();
@@ -171,15 +161,7 @@ public class WhiteBoardCastActivity extends Activity {
                     showMessage("VorbisException: MediaRecoder prepare fail: " + e.getMessage());
                     return;
                 }
-                /*
-                try {
-                    recorder.prepare();
-                } catch (IOException e) {
-                    showMessage("MediaRecoder prepare fail");
-                    return;
-                }
-                */
-                recorder.start();   // Recording is now started
+                recorder.start();
 
                 timer.scheduleAtFixedRate(encoderTask, 0, 1000/FPS);
                 showMessage("record start");
