@@ -105,13 +105,16 @@ public class WhiteBoardCanvas extends View implements FrameRetrieval {
     private float mX, mY;
     private static final float TOUCH_TOLERANCE = 4;
 
-    private static final float CURSOR_SIZE=10;
     RectF mBrushCursorRegion = new RectF(0f, 0f, 0f, 0f);
+
+    private float getCursorSize() {
+        return (float)penWidth;
+    }
 
     private void setBrushCursorPos(float x, float y)
     {
-        mBrushCursorRegion = new RectF(x-CURSOR_SIZE/2, y-CURSOR_SIZE/2,
-                x+CURSOR_SIZE/2, y+CURSOR_SIZE/2);
+        mBrushCursorRegion = new RectF(x-getCursorSize()/2, y-getCursorSize()/2,
+                x+getCursorSize()/2, y+getCursorSize()/2);
 
     }
 
@@ -209,9 +212,15 @@ public class WhiteBoardCanvas extends View implements FrameRetrieval {
         invalRegion.set(0, 0, mBitmap.getWidth(), mBitmap.getHeight());
     }
 
+    private int penWidth = 12;
+
+    private void setPenWidth(int width) {
+        mPaint.setStrokeWidth(width);
+        penWidth = width;
+    }
+
     public void setPenOrEraser(int penIndex) {
-        // mPaint.setXfermode(null);
-        mPaint.setStrokeWidth(12);
+        setPenWidth(12);
 
         switch(penIndex) {
             case FloatingOverlay.PEN_INDEX_BLACK:
@@ -227,13 +236,8 @@ public class WhiteBoardCanvas extends View implements FrameRetrieval {
                 mPaint.setColor(Color.GREEN);
                 break;
             case FloatingOverlay.PEN_INDEX_ERASER:
-                /*
-                mPaint.setXfermode(new PorterDuffXfermode(
-                        PorterDuff.Mode.CLEAR));
-                        */
                 mPaint.setColor(Color.WHITE);
-                mPaint.setStrokeWidth(40);
-
+                setPenWidth(40);
                 break;
         }
     }
