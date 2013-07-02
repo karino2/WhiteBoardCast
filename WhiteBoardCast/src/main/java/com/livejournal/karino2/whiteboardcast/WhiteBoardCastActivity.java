@@ -168,7 +168,7 @@ public class WhiteBoardCastActivity extends Activity {
 
     public void startRecord() {
         timer = new Timer();
-        WhiteBoardCanvas wb = (WhiteBoardCanvas)findViewById(R.id.fullscreen_content);
+        WhiteBoardCanvas wb = getWhiteBoardCanvas();
         encoderTask = new EncoderTask(wb, wb.getBitmap());
         if(!encoderTask.initEncoder()) {
             showMessage("init encode fail");
@@ -190,6 +190,10 @@ public class WhiteBoardCastActivity extends Activity {
 
         timer.scheduleAtFixedRate(encoderTask, 0, 1000/FPS);
         showMessage("record start");
+    }
+
+    private WhiteBoardCanvas getWhiteBoardCanvas() {
+        return (WhiteBoardCanvas)findViewById(R.id.fullscreen_content);
     }
 
     private void beginAudioVideoMergeTask() {
@@ -216,6 +220,10 @@ public class WhiteBoardCastActivity extends Activity {
         MenuInflater inflater = getMenuInflater();
         inflater.inflate(R.menu.main_menu, menu);
         return true;
+    }
+
+    public void clearCanvas() {
+        getWhiteBoardCanvas().clearCanvas();
     }
 
     @Override

@@ -190,6 +190,8 @@ public class FloatingOverlay {
             activity.stopRecord();
         } else if (idx == TOOLBAR_MENU) {
             activity.toggleMenu();
+        } else if (idx == TOOLBAR_CLEAR) {
+            activity.clearCanvas();
         }
 
         return touching;

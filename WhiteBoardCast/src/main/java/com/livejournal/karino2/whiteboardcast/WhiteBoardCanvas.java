@@ -201,4 +201,9 @@ public class WhiteBoardCanvas extends View implements FrameRetrieval {
             invalRegion.set(0, 0, 0, 0);
         }
     }
+
+    public void clearCanvas() {
+        mBitmap.eraseColor(Color.WHITE);
+        invalRegion.set(0, 0, mBitmap.getWidth(), mBitmap.getHeight());
+    }
 }
