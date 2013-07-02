@@ -69,6 +69,7 @@ public class WhiteBoardCastActivity extends Activity {
     Handler handler = new Handler();
     VorbisMediaRecorder recorder;
 
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);

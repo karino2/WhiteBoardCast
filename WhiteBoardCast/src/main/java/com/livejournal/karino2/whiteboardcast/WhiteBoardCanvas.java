@@ -27,10 +27,15 @@ public class WhiteBoardCanvas extends View implements FrameRetrieval {
     private Paint mCursorPaint;
     private Rect invalRegion;
 
+    FloatingOverlay overlay;
+
+
     public WhiteBoardCanvas(Context context, AttributeSet attrs) {
         super(context, attrs);
         mPath = new Path();
         mBitmapPaint = new Paint(Paint.DITHER_FLAG);
+
+        overlay = new FloatingOverlay((WhiteBoardCastActivity)context, 0);
 
         mPaint = new Paint();
         mPaint.setAntiAlias(true);
@@ -61,6 +66,7 @@ public class WhiteBoardCanvas extends View implements FrameRetrieval {
         mX2 = mWidth-(CROSS_SIZE*2);
         mY2 = mHeight-(CROSS_SIZE*2);
         resetCanvas(w, h);
+        overlay.onSize(w, h);
     }
 
     public void resetCanvas() {
@@ -82,6 +88,7 @@ public class WhiteBoardCanvas extends View implements FrameRetrieval {
 
         canvas.drawPath(mPath, mPaint);
         canvas.drawOval(mBrushCursorRegion, mCursorPaint);
+        overlay.onDraw(canvas);
 
     }
 
@@ -117,6 +124,10 @@ public class WhiteBoardCanvas extends View implements FrameRetrieval {
         setBrushCursorPos(x, y);
         switch (event.getAction()) {
             case MotionEvent.ACTION_DOWN:
+                if(overlay.onTouchDown(x, y)) {
+                    invalidate();
+                    break;
+                }
                 mDownHandled = true;
                 mPath.reset();
                 mPath.moveTo(x, y);
@@ -125,6 +136,10 @@ public class WhiteBoardCanvas extends View implements FrameRetrieval {
                 invalidate();
                 break;
             case MotionEvent.ACTION_MOVE:
+                if(overlay.onTouchMove(x, y)) {
+                    invalidate();
+                    break;
+                }
                 if(!mDownHandled)
                     break;
                 float dx = Math.abs(x - mX);
@@ -139,6 +154,10 @@ public class WhiteBoardCanvas extends View implements FrameRetrieval {
                 invalidate();
                 break;
             case MotionEvent.ACTION_UP:
+                if(overlay.onTouchUp(x, y)) {
+                    invalidate();
+                    break;
+                }
                 if(!mDownHandled)
                     break;
                 mDownHandled = false;
