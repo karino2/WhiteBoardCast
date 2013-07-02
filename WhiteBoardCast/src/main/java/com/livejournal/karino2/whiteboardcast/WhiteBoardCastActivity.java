@@ -287,4 +287,8 @@ public class WhiteBoardCastActivity extends Activity {
         mHideHandler.removeCallbacks(mHideRunnable);
         mHideHandler.postDelayed(mHideRunnable, delayMillis);
     }
+
+    public void setPenOrEraser(int penIndex) {
+        getWhiteBoardCanvas().setPenOrEraser(penIndex);
+    }
 }

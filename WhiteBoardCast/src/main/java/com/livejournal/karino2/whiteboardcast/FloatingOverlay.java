@@ -6,7 +6,10 @@ import android.graphics.BitmapFactory;
 import android.graphics.Canvas;
 import android.graphics.Matrix;
 import android.graphics.Paint;
+import android.graphics.Rect;
 import android.util.DisplayMetrics;
+
+import java.util.ArrayList;
 
 /**
  * Created by karino on 7/2/13.
@@ -60,6 +63,13 @@ public class FloatingOverlay {
     final int TOOLBAR_CLEAR = 6;
     final int TOOLBAR_MENU = 7;
 
+    public static final int PEN_INDEX_BLACK = 0;
+    public static final int PEN_INDEX_RED = 1;
+    public static final int PEN_INDEX_BLUE = 2;
+    public static final int PEN_INDEX_GREEN = 3;
+    public static final int PEN_INDEX_ERASER = 4;
+
+
     Bitmap recordButton;
     Bitmap penButton;
     Bitmap undoButton;
@@ -67,6 +77,11 @@ public class FloatingOverlay {
     Bitmap doneButton;
     Bitmap clearButton;
     Bitmap menuButton;
+
+    Bitmap pullDownBG;
+    Bitmap pullDownHiglight;
+    Bitmap toolPen;
+    ArrayList<Bitmap> toolPenIcon;
 
     void initToolbarImage() {
         toolBar = Bitmap.createBitmap(toolHeight *8, toolHeight, Config.ARGB_8888);
@@ -80,8 +95,24 @@ public class FloatingOverlay {
         clearButton = floatResource(R.drawable.clear_button, toolHeight, toolHeight);
         menuButton = floatResource(R.drawable.menu_button, toolHeight, toolHeight);
 
+        pullDownBG = floatResource(R.drawable.pd_bg, toolHeight, toolHeight);
+        pullDownHiglight = floatResource(R.drawable.pd_hilight, toolHeight, toolHeight);
+
+        toolPenIcon = new ArrayList<Bitmap>();
+        toolPenIcon.add(floatResource(R.drawable.pen_black_button, toolHeight, toolHeight));
+        toolPenIcon.add(floatResource(R.drawable.pen_red_button, toolHeight, toolHeight));
+        toolPenIcon.add(floatResource(R.drawable.pen_blue_button, toolHeight, toolHeight));
+        toolPenIcon.add(floatResource(R.drawable.pen_green_button, toolHeight, toolHeight));
+        toolPenIcon.add(floatResource(R.drawable.eraser_button, toolHeight, toolHeight));
+        toolPen = Bitmap.createBitmap(toolHeight, toolHeight*toolPenIcon.size(), Config.ARGB_8888);
+
+
+
         updateToolbarImage();
     }
+
+    int subIndex = -1;
+    int penIndex = 0;
 
     private void updateToolbarImage() {
         Paint paint = new Paint();
@@ -89,12 +120,20 @@ public class FloatingOverlay {
         Canvas canvas = new Canvas(toolBar);
         canvas.drawBitmap(toolBarPanel, 0, 0, null);
         canvas.drawBitmap(recordButton, toolHeight, 0, null);
-        canvas.drawBitmap(penButton, toolHeight *2, 0, null);
+        canvas.drawBitmap(toolPenIcon.get(penIndex), toolHeight *2, 0, null);
         canvas.drawBitmap(undoButton, toolHeight *3, 0, null);
         canvas.drawBitmap(redoButton, toolHeight *4, 0, null);
         canvas.drawBitmap(doneButton, toolHeight *5, 0, null);
         canvas.drawBitmap(clearButton, toolHeight *6, 0, null);
         canvas.drawBitmap(menuButton, toolHeight *7, 0, null);
+
+        toolPen.eraseColor(0);
+        canvas = new Canvas(toolPen);
+        for(int i = 0; i < toolPenIcon.size(); i++) {
+            canvas.drawBitmap(pullDownBG, 0, toolHeight*i, paint);
+            canvas.drawBitmap(toolPenIcon.get(i), 0, toolHeight*i, paint);
+            if(i == subIndex) canvas.drawBitmap(pullDownHiglight, 0, toolHeight*i, paint);
+        }
     }
 
     WhiteBoardCastActivity activity;
@@ -149,10 +188,22 @@ public class FloatingOverlay {
         if (toolY < 0) toolY = 0;
     }
 
+    Rect popupRect = new Rect();
+
     public void onDraw( Canvas canvas )
     {
         forceToolPos();
         canvas.drawBitmap( toolBar, toolX, toolY, null );
+
+        if(penDown) {
+            Bitmap src = toolPen;
+            int x = toolX + toolHeight * TOOLBAR_PEN;
+            int y = toolY - src.getHeight();
+            if (toolY < height/2) y = toolY + toolHeight;
+            canvas.drawBitmap( src, x, y, null );
+
+            popupRect.set( x, y, x + src.getWidth(), y + src.getHeight() );
+        }
     }
 
     public Bitmap toolBitmap() { return toolBar; }
@@ -167,6 +218,8 @@ public class FloatingOverlay {
 
         return (int)((gx - toolX) / toolHeight);
     }
+
+    boolean penDown = false;
 
 
     // if return true, should not respond outsize.
@@ -192,6 +245,9 @@ public class FloatingOverlay {
             activity.toggleMenu();
         } else if (idx == TOOLBAR_CLEAR) {
             activity.clearCanvas();
+        } else if (idx == TOOLBAR_PEN) {
+            penDown = true;
+            updateToolbarImage();
         }
 
         return touching;
@@ -201,12 +257,21 @@ public class FloatingOverlay {
         int ix = (int)gx;
         int iy = (int)gy;
 
+        subIndex = -1;
+
         if (dragging)
         {
             toolX = (int)gx - touchOfsX;
             toolY = (int)gy - touchOfsY;
             forceToolPos();
         }
+
+        if (penDown)
+        {
+            if (popupRect.contains( ix, iy )) subIndex = (iy - popupRect.top) / toolHeight;
+            updateToolbarImage();
+        }
+
         return touching;
     }
 
@@ -216,6 +281,13 @@ public class FloatingOverlay {
         int iy = (int)gy;
         boolean res = touching;
 
+        if(penDown && subIndex != -1) {
+            penIndex = subIndex;
+            updateToolbarImage();
+            activity.setPenOrEraser(penIndex);
+        }
+
+        penDown = false;
 
         cancelOperation();
 

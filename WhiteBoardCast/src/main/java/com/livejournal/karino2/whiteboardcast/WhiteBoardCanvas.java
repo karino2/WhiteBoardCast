@@ -7,6 +7,8 @@ import android.graphics.Color;
 import android.graphics.DashPathEffect;
 import android.graphics.Paint;
 import android.graphics.Path;
+import android.graphics.PorterDuff;
+import android.graphics.PorterDuffXfermode;
 import android.graphics.Rect;
 import android.graphics.RectF;
 import android.util.AttributeSet;
@@ -205,5 +207,34 @@ public class WhiteBoardCanvas extends View implements FrameRetrieval {
     public void clearCanvas() {
         mBitmap.eraseColor(Color.WHITE);
         invalRegion.set(0, 0, mBitmap.getWidth(), mBitmap.getHeight());
+    }
+
+    public void setPenOrEraser(int penIndex) {
+        // mPaint.setXfermode(null);
+        mPaint.setStrokeWidth(12);
+
+        switch(penIndex) {
+            case FloatingOverlay.PEN_INDEX_BLACK:
+                mPaint.setColor(Color.DKGRAY);
+                break;
+            case FloatingOverlay.PEN_INDEX_BLUE:
+                mPaint.setColor(Color.BLUE);
+                break;
+            case FloatingOverlay.PEN_INDEX_RED:
+                mPaint.setColor(Color.MAGENTA);
+                break;
+            case FloatingOverlay.PEN_INDEX_GREEN:
+                mPaint.setColor(Color.GREEN);
+                break;
+            case FloatingOverlay.PEN_INDEX_ERASER:
+                /*
+                mPaint.setXfermode(new PorterDuffXfermode(
+                        PorterDuff.Mode.CLEAR));
+                        */
+                mPaint.setColor(Color.WHITE);
+                mPaint.setStrokeWidth(40);
+
+                break;
+        }
     }
 }
