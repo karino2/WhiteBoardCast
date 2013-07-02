@@ -13,6 +13,9 @@ import android.os.Bundle;
 import android.os.Environment;
 import android.os.Handler;
 import android.view.KeyEvent;
+import android.view.Menu;
+import android.view.MenuInflater;
+import android.view.MenuItem;
 import android.view.MotionEvent;
 import android.view.View;
 import android.widget.Button;
@@ -134,76 +137,59 @@ public class WhiteBoardCastActivity extends Activity {
             }
         });
 
-        // Upon interacting with UI controls, delay any scheduled hide()
-        // operations to prevent the jarring behavior of controls going away
-        // while interacting with the UI.
-        findViewById(R.id.record_start_button).setOnTouchListener(mDelayHideTouchListener);
-        findViewById(R.id.record_stop_button).setOnTouchListener(mDelayHideTouchListener);
+    }
 
-        findButton(R.id.record_start_button).setOnClickListener(new View.OnClickListener() {
+    public void stopRecord() {
+        showMessage("record end");
+        timer.cancel();
+        recorder.stop();
+        recorder.release();
+
+        if(!encoderTask.doneEncoder(new Encoder.FinalizeListener(){
             @Override
-            public void onClick(View view) {
-                timer = new Timer();
-                WhiteBoardCanvas wb = (WhiteBoardCanvas)findViewById(R.id.fullscreen_content);
-                encoderTask = new EncoderTask(wb, wb.getBitmap());
-                if(!encoderTask.initEncoder()) {
-                    showMessage("init encode fail");
-                    return;
-                }
-                recorder = new VorbisMediaRecorder();
-
-                recorder.setOutputFile(Environment.getExternalStorageDirectory() + "/" + AUDIO_FNAME);
-                try {
-                    recorder.prepare();
-                } catch (IOException e) {
-                    showMessage("IOException: MediaRecoder prepare fail: " + e.getMessage());
-                    return;
-                } catch (VorbisException e) {
-                    showMessage("VorbisException: MediaRecoder prepare fail: " + e.getMessage());
-                    return;
-                }
-                recorder.start();
-
-                timer.scheduleAtFixedRate(encoderTask, 0, 1000/FPS);
-                showMessage("record start");
-            }
-        });
-        findButton(R.id.record_stop_button).setOnClickListener(new View.OnClickListener(){
-            @Override
-            public void onClick(View view) {
-                showMessage("record end");
-                timer.cancel();
-                recorder.stop();
-                recorder.release();
-
-                if(!encoderTask.doneEncoder(new Encoder.FinalizeListener(){
+            public void done() {
+                beginAudioVideoMergeTask();
+                handler.postDelayed(new Runnable(){
                     @Override
-                    public void done() {
-                        beginAudioVideoMergeTask();
-                        handler.postDelayed(new Runnable(){
-                            @Override
-                            public void run() {
-                                // for debug.
-                                if(encoderTask.getErrorBuf().length() != 0) {
-                                    showMessage("deb error: " + encoderTask.getErrorBuf().toString());
-                                }
-
-                            }
-                        }, 0);
+                    public void run() {
+                        // for debug.
+                        if(encoderTask.getErrorBuf().length() != 0) {
+                            showMessage("deb error: " + encoderTask.getErrorBuf().toString());
+                        }
 
                     }
-                })) {
-                    showMessage("done encoder fail");
-                }
+                }, 0);
 
             }
-        });
-        findButton(R.id.merge_start_button).setOnClickListener(new View.OnClickListener(){
-            @Override
-            public void onClick(View view) {
-                beginAudioVideoMergeTask();
-            }
-        });
+        })) {
+            showMessage("done encoder fail");
+        }
+    }
+
+    public void startRecord() {
+        timer = new Timer();
+        WhiteBoardCanvas wb = (WhiteBoardCanvas)findViewById(R.id.fullscreen_content);
+        encoderTask = new EncoderTask(wb, wb.getBitmap());
+        if(!encoderTask.initEncoder()) {
+            showMessage("init encode fail");
+            return;
+        }
+        recorder = new VorbisMediaRecorder();
+
+        recorder.setOutputFile(Environment.getExternalStorageDirectory() + "/" + AUDIO_FNAME);
+        try {
+            recorder.prepare();
+        } catch (IOException e) {
+            showMessage("IOException: MediaRecoder prepare fail: " + e.getMessage());
+            return;
+        } catch (VorbisException e) {
+            showMessage("VorbisException: MediaRecoder prepare fail: " + e.getMessage());
+            return;
+        }
+        recorder.start();
+
+        timer.scheduleAtFixedRate(encoderTask, 0, 1000/FPS);
+        showMessage("record start");
     }
 
     private void beginAudioVideoMergeTask() {
@@ -214,10 +200,35 @@ public class WhiteBoardCastActivity extends Activity {
     public boolean dispatchKeyEvent(KeyEvent event) {
         if(event.getAction() == KeyEvent.ACTION_DOWN &&
                 event.getKeyCode() == KeyEvent.KEYCODE_MENU) {
-            mSystemUiHider.toggle();
+            toggleMenu();
             return true;
         }
         return super.dispatchKeyEvent(event);
+    }
+
+    public void toggleMenu() {
+        mSystemUiHider.toggle();
+        openOptionsMenu();
+    }
+
+    @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+        MenuInflater inflater = getMenuInflater();
+        inflater.inflate(R.menu.main_menu, menu);
+        return true;
+    }
+
+    @Override
+    public boolean onMenuItemSelected(int featureId, MenuItem item) {
+        switch(item.getItemId()) {
+            case R.id.menu_id_about:
+                showMessage("menu about!");
+                return true;
+            case R.id.menu_id_quit:
+                finish();
+                return true;
+        }
+        return super.onMenuItemSelected(featureId, item);
     }
 
     private final int FPS = 12;

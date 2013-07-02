@@ -52,12 +52,19 @@ public class FloatingOverlay {
     boolean dragging = false;
 
     final int TOOLBAR_HANDLE = 0;
+    final int TOOLBAR_RECORD = 1;
+    final int TOOLBAR_PEN = 2;
+    final int TOOLBAR_UNDO = 3;
+    final int TOOLBAR_REDO = 4;
+    final int TOOLBAR_DONE = 5;
+    final int TOOLBAR_CLEAR = 6;
+    final int TOOLBAR_MENU = 7;
 
     Bitmap recordButton;
     Bitmap penButton;
     Bitmap undoButton;
     Bitmap redoButton;
-    Bitmap stopButton;
+    Bitmap doneButton;
     Bitmap clearButton;
     Bitmap menuButton;
 
@@ -69,7 +76,7 @@ public class FloatingOverlay {
         penButton = floatResource(R.drawable.pen_button, toolHeight, toolHeight);
         undoButton = floatResource(R.drawable.undo_button, toolHeight, toolHeight);
         redoButton = floatResource(R.drawable.redo_button, toolHeight, toolHeight);
-        stopButton = floatResource(R.drawable.done_button, toolHeight, toolHeight);
+        doneButton = floatResource(R.drawable.done_button, toolHeight, toolHeight);
         clearButton = floatResource(R.drawable.clear_button, toolHeight, toolHeight);
         menuButton = floatResource(R.drawable.menu_button, toolHeight, toolHeight);
 
@@ -85,7 +92,7 @@ public class FloatingOverlay {
         canvas.drawBitmap(penButton, toolHeight *2, 0, null);
         canvas.drawBitmap(undoButton, toolHeight *3, 0, null);
         canvas.drawBitmap(redoButton, toolHeight *4, 0, null);
-        canvas.drawBitmap(stopButton, toolHeight *5, 0, null);
+        canvas.drawBitmap(doneButton, toolHeight *5, 0, null);
         canvas.drawBitmap(clearButton, toolHeight *6, 0, null);
         canvas.drawBitmap(menuButton, toolHeight *7, 0, null);
     }
@@ -175,6 +182,14 @@ public class FloatingOverlay {
         {
             touchOfsX = (int)gx - toolX;
             touchOfsY = (int)gy - toolY;
+        }
+
+        if (idx == TOOLBAR_RECORD) {
+            activity.startRecord();
+        } else if (idx == TOOLBAR_DONE) {
+            activity.stopRecord();
+        } else if (idx == TOOLBAR_MENU) {
+            activity.toggleMenu();
         }
 
         return touching;
