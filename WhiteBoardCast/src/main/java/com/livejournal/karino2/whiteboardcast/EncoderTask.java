@@ -41,9 +41,9 @@ public class EncoderTask extends TimerTask {
     static final int FPS_NUM = 24;
     static final int FPS_DENOM = 1;
 
-    public boolean initEncoder() {
+    public boolean initEncoder(long currentMill) {
         boolean res = encoder.initEncoder(Environment.getExternalStorageDirectory() + "/temp.webm", width, height, FPS_NUM, FPS_DENOM, errorBuf);
-        beginMillis = System.currentTimeMillis();
+        beginMillis = currentMill;
         return res;
     }
 

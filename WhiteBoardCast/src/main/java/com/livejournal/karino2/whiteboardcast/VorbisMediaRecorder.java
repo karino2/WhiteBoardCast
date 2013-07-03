@@ -17,6 +17,7 @@ import com.google.libwebm.mkvmuxer.SegmentInfo;
 import java.io.IOException;
 import java.io.RandomAccessFile;
 import java.lang.reflect.Array;
+import java.util.ArrayList;
 import java.util.Arrays;
 
 /**
@@ -35,6 +36,12 @@ public class VorbisMediaRecorder {
     int framePeriod;
     AudioRecord audioRecorder;
     byte[] buffer;
+    long beginMill;
+
+    public void setBeginMill(long beginMill) {
+        this.beginMill = beginMill;
+    }
+
     enum State {INITIALIZING, READY, RECORDING, ERROR, STOPPED};
     State state;
     String filePath;
@@ -155,6 +162,7 @@ public class VorbisMediaRecorder {
         public void onPeriodicNotification(AudioRecord audioRecord) {
             int readLen = audioRecorder.read(buffer, 0, buffer.length);
             if(readLen >= 0 ) {
+                long currentMil = System.currentTimeMillis();
                 byte[] buf;
                 if(readLen == buffer.length) {
                     buf = buffer;
@@ -167,17 +175,31 @@ public class VorbisMediaRecorder {
                 }
 
 
-                AudioFrame frame = null;
-                while ((frame = vorbisEncoder.ReadCompressedFrame()) != null) {
+                ArrayList<AudioFrame> frames = popAudioFrames();
+
+                long diff = currentMil - beginMill;
+                int frameNum = frames.size();
+                long frameNano = diff*1000000 - (frameNum*1000000000)/sampleRate;
+                for(AudioFrame frame: frames) {
                     if (!muxerSegment.addFrame(
-                            frame.buffer, newAudioTrackNumber, frame.pts, true)) {
+                            frame.buffer, newAudioTrackNumber, frameNano, true)) {
                         Log.d("WBCast", "Could not add audio frame.");
                         return;
                     }
+                    frameNano += (1000000000)/sampleRate;
                 }
             }
 
         }
     };
+
+    private ArrayList<AudioFrame> popAudioFrames() {
+        ArrayList<AudioFrame> frames = new ArrayList<AudioFrame>();
+        AudioFrame frame = null;
+        while ((frame = vorbisEncoder.ReadCompressedFrame()) != null) {
+            frames.add(frame);
+        }
+        return frames;
+    }
 
 }

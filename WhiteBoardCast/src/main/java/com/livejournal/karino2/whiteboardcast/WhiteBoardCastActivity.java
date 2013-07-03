@@ -92,12 +92,14 @@ public class WhiteBoardCastActivity extends Activity {
         timer = new Timer();
         WhiteBoardCanvas wb = getWhiteBoardCanvas();
         encoderTask = new EncoderTask(wb, wb.getBitmap());
-        if(!encoderTask.initEncoder()) {
+        long currentMill = System.currentTimeMillis();
+
+        if(!encoderTask.initEncoder(currentMill)) {
             showMessage("init encode fail");
             return;
         }
         recorder = new VorbisMediaRecorder();
-
+        recorder.setBeginMill(currentMill);
         recorder.setOutputFile(Environment.getExternalStorageDirectory() + "/" + AUDIO_FNAME);
         try {
             recorder.prepare();
