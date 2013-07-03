@@ -16,6 +16,8 @@ import com.google.libwebm.mkvmuxer.SegmentInfo;
 
 import java.io.IOException;
 import java.io.RandomAccessFile;
+import java.lang.reflect.Array;
+import java.util.Arrays;
 
 /**
  * Created by karino on 6/30/13.
@@ -122,6 +124,7 @@ public class VorbisMediaRecorder {
 
     public void stop()  {
         if(state == State.RECORDING) {
+            updateListener.onPeriodicNotification(audioRecorder);
             audioRecorder.stop();
 
             if (!muxerSegment.finalizeSegment()) {
@@ -150,19 +153,27 @@ public class VorbisMediaRecorder {
 
         @Override
         public void onPeriodicNotification(AudioRecord audioRecord) {
-            audioRecorder.read(buffer, 0, buffer.length);
-            if (!vorbisEncoder.Encode(buffer)) {
-                Log.d("WBCast", "Error encoding samples.");
-                return;
-            }
-
-
-            AudioFrame frame = null;
-            while ((frame = vorbisEncoder.ReadCompressedFrame()) != null) {
-                if (!muxerSegment.addFrame(
-                        frame.buffer, newAudioTrackNumber, frame.pts, true)) {
-                    Log.d("WBCast", "Could not add audio frame.");
+            int readLen = audioRecorder.read(buffer, 0, buffer.length);
+            if(readLen >= 0 ) {
+                byte[] buf;
+                if(readLen == buffer.length) {
+                    buf = buffer;
+                } else {
+                    buf = Arrays.copyOf(buffer, readLen);
+                }
+                if (!vorbisEncoder.Encode(buf)) {
+                    Log.d("WBCast", "Error encoding samples.");
                     return;
+                }
+
+
+                AudioFrame frame = null;
+                while ((frame = vorbisEncoder.ReadCompressedFrame()) != null) {
+                    if (!muxerSegment.addFrame(
+                            frame.buffer, newAudioTrackNumber, frame.pts, true)) {
+                        Log.d("WBCast", "Could not add audio frame.");
+                        return;
+                    }
                 }
             }
 
