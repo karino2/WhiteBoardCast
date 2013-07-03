@@ -31,6 +31,8 @@ public class WhiteBoardCanvas extends View implements FrameRetrieval {
 
     FloatingOverlay overlay;
 
+    static final int DEFAULT_PEN_WIDTH = 6;
+
 
     public WhiteBoardCanvas(Context context, AttributeSet attrs) {
         super(context, attrs);
@@ -40,13 +42,13 @@ public class WhiteBoardCanvas extends View implements FrameRetrieval {
         overlay = new FloatingOverlay((WhiteBoardCastActivity)context, 0);
 
         mPaint = new Paint();
+        mPaint.setColor(Color.DKGRAY);
         mPaint.setAntiAlias(true);
         mPaint.setDither(true);
-        mPaint.setColor(0xFF000000);
         mPaint.setStyle(Paint.Style.STROKE);
         mPaint.setStrokeJoin(Paint.Join.ROUND);
         mPaint.setStrokeCap(Paint.Cap.ROUND);
-        mPaint.setStrokeWidth(12);
+        mPaint.setStrokeWidth(DEFAULT_PEN_WIDTH);
         invalRegion = new Rect(0, 0, 0, 0);
 
         mCursorPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
@@ -212,7 +214,7 @@ public class WhiteBoardCanvas extends View implements FrameRetrieval {
         invalRegion.set(0, 0, mBitmap.getWidth(), mBitmap.getHeight());
     }
 
-    private int penWidth = 12;
+    private int penWidth = DEFAULT_PEN_WIDTH;
 
     private void setPenWidth(int width) {
         mPaint.setStrokeWidth(width);
@@ -220,7 +222,7 @@ public class WhiteBoardCanvas extends View implements FrameRetrieval {
     }
 
     public void setPenOrEraser(int penIndex) {
-        setPenWidth(12);
+        setPenWidth(DEFAULT_PEN_WIDTH);
 
         switch(penIndex) {
             case FloatingOverlay.PEN_INDEX_BLACK:
