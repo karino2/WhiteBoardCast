@@ -7,7 +7,10 @@ import com.livejournal.karino2.whiteboardcast.util.SystemUiHider;
 import android.annotation.TargetApi;
 import android.app.Activity;
 import android.app.ProgressDialog;
+import android.content.Intent;
 import android.media.MediaRecorder;
+import android.media.MediaScannerConnection;
+import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Environment;
@@ -21,6 +24,7 @@ import android.view.View;
 import android.widget.Button;
 import android.widget.Toast;
 
+import java.io.File;
 import java.io.IOException;
 import java.util.Timer;
 
@@ -106,8 +110,61 @@ public class WhiteBoardCastActivity extends Activity {
         return (WhiteBoardCanvas)findViewById(R.id.fullscreen_content);
     }
 
+    public String getResultPath() {
+        return Environment.getExternalStorageDirectory() + "/result.webm";
+    }
+
+    private void openVideo() {
+        new MediaScannerConnection.MediaScannerConnectionClient() {
+            private MediaScannerConnection msc = null;
+            {
+                msc = new MediaScannerConnection(
+                        getApplicationContext(), this);
+                msc.connect();
+            }
+
+            public void onMediaScannerConnected() {
+                msc.scanFile(getResultPath(), null);
+            }
+
+            public void onScanCompleted(String path, Uri uri) {
+                msc.disconnect();
+                handler.postDelayed(new Runnable(){
+                    @Override
+                    public void run() {
+                        openVideo2();
+                    }
+                }, 100);
+
+            }
+        };
+
+    }
+
+    private void openVideo2() {
+        Intent i = new Intent(Intent.ACTION_SEND, Uri.parse(getResultPath()));
+        i.setType("video/*");
+        // i.setType("video/x-matroska");
+                /*
+                i.setType("video/webm");
+                i.putExtra(Intent.EXTRA_STREAM, Uri.fromFile(new File(resultPath)));
+                */
+        // startActivity(i);
+        startActivity(Intent.createChooser(i, "Open result video"));
+    }
+
     private void beginAudioVideoMergeTask() {
-        new AudioVideoMergeTask(this).execute(Environment.getExternalStorageDirectory() + "/temp.webm", Environment.getExternalStorageDirectory() + "/" + AUDIO_FNAME, Environment.getExternalStorageDirectory() + "/result.webm");
+        new AudioVideoMergeTask(this, new AudioVideoMergeTask.NotifyFinishListener() {
+            @Override
+            public void onFinish() {
+                handler.postDelayed(new Runnable(){
+                    @Override
+                    public void run() {
+                        openVideo2();
+                    }
+                }, 500);
+            }
+        }).execute(Environment.getExternalStorageDirectory() + "/temp.webm", Environment.getExternalStorageDirectory() + "/" + AUDIO_FNAME, getResultPath());
     }
 
     @Override

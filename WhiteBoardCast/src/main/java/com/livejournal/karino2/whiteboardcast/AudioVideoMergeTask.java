@@ -31,11 +31,17 @@ import java.util.ArrayList;
  */
 public class AudioVideoMergeTask extends AsyncTask<String, Integer, String> {
 
+    public interface NotifyFinishListener {
+        void onFinish();
+    }
+
     private Context context;
+    NotifyFinishListener finishListener;
 
     private ProgressDialog dialog;
-    public AudioVideoMergeTask(Context ctx) {
+    public AudioVideoMergeTask(Context ctx, NotifyFinishListener listener) {
         context = ctx;
+        finishListener = listener;
         dialog = new ProgressDialog(ctx);
     }
 
@@ -245,6 +251,7 @@ public class AudioVideoMergeTask extends AsyncTask<String, Integer, String> {
             }
         }
 
+        finishListener.onFinish();
         return new String("Success!");
     }
 
