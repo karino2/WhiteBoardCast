@@ -6,6 +6,7 @@ import com.livejournal.karino2.whiteboardcast.util.SystemUiHider;
 
 import android.annotation.TargetApi;
 import android.app.Activity;
+import android.app.Dialog;
 import android.app.ProgressDialog;
 import android.content.Intent;
 import android.media.MediaRecorder;
@@ -53,7 +54,12 @@ public class WhiteBoardCastActivity extends Activity {
 
     }
 
+    boolean recording = false;
+
     public void stopRecord() {
+        if(!recording)
+            return;
+        recording = false;
         showMessage("record end, start post process...");
         timer.cancel();
         recorder.stop();
@@ -101,6 +107,7 @@ public class WhiteBoardCastActivity extends Activity {
             return;
         }
         recorder.start();
+        recording = true;
 
         timer.scheduleAtFixedRate(encoderTask, 0, 1000/FPS);
         showMessage("record start");
@@ -200,6 +207,9 @@ public class WhiteBoardCastActivity extends Activity {
                 return true;
             case R.id.menu_id_quit:
                 finish();
+                return true;
+            case R.id.menu_id_merge:
+                beginAudioVideoMergeTask();
                 return true;
         }
         return super.onMenuItemSelected(featureId, item);
