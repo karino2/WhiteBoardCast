@@ -6,8 +6,10 @@ import com.livejournal.karino2.whiteboardcast.util.SystemUiHider;
 
 import android.annotation.TargetApi;
 import android.app.Activity;
+import android.app.AlertDialog;
 import android.app.Dialog;
 import android.app.ProgressDialog;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.media.MediaRecorder;
 import android.media.MediaScannerConnection;
@@ -176,17 +178,26 @@ public class WhiteBoardCastActivity extends Activity {
 
     @Override
     public boolean dispatchKeyEvent(KeyEvent event) {
-        if(event.getAction() == KeyEvent.ACTION_DOWN &&
-                event.getKeyCode() == KeyEvent.KEYCODE_MENU) {
-            toggleMenu();
-            return true;
+        if(event.getAction() == KeyEvent.ACTION_DOWN)
+        {
+            switch(event.getKeyCode()) {
+                case KeyEvent.KEYCODE_BACK:
+                    new AlertDialog.Builder(this)
+                            .setIcon(android.R.drawable.ic_dialog_alert)
+                        .setMessage(R.string.query_back_message)
+                        .setCancelable(true)
+                        .setPositiveButton(android.R.string.yes, new DialogInterface.OnClickListener(){
+                            public void onClick(DialogInterface dialog, int which) {
+                                finish();
+                            }})
+                            .setNegativeButton(android.R.string.no, null)
+                            .show();
+                    return true;
+            }
         }
         return super.dispatchKeyEvent(event);
     }
 
-    public void toggleMenu() {
-        openOptionsMenu();
-    }
 
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {

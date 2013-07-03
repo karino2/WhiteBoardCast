@@ -242,7 +242,7 @@ public class FloatingOverlay {
         } else if (idx == TOOLBAR_DONE) {
             activity.stopRecord();
         } else if (idx == TOOLBAR_MENU) {
-            activity.toggleMenu();
+            activity.openOptionsMenu();
         } else if (idx == TOOLBAR_CLEAR) {
             activity.clearCanvas();
         } else if (idx == TOOLBAR_PEN) {
