@@ -145,15 +145,24 @@ public class WebmReader {
         return block.getTime(cluster);
     }
 
+    boolean done = false;
+    public boolean isDone() {
+        return done;
+    }
+
     int frameCount;
     int currentFrame;
     public byte[] popFrame() {
         if(currentFrame == frameCount) {
             if(!gotoNextBlockEntry()){
-                if(!gotoNextCluster())
+                if(!gotoNextCluster()) {
+                    done = true;
                     return null;
-                if(!initFrameQueue())
-                     return null;
+                }
+                if(!initFrameQueue()) {
+                    done = true;
+                    return null;
+                }
                 // fall through
             }
         }
