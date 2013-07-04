@@ -123,7 +123,8 @@ public class WhiteBoardCastActivity extends Activity {
 
 
     public void startRecord() {
-        if(recStats != RecordStatus.DORMANT) {
+        if(recStats != RecordStatus.DORMANT &&
+                recStats != RecordStatus.DONE) {
             Log.d("WBCast", "record start but status is not dormant: " + recStats);
             return;
         }
