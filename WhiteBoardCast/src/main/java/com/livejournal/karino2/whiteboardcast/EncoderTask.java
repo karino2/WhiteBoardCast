@@ -20,7 +20,7 @@ import java.util.TimerTask;
 /**
  * Created by karino on 6/26/13.
  */
-public class EncoderTask extends TimerTask {
+public class EncoderTask implements Runnable {
 
     Bitmap bitmap;
     FrameRetrieval retrieval;
@@ -89,4 +89,12 @@ public class EncoderTask extends TimerTask {
         return errorBuf;
     }
 
+    public void stop() {
+        // do nothing.
+    }
+
+    public void resume(long suspendedDurMil) {
+        beginMillis += suspendedDurMil;
+
+    }
 }

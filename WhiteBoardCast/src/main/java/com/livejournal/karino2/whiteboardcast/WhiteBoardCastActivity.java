@@ -1,42 +1,36 @@
 package com.livejournal.karino2.whiteboardcast;
 
 import com.google.libvorbis.VorbisException;
-import com.google.libwebm.mkvmuxer.MkvMuxer;
-import com.livejournal.karino2.whiteboardcast.util.SystemUiHider;
 
-import android.annotation.TargetApi;
 import android.app.Activity;
 import android.app.AlertDialog;
-import android.app.Dialog;
-import android.app.ProgressDialog;
 import android.content.DialogInterface;
 import android.content.Intent;
-import android.media.MediaRecorder;
 import android.media.MediaScannerConnection;
 import android.net.Uri;
-import android.os.Build;
 import android.os.Bundle;
 import android.os.Environment;
 import android.os.Handler;
+import android.util.Log;
 import android.view.KeyEvent;
 import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
-import android.view.MotionEvent;
-import android.view.View;
 import android.widget.Button;
 import android.widget.Toast;
 
-import java.io.File;
 import java.io.IOException;
-import java.util.Timer;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
 
 public class WhiteBoardCastActivity extends Activity {
 
 
     private static final String AUDIO_FNAME = "temp.mkv";
 
-    private Timer timer = null;
+    private ScheduledExecutorService scheduleExecuter = null;
     private EncoderTask encoderTask = null;
 
     public void showMessage(String msg) {
@@ -47,6 +41,7 @@ public class WhiteBoardCastActivity extends Activity {
 
     Handler handler = new Handler();
     VorbisMediaRecorder recorder;
+    Future<?> futuer = null;
 
 
     @Override
@@ -56,16 +51,20 @@ public class WhiteBoardCastActivity extends Activity {
 
     }
 
-    boolean recording = false;
 
     public void stopRecord() {
-        if(!recording)
+        if(recStats != RecordStatus.RECORDING) {
+            Log.d("WBCast", "stop record called but not recording. " + recStats);
             return;
-        recording = false;
+        }
+        // under processing.
+        changeRecStatus(RecordStatus.DONE_PROCESS);
         showMessage("record end, start post process...");
-        timer.cancel();
+        scheduleExecuter.shutdown();
+        scheduleExecuter = Executors.newSingleThreadScheduledExecutor();
         recorder.stop();
         recorder.release();
+        changeRecStatus(RecordStatus.DONE);
 
         if(!encoderTask.doneEncoder(new Encoder.FinalizeListener(){
             @Override
@@ -88,9 +87,60 @@ public class WhiteBoardCastActivity extends Activity {
         }
     }
 
+    public enum RecordStatus {
+        DORMANT, SETUP, RECORDING, PAUSE, DONE_PROCESS, DONE
+    }
+    RecordStatus recStats = RecordStatus.DORMANT;
+
+    public RecordStatus getRecStats() {
+        return recStats;
+    }
+
+    void changeRecStatus(RecordStatus stats) {
+        recStats = stats;
+        getWhiteBoardCanvas().changeRecStatus(stats);
+    }
+
+    public void pauseRecord() {
+        changeRecStatus(RecordStatus.PAUSE);
+        futuer.cancel(false);
+        futuer = null;
+        recorder.stop();
+        encoderTask.stop();
+        showMessage("pause");
+    }
+
+    public void resumeRecord() {
+        long suspendedBegin = recorder.lastBlockEndMil();
+        long suspendedDur = System.currentTimeMillis() - suspendedBegin;
+        recorder.resume(suspendedDur);
+        encoderTask.resume(suspendedDur);
+        scheduleEncodeTask();
+        changeRecStatus(RecordStatus.RECORDING);
+        showMessage("resume");
+    }
+
+
+
     public void startRecord() {
-        timer = new Timer();
+        if(recStats != RecordStatus.DORMANT) {
+            Log.d("WBCast", "record start but status is not dormant: " + recStats);
+            return;
+        }
+        changeRecStatus(RecordStatus.SETUP);
+        scheduleExecuter = Executors.newSingleThreadScheduledExecutor();
+        handler.post(new Runnable() {
+            @Override
+            public void run() {
+                // this method take some times. so get it back to UI first for update overlay.
+                startRecordSecondPhase();
+            }
+        });
+    }
+
+    private void startRecordSecondPhase() {
         WhiteBoardCanvas wb = getWhiteBoardCanvas();
+        wb.setWholeAreaInvalidate(); // for restart. make it a little heavy.
         encoderTask = new EncoderTask(wb, wb.getBitmap());
         long currentMill = System.currentTimeMillis();
 
@@ -111,10 +161,14 @@ public class WhiteBoardCastActivity extends Activity {
             return;
         }
         recorder.start();
-        recording = true;
 
-        timer.scheduleAtFixedRate(encoderTask, 0, 1000/FPS);
+        scheduleEncodeTask();
+        changeRecStatus(RecordStatus.RECORDING);
         showMessage("record start");
+    }
+
+    private void scheduleEncodeTask() {
+        futuer = scheduleExecuter.scheduleAtFixedRate(encoderTask, 0, 1000 / FPS, TimeUnit.MILLISECONDS);
     }
 
     private WhiteBoardCanvas getWhiteBoardCanvas() {

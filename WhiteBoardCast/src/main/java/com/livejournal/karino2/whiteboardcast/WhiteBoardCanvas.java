@@ -197,6 +197,10 @@ public class WhiteBoardCanvas extends View implements FrameRetrieval {
 
     public Bitmap getBitmap() { return mBitmap;}
 
+    public void setWholeAreaInvalidate() {
+        invalRegion.set(0, 0, mWidth, mHeight);
+    }
+
     @Override
     public void pullUpdateRegion(int[] pixelBufs, Rect inval) {
         synchronized(mBitmap) {
@@ -242,5 +246,10 @@ public class WhiteBoardCanvas extends View implements FrameRetrieval {
                 setPenWidth(40);
                 break;
         }
+    }
+
+    public void changeRecStatus(WhiteBoardCastActivity.RecordStatus recStats) {
+        overlay.changeRecStatus();
+        invalidate();
     }
 }

@@ -122,10 +122,20 @@ public class VorbisMediaRecorder {
 
 
     public void start() {
-        if(state == State.READY) {
+        if(state == State.READY ||
+                state == State.STOPPED) {
             audioRecorder.startRecording();
             audioRecorder.read(buffer, 0, buffer.length);
             state = State.RECORDING;
+        }
+    }
+
+    public void resume(long pasuedMil) {
+        if(state == State.STOPPED) {
+            beginMill += pasuedMil;
+            start();
+        } else {
+            Log.d("WBCast", "VorbisRec: resume call but state is not stopped: " + state);
         }
     }
 
@@ -134,12 +144,6 @@ public class VorbisMediaRecorder {
             updateListener.onPeriodicNotification(audioRecorder);
             audioRecorder.stop();
 
-            if (!muxerSegment.finalizeSegment()) {
-                throw new RuntimeException("Finalization of segment failed.");
-            }
-            if (mkvWriter != null) {
-                mkvWriter.close();
-            }
             state = State.STOPPED;
         }
     }
@@ -147,6 +151,12 @@ public class VorbisMediaRecorder {
     public void release() {
         if(state == State.RECORDING) {
             stop();
+        }
+        if (!muxerSegment.finalizeSegment()) {
+            throw new RuntimeException("Finalization of segment failed.");
+        }
+        if (mkvWriter != null) {
+            mkvWriter.close();
         }
         audioRecorder.release();
     }
@@ -194,6 +204,10 @@ public class VorbisMediaRecorder {
 
         }
     };
+
+    public long lastBlockEndMil() {
+        return beginMill + prevBlockEndNano/1000000;
+    }
 
     private ArrayList<AudioFrame> popAudioFrames() {
         ArrayList<AudioFrame> frames = new ArrayList<AudioFrame>();

@@ -69,9 +69,12 @@ public class FloatingOverlay {
     public static final int PEN_INDEX_GREEN = 3;
     public static final int PEN_INDEX_ERASER = 4;
 
+    static final int REC_NORMAL = 0;
+    static final int REC_SETUP = 1;
+    static final int REC_PAUSE = 2;
 
-    Bitmap recordButton;
-    Bitmap penButton;
+
+    ArrayList<Bitmap> recIcon;
     Bitmap undoButton;
     Bitmap redoButton;
     Bitmap doneButton;
@@ -87,8 +90,6 @@ public class FloatingOverlay {
         toolBar = Bitmap.createBitmap(toolHeight *8, toolHeight, Config.ARGB_8888);
         toolBarPanel = floatResource(R.drawable.float_base, toolHeight *8, toolHeight);
 
-        recordButton = floatResource(R.drawable.rec_button, toolHeight, toolHeight);
-        penButton = floatResource(R.drawable.pen_button, toolHeight, toolHeight);
         undoButton = floatResource(R.drawable.undo_button, toolHeight, toolHeight);
         redoButton = floatResource(R.drawable.redo_button, toolHeight, toolHeight);
         doneButton = floatResource(R.drawable.done_button, toolHeight, toolHeight);
@@ -106,6 +107,10 @@ public class FloatingOverlay {
         toolPenIcon.add(floatResource(R.drawable.eraser_button, toolHeight, toolHeight));
         toolPen = Bitmap.createBitmap(toolHeight, toolHeight*toolPenIcon.size(), Config.ARGB_8888);
 
+        recIcon = new ArrayList<Bitmap>();
+        recIcon.add(floatResource(R.drawable.rec_button, toolHeight, toolHeight));
+        recIcon.add(floatResource(R.drawable.rec_setupping, toolHeight, toolHeight));
+        recIcon.add(floatResource(R.drawable.pause_button, toolHeight, toolHeight));
 
 
         updateToolbarImage();
@@ -119,14 +124,21 @@ public class FloatingOverlay {
         toolBar.eraseColor(0);
         Canvas canvas = new Canvas(toolBar);
         canvas.drawBitmap(toolBarPanel, 0, 0, null);
-        canvas.drawBitmap(recordButton, toolHeight, 0, null);
-        canvas.drawBitmap(toolPenIcon.get(penIndex), toolHeight *2, 0, null);
-        canvas.drawBitmap(undoButton, toolHeight *3, 0, null);
-        canvas.drawBitmap(redoButton, toolHeight *4, 0, null);
-        canvas.drawBitmap(doneButton, toolHeight *5, 0, null);
-        canvas.drawBitmap(clearButton, toolHeight *6, 0, null);
-        canvas.drawBitmap(menuButton, toolHeight *7, 0, null);
 
+        canvas.drawBitmap(getRecIcon(), toolHeight, 0, null);
+
+        canvas.drawBitmap(toolPenIcon.get(penIndex), toolHeight * 2, 0, null);
+        canvas.drawBitmap(undoButton, toolHeight * 3, 0, null);
+        canvas.drawBitmap(redoButton, toolHeight * 4, 0, null);
+        canvas.drawBitmap(doneButton, toolHeight * 5, 0, null);
+        canvas.drawBitmap(clearButton, toolHeight * 6, 0, null);
+        canvas.drawBitmap(menuButton, toolHeight * 7, 0, null);
+
+        updateToolPenImage(paint);
+    }
+
+    private void updateToolPenImage(Paint paint) {
+        Canvas canvas;
         toolPen.eraseColor(0);
         canvas = new Canvas(toolPen);
         for(int i = 0; i < toolPenIcon.size(); i++) {
@@ -238,7 +250,7 @@ public class FloatingOverlay {
         }
 
         if (idx == TOOLBAR_RECORD) {
-            activity.startRecord();
+            handleRecordButtonPressed();
         } else if (idx == TOOLBAR_DONE) {
             activity.stopRecord();
         } else if (idx == TOOLBAR_MENU) {
@@ -252,6 +264,27 @@ public class FloatingOverlay {
 
         return touching;
     }
+
+    private void handleRecordButtonPressed() {
+        WhiteBoardCastActivity.RecordStatus stats = activity.getRecStats();
+
+        switch(stats) {
+            case DORMANT:
+            case DONE:
+                activity.startRecord();
+                break;
+            case PAUSE:
+                activity.resumeRecord();
+                break;
+            case RECORDING:
+                activity.pauseRecord();
+                break;
+            case SETUP:
+            case DONE_PROCESS:
+                break; // do nothing.
+        }
+    }
+
     public boolean onTouchMove( float gx, float gy )
     {
         int ix = (int)gx;
@@ -299,4 +332,25 @@ public class FloatingOverlay {
         touching = false;
         dragging = false;
     }
- }
+
+    public void changeRecStatus() {
+        updateToolbarImage();
+    }
+
+    public Bitmap getRecIcon() {
+        WhiteBoardCastActivity.RecordStatus stats = activity.getRecStats();
+
+        switch(stats) {
+            case SETUP:
+            case DONE_PROCESS:
+                return recIcon.get(REC_SETUP);
+            case DONE:
+            case RECORDING:
+                return recIcon.get(REC_PAUSE);
+            case DORMANT:
+            case PAUSE:
+            default:
+                return recIcon.get(REC_NORMAL);
+        }
+    }
+}
