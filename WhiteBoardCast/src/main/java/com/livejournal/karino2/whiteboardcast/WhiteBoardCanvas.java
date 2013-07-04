@@ -21,8 +21,10 @@ import android.view.View;
  */
 public class WhiteBoardCanvas extends View implements FrameRetrieval {
 
-    private Bitmap mBitmap;
+    Bitmap viewBmp;
+    Bitmap commitedBmp;
     private Canvas mCanvas;
+    Canvas commitedCanvas;
     private Path mPath;
     private Paint mBitmapPaint;
     private Paint       mPaint;
@@ -32,7 +34,7 @@ public class WhiteBoardCanvas extends View implements FrameRetrieval {
     FloatingOverlay overlay;
 
     static final int DEFAULT_PEN_WIDTH = 6;
-
+    UndoList undoList = new UndoList();
 
     public WhiteBoardCanvas(Context context, AttributeSet attrs) {
         super(context, attrs);
@@ -74,24 +76,30 @@ public class WhiteBoardCanvas extends View implements FrameRetrieval {
     }
 
     public void resetCanvas() {
-        resetCanvas(mBitmap.getWidth(), mBitmap.getHeight());
+        resetCanvas(viewBmp.getWidth(), viewBmp.getHeight());
         invalidate();
     }
     public void resetCanvas(int w, int h) {
-        mBitmap = Bitmap.createBitmap(w, h, Bitmap.Config.ARGB_8888);
-        mBitmap.eraseColor(Color.WHITE);
-        mCanvas = new Canvas(mBitmap);
+        viewBmp = Bitmap.createBitmap(w, h, Bitmap.Config.ARGB_8888);
+        viewBmp.eraseColor(Color.WHITE);
+        commitedBmp = Bitmap.createBitmap(w, h, Bitmap.Config.ARGB_8888);
+        commitedBmp.eraseColor(Color.WHITE);
+        mCanvas = new Canvas(viewBmp);
+        commitedCanvas = new Canvas(commitedBmp);
     }
 
     protected void onDraw(Canvas canvas) {
         canvas.drawColor(0xFFFFFFFF);
 
-        synchronized(mBitmap) {
-            canvas.drawBitmap(mBitmap, 0, 0, mBitmapPaint);
+        synchronized(viewBmp) {
+            canvas.drawBitmap(viewBmp, 0, 0, mBitmapPaint);
         }
 
-        canvas.drawPath(mPath, mPaint);
+        // canvas.drawPath(mPath, mPaint);
+
+        // should write to viewBmp. but later.
         canvas.drawOval(mBrushCursorRegion, mCursorPaint);
+
         overlay.onDraw(canvas);
 
     }
@@ -169,7 +177,13 @@ public class WhiteBoardCanvas extends View implements FrameRetrieval {
                     break;
                 mDownHandled = false;
                 mPath.lineTo(mX, mY);
-                updateInvalRegion();
+
+                Rect region = pathBound();
+                Bitmap undo = Bitmap.createBitmap(commitedBmp, region.left, region.top, region.width(), region.height() );
+                commitedCanvas.drawPath(mPath, mPaint);
+                Bitmap redo = Bitmap.createBitmap(commitedBmp, region.left, region.top, region.width(), region.height());
+                undoList.pushUndoCommand(region.left, region.top, undo, redo);
+                invalRegion.union(region);
                 mCanvas.drawPath(mPath, mPaint);
                 mPath.reset();
                 invalidate();
@@ -179,11 +193,18 @@ public class WhiteBoardCanvas extends View implements FrameRetrieval {
 
     }
 
-    private void updateInvalRegion() {
+
+
+    private Rect pathBound() {
         mPath.computeBounds(invalF, false);
         invalF.roundOut(tmpInval);
         widen(tmpInval);
-        invalRegion.union(tmpInval);
+        return tmpInval;
+    }
+
+
+    private void updateInvalRegion() {
+        invalRegion.union(pathBound());
     }
 
     static final int BRUSH_WIDTH = 6;
@@ -195,27 +216,50 @@ public class WhiteBoardCanvas extends View implements FrameRetrieval {
         tmpInval.set(newLeft, newTop, newRight, newBottom);
     }
 
-    public Bitmap getBitmap() { return mBitmap;}
+    public Bitmap getBitmap() { return viewBmp;}
 
     public void setWholeAreaInvalidate() {
         invalRegion.set(0, 0, mWidth, mHeight);
     }
 
+    public boolean canUndo() {
+        return undoList.canUndo();
+    }
+
+    public void undo() {
+        Rect undoInval = undoList.undo(commitedCanvas, mPaint);
+        afterUndoRedo(undoInval);
+    }
+
+    public void redo() {
+        Rect undoInval = undoList.redo(commitedCanvas, mPaint);
+        afterUndoRedo(undoInval);
+    }
+
+    private void afterUndoRedo(Rect undoInval) {
+        synchronized (viewBmp) {
+            mCanvas.drawBitmap(commitedBmp, undoInval, undoInval, mPaint);
+            invalRegion.union(undoInval);
+        }
+        invalidate(undoInval);
+    }
+
+
     @Override
     public void pullUpdateRegion(int[] pixelBufs, Rect inval) {
-        synchronized(mBitmap) {
+        synchronized(viewBmp) {
             inval.set(invalRegion);
-            int stride = mBitmap.getWidth();
+            int stride = viewBmp.getWidth();
             int offset = inval.left+inval.top*stride;
-            mBitmap.getPixels(pixelBufs, offset, stride,  inval.left, inval.top, inval.width(), inval.height());
+            viewBmp.getPixels(pixelBufs, offset, stride,  inval.left, inval.top, inval.width(), inval.height());
 
             invalRegion.set(0, 0, 0, 0);
         }
     }
 
     public void clearCanvas() {
-        mBitmap.eraseColor(Color.WHITE);
-        invalRegion.set(0, 0, mBitmap.getWidth(), mBitmap.getHeight());
+        viewBmp.eraseColor(Color.WHITE);
+        invalRegion.set(0, 0, viewBmp.getWidth(), viewBmp.getHeight());
     }
 
     private int penWidth = DEFAULT_PEN_WIDTH;
@@ -252,4 +296,9 @@ public class WhiteBoardCanvas extends View implements FrameRetrieval {
         overlay.changeRecStatus();
         invalidate();
     }
+
+    public boolean canRedo() {
+        return undoList.canRedo();
+    }
+
 }

@@ -51,6 +51,15 @@ public class WhiteBoardCastActivity extends Activity {
 
     }
 
+    public boolean canUndo() {
+        return getWhiteBoardCanvas().canUndo();
+    }
+
+    public void undo() {
+        getWhiteBoardCanvas().undo();
+    }
+
+
 
     public void stopRecord() {
         if(recStats != RecordStatus.RECORDING) {
@@ -85,6 +94,14 @@ public class WhiteBoardCastActivity extends Activity {
         })) {
             showMessage("done encoder fail");
         }
+    }
+
+    public boolean canRedo() {
+        return getWhiteBoardCanvas().canRedo();
+    }
+
+    public void redo() {
+        getWhiteBoardCanvas().redo();
     }
 
     public enum RecordStatus {
@@ -128,6 +145,7 @@ public class WhiteBoardCastActivity extends Activity {
             Log.d("WBCast", "record start but status is not dormant: " + recStats);
             return;
         }
+        showMessage("setup...");
         changeRecStatus(RecordStatus.SETUP);
         scheduleExecuter = Executors.newSingleThreadScheduledExecutor();
         handler.post(new Runnable() {

@@ -260,6 +260,12 @@ public class FloatingOverlay {
         } else if (idx == TOOLBAR_PEN) {
             penDown = true;
             updateToolbarImage();
+        } else if (idx == TOOLBAR_UNDO) {
+            if(activity.canUndo())
+                activity.undo(); // should updateToolBarImage.
+        } else if (idx == TOOLBAR_REDO) {
+            if(activity.canRedo())
+                activity.redo();
         }
 
         return touching;
