@@ -121,6 +121,9 @@ public class FloatingOverlay {
 
     private void updateToolbarImage() {
         Paint paint = new Paint();
+        Paint disablePaint = new Paint();
+        disablePaint.setAlpha(32);
+
         toolBar.eraseColor(0);
         Canvas canvas = new Canvas(toolBar);
         canvas.drawBitmap(toolBarPanel, 0, 0, null);
@@ -128,8 +131,12 @@ public class FloatingOverlay {
         canvas.drawBitmap(getRecIcon(), toolHeight, 0, null);
 
         canvas.drawBitmap(toolPenIcon.get(penIndex), toolHeight * 2, 0, null);
-        canvas.drawBitmap(undoButton, toolHeight * 3, 0, null);
-        canvas.drawBitmap(redoButton, toolHeight * 4, 0, null);
+
+        Paint undoPaint = activity.canUndo()? null: disablePaint;
+        Paint redoPaint = activity.canRedo()? null: disablePaint;
+        canvas.drawBitmap(undoButton, toolHeight * 3, 0, undoPaint);
+        canvas.drawBitmap(redoButton, toolHeight * 4, 0, redoPaint);
+
         canvas.drawBitmap(doneButton, toolHeight * 5, 0, null);
         canvas.drawBitmap(clearButton, toolHeight * 6, 0, null);
         canvas.drawBitmap(menuButton, toolHeight * 7, 0, null);
@@ -261,11 +268,15 @@ public class FloatingOverlay {
             penDown = true;
             updateToolbarImage();
         } else if (idx == TOOLBAR_UNDO) {
-            if(activity.canUndo())
-                activity.undo(); // should updateToolBarImage.
+            if(activity.canUndo()) {
+                activity.undo();
+                updateToolbarImage();
+            }
         } else if (idx == TOOLBAR_REDO) {
-            if(activity.canRedo())
+            if(activity.canRedo()) {
                 activity.redo();
+                updateToolbarImage();
+            }
         }
 
         return touching;
@@ -340,6 +351,10 @@ public class FloatingOverlay {
     }
 
     public void changeRecStatus() {
+        updateToolbarImage();
+    }
+
+    public void changeUndoStatus() {
         updateToolbarImage();
     }
 

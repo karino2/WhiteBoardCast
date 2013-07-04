@@ -178,6 +178,7 @@ public class WhiteBoardCanvas extends View implements FrameRetrieval {
                 mDownHandled = false;
                 mPath.lineTo(mX, mY);
 
+                boolean canUndoBefore = undoList.canUndo();
                 Rect region = pathBound();
                 Bitmap undo = Bitmap.createBitmap(commitedBmp, region.left, region.top, region.width(), region.height() );
                 commitedCanvas.drawPath(mPath, mPaint);
@@ -186,6 +187,9 @@ public class WhiteBoardCanvas extends View implements FrameRetrieval {
                 invalRegion.union(region);
                 mCanvas.drawPath(mPath, mPaint);
                 mPath.reset();
+                if(undoList.canUndo() != canUndoBefore) {
+                    overlay.changeUndoStatus();
+                }
                 invalidate();
                 break;
         }

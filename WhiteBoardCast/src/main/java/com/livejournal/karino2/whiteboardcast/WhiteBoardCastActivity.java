@@ -52,7 +52,10 @@ public class WhiteBoardCastActivity extends Activity {
     }
 
     public boolean canUndo() {
-        return getWhiteBoardCanvas().canUndo();
+        WhiteBoardCanvas wb = getWhiteBoardCanvas();
+        if(wb == null)
+            return false;
+        return wb.canUndo();
     }
 
     public void undo() {
@@ -97,7 +100,10 @@ public class WhiteBoardCastActivity extends Activity {
     }
 
     public boolean canRedo() {
-        return getWhiteBoardCanvas().canRedo();
+        WhiteBoardCanvas wb = getWhiteBoardCanvas();
+        if(wb == null)
+            return false;
+        return wb.canRedo();
     }
 
     public void redo() {
