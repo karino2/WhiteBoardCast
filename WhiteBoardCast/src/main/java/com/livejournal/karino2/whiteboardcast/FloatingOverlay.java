@@ -344,9 +344,9 @@ public class FloatingOverlay {
             case SETUP:
             case DONE_PROCESS:
                 return recIcon.get(REC_SETUP);
-            case DONE:
             case RECORDING:
                 return recIcon.get(REC_PAUSE);
+            case DONE:
             case DORMANT:
             case PAUSE:
             default:
