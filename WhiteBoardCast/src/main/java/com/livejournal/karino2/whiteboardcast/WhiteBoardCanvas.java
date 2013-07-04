@@ -179,6 +179,7 @@ public class WhiteBoardCanvas extends View implements FrameRetrieval {
                 mPath.lineTo(mX, mY);
 
                 boolean canUndoBefore = undoList.canUndo();
+
                 Rect region = pathBound();
                 Bitmap undo = Bitmap.createBitmap(commitedBmp, region.left, region.top, region.width(), region.height() );
                 commitedCanvas.drawPath(mPath, mPaint);
@@ -262,8 +263,18 @@ public class WhiteBoardCanvas extends View implements FrameRetrieval {
     }
 
     public void clearCanvas() {
+        boolean canUndoBefore = undoList.canUndo();
+        Bitmap undo = Bitmap.createBitmap(commitedBmp, 0, 0, viewBmp.getWidth(), viewBmp.getHeight() );
+
+        commitedBmp.eraseColor(Color.WHITE);
         viewBmp.eraseColor(Color.WHITE);
         invalRegion.set(0, 0, viewBmp.getWidth(), viewBmp.getHeight());
+
+        Bitmap redo = Bitmap.createBitmap(commitedBmp, 0, 0, viewBmp.getWidth(), viewBmp.getHeight() );
+        undoList.pushUndoCommand(0, 0, undo, redo);
+        if(undoList.canUndo() != canUndoBefore) {
+            overlay.changeUndoStatus();
+        }
     }
 
     private int penWidth = DEFAULT_PEN_WIDTH;

@@ -1,11 +1,14 @@
 package com.livejournal.karino2.whiteboardcast;
 
 import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.graphics.Canvas;
 import android.graphics.Paint;
 import android.graphics.Rect;
 import android.graphics.RectF;
 
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -15,26 +18,47 @@ import java.util.List;
 public class UndoList {
 
     class UndoCommand {
-        Bitmap undoBmp;
-        Bitmap redoBmp;
-        int x, y;
+        byte[] undoBuf;
+        byte[] redoBuf;
+        int x, y, width, height;
+
+        byte[] convertToPngBytes(Bitmap bmp) {
+            ByteArrayOutputStream os = new ByteArrayOutputStream();
+            bmp.compress(Bitmap.CompressFormat.PNG, 100, os);
+            return os.toByteArray();
+        }
+
         UndoCommand(int x, int y, Bitmap undo, Bitmap redo) {
             this.x = x;
             this.y = y;
-            undoBmp = undo;
-            redoBmp = redo;
-
+            width = undo.getWidth();
+            height = undo.getHeight();
+            undoBuf = convertToPngBytes(undo);
+            redoBuf = convertToPngBytes(redo);
         }
+
+        Bitmap decodeUndoBmp() {
+            return decodePng(undoBuf);
+        }
+        Bitmap decodeRedoBmp() {
+            return decodePng(redoBuf);
+        }
+
+        private Bitmap decodePng(byte[] buf) {
+            ByteArrayInputStream is = new ByteArrayInputStream(buf);
+            return BitmapFactory.decodeStream(is);
+        }
+
         int getByteSize() {
-            return undoBmp.getByteCount()+redoBmp.getByteCount();
+            return undoBuf.length+redoBuf.length;
         }
         Rect undo(Canvas target, Paint paint) {
-            target.drawBitmap(undoBmp, x, y, paint );
-            return new Rect(x, y, x+undoBmp.getWidth(), y+undoBmp.getHeight());
+            target.drawBitmap(decodeUndoBmp(), x, y, paint );
+            return new Rect(x, y, x+width, y+height);
         }
         Rect redo(Canvas target, Paint paint) {
-            target.drawBitmap(redoBmp, x, y, paint );
-            return new Rect(x, y, x+undoBmp.getWidth(), y+undoBmp.getHeight());
+            target.drawBitmap(decodeRedoBmp(), x, y, paint );
+            return new Rect(x, y, x+width, y+height);
         }
 
     }
