@@ -4,6 +4,7 @@ import com.google.libvorbis.VorbisException;
 
 import android.app.Activity;
 import android.app.AlertDialog;
+import android.app.Dialog;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.media.MediaScannerConnection;
@@ -16,6 +17,7 @@ import android.view.KeyEvent;
 import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
+import android.webkit.WebView;
 import android.widget.Button;
 import android.widget.Toast;
 
@@ -27,6 +29,7 @@ import java.util.concurrent.TimeUnit;
 
 public class WhiteBoardCastActivity extends Activity {
 
+    static final int DIALOG_ID_ABOUT = 1;
 
     private static final String AUDIO_FNAME = "temp.mkv";
 
@@ -295,7 +298,7 @@ public class WhiteBoardCastActivity extends Activity {
     public boolean onMenuItemSelected(int featureId, MenuItem item) {
         switch(item.getItemId()) {
             case R.id.menu_id_about:
-                showMessage("menu about!");
+                showDialog(DIALOG_ID_ABOUT);
                 return true;
             case R.id.menu_id_quit:
                 finish();
@@ -305,6 +308,28 @@ public class WhiteBoardCastActivity extends Activity {
                 return true;
         }
         return super.onMenuItemSelected(featureId, item);
+    }
+
+    @Override
+    protected Dialog onCreateDialog(int id) {
+        switch(id) {
+            case DIALOG_ID_ABOUT:
+                return createAbout();
+        }
+        return super.onCreateDialog(id);
+    }
+
+    private AlertDialog createAbout() {
+        final WebView webView = new WebView(this);
+        webView.loadUrl("file:///android_asset/licenses.html");
+        return new AlertDialog.Builder(this).setTitle(R.string.about_title)
+                .setView(webView)
+                .setPositiveButton(android.R.string.ok, new DialogInterface.OnClickListener() {
+                    public void onClick(final DialogInterface dialog, final int whichButton) {
+                        dialog.dismiss();
+                    }
+                }).create();
+
     }
 
     private final int FPS = 12;
