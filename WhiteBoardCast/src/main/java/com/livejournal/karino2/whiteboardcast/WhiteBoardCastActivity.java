@@ -176,7 +176,12 @@ public class WhiteBoardCastActivity extends Activity {
     private void startRecordSecondPhase() {
         WhiteBoardCanvas wb = getWhiteBoardCanvas();
         wb.setWholeAreaInvalidate(); // for restart. make it a little heavy.
-        encoderTask = new EncoderTask(wb, wb.getBitmap());
+        try {
+            encoderTask = new EncoderTask(wb, wb.getBitmap(), getWorkVideoPath());
+        } catch (IOException e) {
+            showMessage("Fail to get workVideoPath: " + e.getMessage());
+            return;
+        }
         long currentMill = System.currentTimeMillis();
 
         if(!encoderTask.initEncoder(currentMill)) {
@@ -185,7 +190,12 @@ public class WhiteBoardCastActivity extends Activity {
         }
         recorder = new VorbisMediaRecorder();
         recorder.setBeginMill(currentMill);
-        recorder.setOutputFile(Environment.getExternalStorageDirectory() + "/" + AUDIO_FNAME);
+        try {
+            recorder.setOutputFile(getWorkAudioPath());
+        } catch (IOException e) {
+            showMessage("IOException: Create WhiteBoardCast folder fail: " + e.getMessage());
+            return;
+        }
         try {
             recorder.prepare();
         } catch (IOException e) {
@@ -210,13 +220,36 @@ public class WhiteBoardCastActivity extends Activity {
         return (WhiteBoardCanvas)findViewById(R.id.fullscreen_content);
     }
 
-    public String getResultPath() {
-        return Environment.getExternalStorageDirectory() + "/result.webm";
+    private static  void ensureDirExist(File dir) throws IOException {
+        if(!dir.exists()) {
+            if(!dir.mkdir()){
+                throw new IOException();
+            }
+        }
     }
+    public static File getFileStoreDirectory() throws IOException {
+        File dir = new File(Environment.getExternalStorageDirectory(), "WhiteBoardCast");
+        ensureDirExist(dir);
+        return dir;
+    }
+
+
+    public String getResultPath() throws IOException {
+        return getFileStoreDirectory().getAbsolutePath() + "/result.webm";
+    }
+
+    private String getWorkAudioPath() throws IOException {
+        return getFileStoreDirectory().getAbsolutePath() + "/" + AUDIO_FNAME;
+    }
+
+    private String getWorkVideoPath() throws IOException {
+        return getFileStoreDirectory().getAbsolutePath() + "/temp.webm";
+    }
+
 
     private void viewVideoIntent() {
         Intent i = new Intent(Intent.ACTION_VIEW);
-        i.setDataAndType(Uri.parse(getResultPath()), "video/*");
+        i.setDataAndType(Uri.fromFile(lastResult), "video/*");
         i.putExtra(MediaStore.EXTRA_FINISH_ON_COMPLETION, false);
         startActivity(i);
     }
@@ -235,7 +268,7 @@ public class WhiteBoardCastActivity extends Activity {
         content.put(MediaStore.Video.VideoColumns.DATE_ADDED,
                 System.currentTimeMillis() / 1000);
         content.put(MediaStore.Video.Media.MIME_TYPE, "video/webm");
-        content.put(MediaStore.Video.Media.DATA, getResultPath());
+        content.put(MediaStore.Video.Media.DATA, lastResult.getAbsolutePath());
         ContentResolver resolver = getBaseContext().getContentResolver();
         Uri uri = resolver.insert(MediaStore.Video.Media.EXTERNAL_CONTENT_URI, content);
 
@@ -246,18 +279,45 @@ public class WhiteBoardCastActivity extends Activity {
     }
 
     private void beginAudioVideoMergeTask() {
-        new AudioVideoMergeTask(this, new AudioVideoMergeTask.NotifyFinishListener() {
-            @Override
-            public void onFinish() {
-                handler.postDelayed(new Runnable(){
-                    @Override
-                    public void run() {
-                        showDialog(DIALOG_ID_QUERY_VIEW_SHARE);
-                    }
-                }, 500);
-            }
-        }).execute(Environment.getExternalStorageDirectory() + "/temp.webm", Environment.getExternalStorageDirectory() + "/" + AUDIO_FNAME, getResultPath());
+        try {
+            new AudioVideoMergeTask(this, new AudioVideoMergeTask.NotifyFinishListener() {
+                @Override
+                public void onFinish() {
+                    handler.postDelayed(new Runnable(){
+                        @Override
+                        public void run() {
+                            try {
+                                renameAndDeleteWorkFiles();
+                                showDialog(DIALOG_ID_QUERY_VIEW_SHARE);
+                            } catch (IOException e) {
+                                showMessage("Rename encoded file fail: " + e.getMessage());
+                            }
+                        }
+                    }, 500);
+                }
+            }).execute(getWorkVideoPath(), getWorkAudioPath(), getResultPath());
+        } catch (IOException e) {
+            showMessage("Fail to create WhiteBoardCast folder(2). " + e.getMessage());
+        }
     }
+
+    File lastResult = null;
+
+    private void renameAndDeleteWorkFiles() throws IOException {
+        File result = new File(getResultPath());
+        File workVideo = new File(getWorkVideoPath());
+        File workAudio = new File(getWorkAudioPath());
+        if(!result.exists())
+            throw new IOException("no encoded file exists.");
+        SimpleDateFormat timeStampFormat = new SimpleDateFormat("yyyyMMddHHmmssSS");
+        String filename = timeStampFormat.format(new Date()) + ".webm";
+
+        lastResult = new File(getFileStoreDirectory(), filename);
+        result.renameTo(lastResult);
+        workVideo.delete();
+        workAudio.delete();
+    }
+
 
     @Override
     public boolean dispatchKeyEvent(KeyEvent event) {
@@ -301,9 +361,6 @@ public class WhiteBoardCastActivity extends Activity {
                 return true;
             case R.id.menu_id_quit:
                 finish();
-                return true;
-            case R.id.menu_id_merge:
-                beginAudioVideoMergeTask();
                 return true;
         }
         return super.onMenuItemSelected(featureId, item);

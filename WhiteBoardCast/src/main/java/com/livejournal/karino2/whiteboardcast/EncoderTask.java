@@ -30,19 +30,21 @@ public class EncoderTask implements Runnable {
     int width;
     int height;
     long beginMillis=0;
+    String workVideoPath;
 
-    public EncoderTask(FrameRetrieval frameR, Bitmap parentBmp) {
+    public EncoderTask(FrameRetrieval frameR, Bitmap parentBmp, String workVideoPath) {
         retrieval = frameR;
         updateBitmap(parentBmp);
         errorBuf = new StringBuilder();
         encoder = new Encoder();
+        this.workVideoPath = workVideoPath;
     }
 
     static final int FPS_NUM = 24;
     static final int FPS_DENOM = 1;
 
     public boolean initEncoder(long currentMill) {
-        boolean res = encoder.initEncoder(Environment.getExternalStorageDirectory() + "/temp.webm", width, height, FPS_NUM, FPS_DENOM, errorBuf);
+        boolean res = encoder.initEncoder(workVideoPath, width, height, FPS_NUM, FPS_DENOM, errorBuf);
         beginMillis = currentMill;
         return res;
     }
