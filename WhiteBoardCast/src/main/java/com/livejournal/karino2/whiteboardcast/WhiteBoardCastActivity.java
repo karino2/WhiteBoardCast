@@ -9,7 +9,6 @@ import android.content.ContentResolver;
 import android.content.ContentValues;
 import android.content.DialogInterface;
 import android.content.Intent;
-import android.media.MediaScannerConnection;
 import android.net.Uri;
 import android.os.Bundle;
 import android.os.Environment;
@@ -17,9 +16,11 @@ import android.os.Handler;
 import android.provider.MediaStore;
 import android.util.Log;
 import android.view.KeyEvent;
+import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
+import android.view.View;
 import android.webkit.WebView;
 import android.widget.Button;
 import android.widget.Toast;
@@ -36,6 +37,7 @@ import java.util.concurrent.TimeUnit;
 public class WhiteBoardCastActivity extends Activity {
 
     static final int DIALOG_ID_ABOUT = 1;
+    static final int DIALOG_ID_QUERY_VIEW_SHARE = 2;
 
     private static final String AUDIO_FNAME = "temp.mkv";
 
@@ -212,42 +214,14 @@ public class WhiteBoardCastActivity extends Activity {
         return Environment.getExternalStorageDirectory() + "/result.webm";
     }
 
-    private void openVideo() {
-        Intent intent = new Intent(Intent.ACTION_MEDIA_SCANNER_SCAN_FILE);
-        intent.setData(Uri.fromFile(new File(getResultPath())));
-        intent.setType("video/webm");
-        sendBroadcast(intent);
-
-        /*
-        new MediaScannerConnection.MediaScannerConnectionClient() {
-            private MediaScannerConnection msc = null;
-            {
-                msc = new MediaScannerConnection(
-                        getApplicationContext(), this);
-                msc.connect();
-            }
-
-            public void onMediaScannerConnected() {
-                msc.scanFile(getResultPath(), null);
-            }
-
-            public void onScanCompleted(String path, Uri uri) {
-                msc.disconnect();
-                handler.postDelayed(new Runnable(){
-                    @Override
-                    public void run() {
-                        openVideo2();
-                    }
-                }, 100);
-
-            }
-        };
-        */
-        openVideo2();
-
+    private void viewVideoIntent() {
+        Intent i = new Intent(Intent.ACTION_VIEW);
+        i.setDataAndType(Uri.parse(getResultPath()), "video/*");
+        i.putExtra(MediaStore.EXTRA_FINISH_ON_COMPLETION, false);
+        startActivity(i);
     }
 
-    private void openVideo2() {
+    private void shareVideoIntent() {
         Intent i = new Intent(Intent.ACTION_SEND);
         i.setType("video/webm");
 
@@ -269,47 +243,6 @@ public class WhiteBoardCastActivity extends Activity {
         i.putExtra(Intent.EXTRA_STREAM, uri);
         startActivity(Intent.createChooser(i, "Share video"));
 
-        /*
-        // not working
-        ContentValues content = new ContentValues(4);
-        content.put(MediaStore.Video.VideoColumns.DATE_ADDED,
-                System.currentTimeMillis() / 1000);
-        content.put(MediaStore.Video.Media.MIME_TYPE, "video/webm");
-       // content.put(MediaStore.Video.Media.DATA, "video_path");
-        content.put(MediaStore.Video.Media.DATA, getResultPath());
-        ContentResolver resolver = getBaseContext().getContentResolver();
-        Uri uri = resolver.insert(MediaStore.Video.Media.EXTERNAL_CONTENT_URI, content);
-
-        Intent sharingIntent = new Intent(android.content.Intent.ACTION_SEND);
-        sharingIntent.putExtra(android.content.Intent.EXTRA_SUBJECT,"Title");
-        sharingIntent.putExtra(android.content.Intent.EXTRA_STREAM,uri);
-        startActivity(Intent.createChooser(sharingIntent,"share:"));
-         */
-
-        /*
-        // working!
-        Intent i = new Intent(Intent.ACTION_VIEW);
-        i.setDataAndType(Uri.parse(getResultPath()), "video/*");
-        i.putExtra(MediaStore.EXTRA_FINISH_ON_COMPLETION, false);
-        startActivity(i);
-        */
-
-        // Intent i = new Intent(Intent.ACTION_SEND);
-        // Intent i = new Intent(Intent.ACTION_VIEW, Uri.parse(getResultPath()));
-        // i.setType("video/mkv");
-        // i.setType("video/webm");
-        // i.setType("video/*");
-        // i.putExtra(Intent.EXTRA_STREAM, Uri.parse(getResultPath()));
-        // i.setData(Uri.parse(getResultPath()));
-
-        // i.setType("video/webm");
-        // i.setType("video/x-matroska");
-                /*
-                i.setType("video/webm");
-                i.putExtra(Intent.EXTRA_STREAM, Uri.fromFile(new File(resultPath)));
-                */
-        // startActivity(Intent.createChooser(i, "Open result video"));
-        // startActivity(i);
     }
 
     private void beginAudioVideoMergeTask() {
@@ -319,7 +252,7 @@ public class WhiteBoardCastActivity extends Activity {
                 handler.postDelayed(new Runnable(){
                     @Override
                     public void run() {
-                        openVideo();
+                        showDialog(DIALOG_ID_QUERY_VIEW_SHARE);
                     }
                 }, 500);
             }
@@ -381,8 +314,35 @@ public class WhiteBoardCastActivity extends Activity {
         switch(id) {
             case DIALOG_ID_ABOUT:
                 return createAbout();
+            case DIALOG_ID_QUERY_VIEW_SHARE:
+                return createQueryViewShareDialog();
         }
         return super.onCreateDialog(id);
+    }
+
+    private Dialog createQueryViewShareDialog() {
+        LayoutInflater inflater = LayoutInflater.from(this);
+        View view = inflater.inflate(R.layout.query_viewsend, null);
+        setOnClickListener(view, R.id.button_view, new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                viewVideoIntent();
+            }
+        });
+        setOnClickListener(view, R.id.button_share, new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                shareVideoIntent();
+            }
+        });
+        return new AlertDialog.Builder(this).setTitle(R.string.query_title)
+                .setView(view)
+                .create();
+    }
+
+    private void setOnClickListener(View view, int id, View.OnClickListener onclick) {
+        Button button = (Button)view.findViewById(id);
+        button.setOnClickListener(onclick);
     }
 
     private AlertDialog createAbout() {

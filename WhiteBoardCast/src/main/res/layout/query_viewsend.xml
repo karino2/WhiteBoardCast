@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+              android:orientation="horizontal"
+              android:layout_width="match_parent"
+              android:layout_height="match_parent">
+
+    <Button
+            android:layout_width="wrap_content"
+            android:layout_height="fill_parent"
+            android:text="@string/label_view"
+            android:drawableLeft="@android:drawable/ic_media_play"
+            android:id="@+id/button_view"/>
+    <Button
+            android:layout_width="wrap_content"
+            android:layout_height="fill_parent"
+            android:text="@string/label_share"
+            android:drawableLeft="@android:drawable/ic_menu_share"
+            android:id="@+id/button_share"/>
+</LinearLayout>

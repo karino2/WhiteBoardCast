@@ -9,4 +9,7 @@
     <string name="menu_merge_again">Merge again</string>
     <string name="query_back_message">Really finish WhiteBoardCast app?</string>
     <string name="about_title">Open Source Credits</string>
+    <string name="label_view">View</string>
+    <string name="label_share">Share</string>
+    <string name="query_title">View or Share?</string>
 </resources>
