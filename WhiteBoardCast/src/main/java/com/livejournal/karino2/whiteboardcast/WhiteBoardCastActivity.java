@@ -74,9 +74,8 @@ public class WhiteBoardCastActivity extends Activity {
     }
 
 
-
     public void stopRecord() {
-        if(recStats != RecordStatus.RECORDING) {
+        if(!canStop()) {
             Log.d("WBCast", "stop record called but not recording. " + recStats);
             return;
         }
@@ -108,6 +107,11 @@ public class WhiteBoardCastActivity extends Activity {
         })) {
             showMessage("done encoder fail");
         }
+    }
+
+    public boolean canStop() {
+        return recStats == RecordStatus.RECORDING ||
+                recStats == RecordStatus.PAUSE;
     }
 
     public boolean canRedo() {
