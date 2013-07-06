@@ -5,6 +5,8 @@ import com.google.libvorbis.VorbisException;
 import android.app.Activity;
 import android.app.AlertDialog;
 import android.app.Dialog;
+import android.content.ContentResolver;
+import android.content.ContentValues;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.media.MediaScannerConnection;
@@ -12,6 +14,7 @@ import android.net.Uri;
 import android.os.Bundle;
 import android.os.Environment;
 import android.os.Handler;
+import android.provider.MediaStore;
 import android.util.Log;
 import android.view.KeyEvent;
 import android.view.Menu;
@@ -21,7 +24,10 @@ import android.webkit.WebView;
 import android.widget.Button;
 import android.widget.Toast;
 
+import java.io.File;
 import java.io.IOException;
+import java.text.SimpleDateFormat;
+import java.util.Date;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 import java.util.concurrent.ScheduledExecutorService;
@@ -154,7 +160,6 @@ public class WhiteBoardCastActivity extends Activity {
             Log.d("WBCast", "record start but status is not dormant: " + recStats);
             return;
         }
-        showMessage("setup...");
         changeRecStatus(RecordStatus.SETUP);
         scheduleExecuter = Executors.newSingleThreadScheduledExecutor();
         handler.post(new Runnable() {
@@ -208,6 +213,12 @@ public class WhiteBoardCastActivity extends Activity {
     }
 
     private void openVideo() {
+        Intent intent = new Intent(Intent.ACTION_MEDIA_SCANNER_SCAN_FILE);
+        intent.setData(Uri.fromFile(new File(getResultPath())));
+        intent.setType("video/webm");
+        sendBroadcast(intent);
+
+        /*
         new MediaScannerConnection.MediaScannerConnectionClient() {
             private MediaScannerConnection msc = null;
             {
@@ -231,19 +242,74 @@ public class WhiteBoardCastActivity extends Activity {
 
             }
         };
+        */
+        openVideo2();
 
     }
 
     private void openVideo2() {
-        Intent i = new Intent(Intent.ACTION_SEND, Uri.parse(getResultPath()));
-        i.setType("video/*");
+        Intent i = new Intent(Intent.ACTION_SEND);
+        i.setType("video/webm");
+
+        SimpleDateFormat timeStampFormat = new SimpleDateFormat("yyyy-MM-dd-HH:mm");
+        String title = timeStampFormat.format(new Date()) + " recorded";
+
+        ContentValues content = new ContentValues(4);
+
+
+        content.put(MediaStore.Video.VideoColumns.TITLE, title);
+        content.put(MediaStore.Video.VideoColumns.DATE_ADDED,
+                System.currentTimeMillis() / 1000);
+        content.put(MediaStore.Video.Media.MIME_TYPE, "video/webm");
+        content.put(MediaStore.Video.Media.DATA, getResultPath());
+        ContentResolver resolver = getBaseContext().getContentResolver();
+        Uri uri = resolver.insert(MediaStore.Video.Media.EXTERNAL_CONTENT_URI, content);
+
+
+        i.putExtra(Intent.EXTRA_STREAM, uri);
+        startActivity(Intent.createChooser(i, "Share video"));
+
+        /*
+        // not working
+        ContentValues content = new ContentValues(4);
+        content.put(MediaStore.Video.VideoColumns.DATE_ADDED,
+                System.currentTimeMillis() / 1000);
+        content.put(MediaStore.Video.Media.MIME_TYPE, "video/webm");
+       // content.put(MediaStore.Video.Media.DATA, "video_path");
+        content.put(MediaStore.Video.Media.DATA, getResultPath());
+        ContentResolver resolver = getBaseContext().getContentResolver();
+        Uri uri = resolver.insert(MediaStore.Video.Media.EXTERNAL_CONTENT_URI, content);
+
+        Intent sharingIntent = new Intent(android.content.Intent.ACTION_SEND);
+        sharingIntent.putExtra(android.content.Intent.EXTRA_SUBJECT,"Title");
+        sharingIntent.putExtra(android.content.Intent.EXTRA_STREAM,uri);
+        startActivity(Intent.createChooser(sharingIntent,"share:"));
+         */
+
+        /*
+        // working!
+        Intent i = new Intent(Intent.ACTION_VIEW);
+        i.setDataAndType(Uri.parse(getResultPath()), "video/*");
+        i.putExtra(MediaStore.EXTRA_FINISH_ON_COMPLETION, false);
+        startActivity(i);
+        */
+
+        // Intent i = new Intent(Intent.ACTION_SEND);
+        // Intent i = new Intent(Intent.ACTION_VIEW, Uri.parse(getResultPath()));
+        // i.setType("video/mkv");
+        // i.setType("video/webm");
+        // i.setType("video/*");
+        // i.putExtra(Intent.EXTRA_STREAM, Uri.parse(getResultPath()));
+        // i.setData(Uri.parse(getResultPath()));
+
+        // i.setType("video/webm");
         // i.setType("video/x-matroska");
                 /*
                 i.setType("video/webm");
                 i.putExtra(Intent.EXTRA_STREAM, Uri.fromFile(new File(resultPath)));
                 */
+        // startActivity(Intent.createChooser(i, "Open result video"));
         // startActivity(i);
-        startActivity(Intent.createChooser(i, "Open result video"));
     }
 
     private void beginAudioVideoMergeTask() {
@@ -253,7 +319,7 @@ public class WhiteBoardCastActivity extends Activity {
                 handler.postDelayed(new Runnable(){
                     @Override
                     public void run() {
-                        openVideo2();
+                        openVideo();
                     }
                 }, 500);
             }
