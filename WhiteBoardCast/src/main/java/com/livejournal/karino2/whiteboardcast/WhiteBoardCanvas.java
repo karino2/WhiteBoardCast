@@ -295,7 +295,7 @@ public class WhiteBoardCanvas extends View implements FrameRetrieval {
                 mPaint.setColor(Color.BLUE);
                 break;
             case FloatingOverlay.PEN_INDEX_RED:
-                mPaint.setColor(Color.MAGENTA);
+                mPaint.setColor(Color.RED);
                 break;
             case FloatingOverlay.PEN_INDEX_GREEN:
                 mPaint.setColor(Color.GREEN);
