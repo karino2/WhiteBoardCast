@@ -48,6 +48,7 @@ public class AudioVideoMergeTask extends AsyncTask<String, Integer, String> {
     protected void onPreExecute() {
         dialog = new ProgressDialog(context);
         dialog.setTitle("Please wait");
+        dialog.setCancelable(false);;
         dialog.show();
     }
 

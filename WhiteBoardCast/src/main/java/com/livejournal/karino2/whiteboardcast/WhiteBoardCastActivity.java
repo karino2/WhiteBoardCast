@@ -38,6 +38,7 @@ public class WhiteBoardCastActivity extends Activity {
 
     static final int DIALOG_ID_ABOUT = 1;
     static final int DIALOG_ID_QUERY_VIEW_SHARE = 2;
+    static final int DIALOG_ID_QUERY_MERGE_AGAIN = 3;
 
     private static final String AUDIO_FNAME = "temp.mkv";
 
@@ -60,6 +61,22 @@ public class WhiteBoardCastActivity extends Activity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_whiteboardcast);
 
+        if(workingFileExists()) {
+            showDialog(DIALOG_ID_QUERY_MERGE_AGAIN);
+        }
+
+    }
+
+    private boolean workingFileExists() {
+        try {
+            File workVideo = new File(getWorkVideoPath());
+            if(workVideo.exists())
+                return true;
+            return false;
+        } catch (IOException e) {
+            showMessage("IO Exception while working file check: " + e.getMessage());
+            return false;
+        }
     }
 
     public boolean canUndo() {
@@ -377,8 +394,28 @@ public class WhiteBoardCastActivity extends Activity {
                 return createAbout();
             case DIALOG_ID_QUERY_VIEW_SHARE:
                 return createQueryViewShareDialog();
+            case DIALOG_ID_QUERY_MERGE_AGAIN:
+                return createQueryMergeWorkingFileDialog();
         }
         return super.onCreateDialog(id);
+    }
+
+    private Dialog createQueryMergeWorkingFileDialog() {
+        return new AlertDialog.Builder(this).setTitle(R.string.query_merge_title)
+                .setMessage(R.string.query_merge_body)
+                .setPositiveButton(android.R.string.ok, new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialogInterface, int i) {
+                        beginAudioVideoMergeTask();
+                    }
+                })
+                .setNegativeButton(android.R.string.cancel, new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialogInterface, int i) {
+
+                    }
+                })
+                .create();
     }
 
     private Dialog createQueryViewShareDialog() {
