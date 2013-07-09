@@ -58,6 +58,7 @@ public class VorbisMediaRecorder {
         {
             bufferSize = AudioRecord.getMinBufferSize(sampleRate, AudioFormat.CHANNEL_IN_MONO, AUDIO_FORMAT);
             framePeriod = bufferSize / ( 2 * bSamples * nChannels / 8 );
+            Log.d("WBCast", "Extend buffer size: " + bufferSize);
         }
 
         audioRecorder = new AudioRecord(AUDIO_SOURCE, sampleRate, AudioFormat.CHANNEL_IN_MONO, AUDIO_FORMAT, bufferSize);
