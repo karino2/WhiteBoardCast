@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
 
-    <string name="app_name">WhiteBoard Cast</string>
+    <string name="app_name">Whiteboard Cast</string>
     <string name="record_start_button">Rec Start</string>
     <string name="record_stop_button">Rec Stop</string>
     <string name="menu_about">About this app</string>
