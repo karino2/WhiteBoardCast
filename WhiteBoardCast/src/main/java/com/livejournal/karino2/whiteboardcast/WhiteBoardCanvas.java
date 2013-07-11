@@ -63,6 +63,11 @@ public class WhiteBoardCanvas extends View implements FrameRetrieval {
     int mX1, mX2, mY1, mY2;
     protected void onSizeChanged(int w, int h, int oldw, int oldh) {
         super.onSizeChanged(w, h, oldw, oldh);
+        // align for livbpx.
+        // Log.d("WBCast", "before, w,h=" + w+ "," + h);
+        w = (w+15) & ~15;
+        h = (h+15) & ~15;
+        // Log.d("WBCast", "after, w,h=" + w+ "," + h);
         mCenterX = ((float)w)/2F;
         mCenterY = ((float)h)/2F;
         mWidth = w;

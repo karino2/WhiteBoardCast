@@ -88,6 +88,7 @@ public class Encoder {
     public boolean initEncoder(String webmOutputName,
                                int width, int height, int rate, int scale,
                                StringBuilder error) {
+        // Log.d("WBCast", "width, height=" + width + "," + height);
         try {
             encoderConfig = new LibVpxEncConfig(width, height);
             encoder = new LibVpxEnc(encoderConfig);
