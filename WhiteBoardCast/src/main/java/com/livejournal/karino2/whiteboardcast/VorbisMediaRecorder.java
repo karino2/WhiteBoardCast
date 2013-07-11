@@ -54,13 +54,14 @@ public class VorbisMediaRecorder {
     public VorbisMediaRecorder () {
         framePeriod = sampleRate * TIMER_INTERVAL / 1000;
         // bufferSize = framePeriod * 2 * bSamples * nChannels / 8;
-        bufferSize = framePeriod * 8 * bSamples * nChannels / 8;
+        bufferSize = framePeriod * 32 * bSamples * nChannels / 8;
         if (bufferSize < AudioRecord.getMinBufferSize(sampleRate, AudioFormat.CHANNEL_IN_MONO, AUDIO_FORMAT))
         {
             bufferSize = AudioRecord.getMinBufferSize(sampleRate, AudioFormat.CHANNEL_IN_MONO, AUDIO_FORMAT);
             framePeriod = bufferSize / ( 2 * bSamples * nChannels / 8 );
             Log.d("WBCast", "Extend buffer size: " + bufferSize);
         }
+        // Log.d("WBCast", "buffer size: " + bufferSize);
 
         audioRecorder = new AudioRecord(AUDIO_SOURCE, sampleRate, AudioFormat.CHANNEL_IN_MONO, AUDIO_FORMAT, bufferSize);
         state = State.INITIALIZING;
