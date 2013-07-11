@@ -53,7 +53,8 @@ public class VorbisMediaRecorder {
 
     public VorbisMediaRecorder () {
         framePeriod = sampleRate * TIMER_INTERVAL / 1000;
-        bufferSize = framePeriod * 2 * bSamples * nChannels / 8;
+        // bufferSize = framePeriod * 2 * bSamples * nChannels / 8;
+        bufferSize = framePeriod * 8 * bSamples * nChannels / 8;
         if (bufferSize < AudioRecord.getMinBufferSize(sampleRate, AudioFormat.CHANNEL_IN_MONO, AUDIO_FORMAT))
         {
             bufferSize = AudioRecord.getMinBufferSize(sampleRate, AudioFormat.CHANNEL_IN_MONO, AUDIO_FORMAT);
