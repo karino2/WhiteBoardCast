@@ -66,10 +66,10 @@ public class EncoderTask implements Runnable {
         }
     }
 
-    public boolean encodeFrame(int[] frame) {
+    public boolean encodeFrame(int[] frame, Rect invalRect) {
         long curr = System.currentTimeMillis();
         long diff = curr-beginMillis;
-        return encoder.encodeFrames(frame,  (int)(diff*FPS_NUM/1000), LibVpxEnc.FOURCC_ARGB, errorBuf);
+        return encoder.encodeFrames(frame,  invalRect, (int)(diff*FPS_NUM/1000), LibVpxEnc.FOURCC_ARGB, errorBuf);
     }
 
 
@@ -88,7 +88,7 @@ public class EncoderTask implements Runnable {
     public void run() {
         checkFrameRate();
         retrieval.pullUpdateRegion(pixelBuf, invalRect);
-        encodeFrame(pixelBuf);
+        encodeFrame(pixelBuf, invalRect);
     }
 
     private void checkFrameRate() {

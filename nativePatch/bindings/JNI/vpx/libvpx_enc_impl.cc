@@ -123,6 +123,106 @@ FUNC(jboolean, vpxCodecHaveLibyuv) {
   return true;
 }
 
+static uint8* g_yuvBuf = NULL;
+static uint8* g_yuvBufAligned = NULL;
+static vpx_image_t *g_img = NULL;
+static void ensureYuvBufInit(vpx_codec_ctx_t *ctx, int size) {
+   if(g_yuvBuf != NULL)
+	return;
+  g_yuvBuf = reinterpret_cast<uint8*>(malloc(size+63));
+  g_yuvBufAligned = reinterpret_cast<uint8*> ((reinterpret_cast<intptr_t>(g_yuvBuf) + 63) & ~63);
+
+}
+
+static vpx_image_t *my_img_wrap(vpx_codec_ctx_t *ctx, uint8* dstY) {
+  if(g_img == NULL) {
+    g_img = (vpx_image_t *)malloc(sizeof(vpx_image_t));
+    vpx_image_t *img = vpx_img_wrap(NULL,
+                                    VPX_IMG_FMT_I420,
+                                    ctx->config.enc->g_w,
+                                    ctx->config.enc->g_h,
+                                    0,
+                                    dstY);
+    memcpy(g_img, img, sizeof(vpx_image_t));
+  }
+  g_img->img_data = dstY; 
+  return g_img;
+}
+
+void yuvBufFinalize() {
+  if(g_yuvBuf != NULL)
+    free(g_yuvBuf);
+  if(g_img != NULL)
+    free(g_img);
+  g_yuvBuf = NULL;
+  g_img = NULL;
+}
+
+
+bool convertEncodeRegion(vpx_codec_ctx_t *ctx, const uint8 *frame,
+		int invalX, int invalY, int invalWidth, int invalHeight, 
+		   int64_t pts, long duration, long flags, long deadline, long fourcc,
+                   int size) {
+  printf("convertEncodeRegion");
+  bool success = true;
+
+  const int width = ctx->config.enc->g_w;
+  const int height = ctx->config.enc->g_h;
+  const int dst_y_stride = (width + 1) & ~1;
+  const int dst_uv_stride = (width + 1) / 2;
+  const int dst_uv_size = dst_uv_stride * ((height + 1) / 2);
+  const int alignedInvalWidth = (invalWidth+15) & ~15;
+  const int alignedInvalHeight = (invalHeight+15) & ~15;
+  const int alignedInvalX = invalX & ~15;
+  const int alignedInvalY = invalY & ~15;
+/*
+  const int alignedInvalX = invalX & ~1;
+  const int alignedInvalY = invalY & ~1;
+*/
+
+  ensureYuvBufInit(ctx, (dst_y_stride * height) + (2 * dst_uv_size));
+  uint8 *dst_y = g_yuvBufAligned;
+  // align_buffer_64(dst_y, (dst_y_stride * height) + (2 * dst_uv_size));
+  uint8 *dst_u = dst_y + (dst_y_stride * height);
+  uint8 *dst_v = dst_u + dst_uv_size;
+
+  uint8 *dst_y_withOffset = dst_y + invalY*dst_y_stride + invalX;
+  uint8 *dst_u_withOffset = dst_u + dst_uv_stride*(invalY+1)/2 + (invalX+1)/2;
+  uint8 *dst_v_withOffset = dst_v + dst_uv_stride*(invalY+1)/2 + (invalX+1)/2;
+
+  if(invalWidth !=0 && invalHeight != 0) {
+
+     int rv = libyuv::ConvertToI420(frame, size,
+                                 dst_y_withOffset, dst_y_stride,
+                                 dst_u_withOffset, dst_uv_stride,
+                                 dst_v_withOffset, dst_uv_stride,
+                                 invalX, invalY,
+                                 // 0, 0,
+                                 // alignedInvalX, alignedInvalY,
+                                 width, height,
+				invalWidth, invalHeight,
+                                 // alignedInvalWidth, alignedInvalHeight,
+                                 // dst_y_stride, height,
+                                 libyuv::kRotate0, fourcc);
+     if (rv != 0)
+        success = false;
+   }
+
+  if (success) {
+    vpx_image_t *img = my_img_wrap(ctx, dst_y);
+
+    if (img) {
+      vpx_codec_encode(ctx, img, pts, duration, flags, deadline);
+    } else {
+      success = false;
+    }
+  }
+
+  // free_aligned_buffer_64(dst_y);
+
+  return success;
+}
+
 bool convertEncode(vpx_codec_ctx_t *ctx, const uint8 *frame, int64_t pts,
                    long duration, long flags, long deadline, long fourcc,
                    int size) {
@@ -196,6 +296,23 @@ FUNC(jboolean, vpxCodecConvertIntEncode, jlong jctx, jintArray jframe,
 
   jboolean success = convertEncode(ctx, reinterpret_cast<uint8 *>(frame), pts,
                                    duration, flags, deadline, fourcc, size);
+  env->ReleaseIntArrayElements(jframe, frame, 0);
+  return success;
+}
+
+FUNC(jboolean, vpxCodecConvertIntEncodeRegion, jlong jctx, jintArray jframe,
+					jint x, jint y, jint w, jint h, 
+                                         jlong pts, jlong duration,
+                                         jlong flags, jlong deadline,
+                                         jlong fourcc, jint size) {
+  printf("vpxCodecConvertIntEncodeRegion");
+
+  vpx_codec_ctx_t *const ctx = reinterpret_cast<vpx_codec_ctx_t *>(jctx);
+  jint *frame = env->GetIntArrayElements(jframe, 0);
+
+  jboolean success = convertEncodeRegion(ctx, reinterpret_cast<uint8 *>(frame), 
+				x, y, w, h, 
+				pts, duration, flags, deadline, fourcc, size);
   env->ReleaseIntArrayElements(jframe, frame, 0);
   return success;
 }

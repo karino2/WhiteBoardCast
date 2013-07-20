@@ -48,6 +48,8 @@ public class LibVpxEnc extends LibVpxCom {
   private native boolean vpxCodecEncode(long ctx, byte[] frame,
                                         int fmt, long pts, long duration,
                                         long flags, long deadline);
+
+
   private native boolean vpxCodecConvertByteEncode(long ctx, byte[] frame,
                                                    long pts, long duration,
                                                    long flags, long deadline,
@@ -56,6 +58,12 @@ public class LibVpxEnc extends LibVpxCom {
                                                   long pts, long duration,
                                                   long flags, long deadline,
                                                   long fourcc, int size);
+  private native boolean vpxCodecConvertIntEncodeRegion(long ctx, int[] frame,
+                                                    int invalX, int invalY,
+                                                    int invalWidth, int invalHeight,
+                                                    long pts, long duration,
+                                                    long flags, long deadline,
+                                                    long fourcc, int size);
   private static native boolean vpxCodecHaveLibyuv();
 
   private native ArrayList<VpxCodecCxPkt> vpxCodecEncGetCxData(long ctx);
@@ -102,6 +110,19 @@ public class LibVpxEnc extends LibVpxCom {
     throwOnError();
     return vpxCodecEncGetCxData(vpxCodecIface);
   }
+
+    public ArrayList<VpxCodecCxPkt> convertIntEncodeFrameRegion(
+            int[] frame, int invalX, int invalY, int invalWidth, int invalHeight,
+            long frameStart, long frameDuration, long fourcc) throws LibVpxException {
+        if (!vpxCodecConvertIntEncodeRegion(vpxCodecIface,
+                frame, invalX, invalY, invalWidth, invalHeight,
+                frameStart, frameDuration, 0L, 0L, fourcc, frame.length)) {
+            throw new LibVpxException("Unable to convert and encode frame");
+        }
+        throwOnError();
+        return vpxCodecEncGetCxData(vpxCodecIface);
+    }
+
 
   public ArrayList<VpxCodecCxPkt> convertIntEncodeFrame(
       int[] frame, long frameStart, long frameDuration, long fourcc) throws LibVpxException {

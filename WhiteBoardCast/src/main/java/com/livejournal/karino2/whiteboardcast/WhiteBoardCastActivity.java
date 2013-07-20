@@ -142,7 +142,9 @@ public class WhiteBoardCastActivity extends Activity {
                     public void run() {
                         // for debug.
                         if(encoderTask.getErrorBuf().length() != 0) {
-                            showMessage("deb error: " + encoderTask.getErrorBuf().toString());
+                            String errorMsg = encoderTask.getErrorBuf().toString();
+                            showMessage("deb error: " + errorMsg);
+                            Log.d("WBCast", errorMsg);
                         }
 
                     }

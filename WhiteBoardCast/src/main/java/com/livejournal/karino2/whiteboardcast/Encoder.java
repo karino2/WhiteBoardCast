@@ -1,5 +1,6 @@
 package com.livejournal.karino2.whiteboardcast;
 
+import android.graphics.Rect;
 import android.util.Log;
 
 import com.google.libvpx.LibVpxEnc;
@@ -60,10 +61,10 @@ public class Encoder {
 
     private boolean duringEncoding = false;
 
-    public boolean encodeFrames(int[] srcFrame,int framesToEncode, long fourcc, StringBuilder error) {
+    public boolean encodeFrames(int[] srcFrame, Rect invalRect, int framesToEncode, long fourcc, StringBuilder error) {
         duringEncoding = true;
         try {
-            if(!encodeOneFrame(srcFrame,  framesToEncode, fourcc, error))
+            if(!encodeOneFrame(srcFrame, invalRect, framesToEncode, fourcc, error))
                 return false;
             framesIn = framesToEncode;
 
@@ -128,15 +129,16 @@ public class Encoder {
         return true;
     }
 
-    private boolean encodeOneFrame(int[] srcFrame, int endFrame,  long fourcc,
+    private boolean encodeOneFrame(int[] srcFrame, Rect invalRect, int endFrame, long fourcc,
                                    StringBuilder error) {
         long frameStart = timeMultiplier.multiply(framesIn - 1).toLong();
         long nextFrameStart = timeMultiplier.multiply(endFrame).toLong();
 
         ArrayList<VpxCodecCxPkt> encPkt = null;
         try {
-            encPkt = encoder.convertIntEncodeFrame(
-                    srcFrame, frameStart, nextFrameStart - frameStart, fourcc);
+            encPkt = encoder.convertIntEncodeFrameRegion(
+                    srcFrame, invalRect.left, invalRect.top, invalRect.width(), invalRect.height(),
+                    frameStart, nextFrameStart - frameStart, fourcc);
             for (int i = 0; i < encPkt.size(); i++) {
                 VpxCodecCxPkt pkt = encPkt.get(i);
                 final boolean isKey = (pkt.flags & 0x1) == 1;
