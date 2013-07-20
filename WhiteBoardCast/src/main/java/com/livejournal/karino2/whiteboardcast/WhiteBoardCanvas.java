@@ -160,6 +160,12 @@ public class WhiteBoardCanvas extends View implements FrameRetrieval  {
     private RectF invalF = new RectF();
     private Rect tmpInval = new Rect();
 
+    private boolean overTolerance(float x, float y) {
+        float dx = Math.abs(x - mX);
+        float dy = Math.abs(y - mY);
+        return (dx >= TOUCH_TOLERANCE || dy >= TOUCH_TOLERANCE);
+    }
+
     public boolean onTouchEvent(MotionEvent event) {
 
         float x = event.getX();
@@ -186,15 +192,29 @@ public class WhiteBoardCanvas extends View implements FrameRetrieval  {
                 }
                 if(!mDownHandled)
                     break;
-                float dx = Math.abs(x - mX);
-                float dy = Math.abs(y - mY);
-                if (dx >= TOUCH_TOLERANCE || dy >= TOUCH_TOLERANCE) {
-                    mPath.quadTo(mX, mY, (x + mX)/2, (y + mY)/2);
-                    mX = x;
-                    mY = y;
+                if (overTolerance(x, y)) {
+                    for(int i = 0; i < event.getHistorySize(); i++) {
+                        float hx = event.getHistoricalX(i);
+                        float hy = event.getHistoricalY(i);
+                        if(overTolerance(hx, hy)) {
+                            mPath.quadTo(mX, mY, (hx + mX)/2, (hy + mY)/2);
+                            mX = hx;
+                            mY = hy;
+                        }
+                    }
                     updateInvalRegion();
                     mCanvas.drawPath(mPath, mPaint);
                 }
+                // no tolerance
+                /*
+                mPath.quadTo(mX, mY, (x + mX)/2, (y + mY)/2);
+                mX = x;
+                mY = y;
+                updateInvalRegion();
+                mCanvas.drawPath(mPath, mPaint);
+                */
+                // no tolerance done.
+
                 invalidate();
                 break;
             case MotionEvent.ACTION_UP:
