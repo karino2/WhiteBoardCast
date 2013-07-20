@@ -14,14 +14,20 @@ public class FpsCounter {
     }
 
     public int cycleFps() {
-        synchronized (deltaMillList) {
-            if(deltaMillList.size() < fpsCashNum)
-                return -1;
-            long sum = 0;
-            for(long fps : deltaMillList) {
-                sum+=1000/fps;
+        try {
+            synchronized (deltaMillList) {
+                if(deltaMillList.size() < fpsCashNum)
+                    return -1;
+                long sum = 0;
+                for(long fps : deltaMillList) {
+                    sum+=1000/fps;
+                }
+                return (int) sum/ deltaMillList.size();
             }
-            return (int) sum/ deltaMillList.size();
+
+        }catch(ArithmeticException ae) {
+            // fps is 0 for some reasons.
+            return -1;
         }
     }
 
