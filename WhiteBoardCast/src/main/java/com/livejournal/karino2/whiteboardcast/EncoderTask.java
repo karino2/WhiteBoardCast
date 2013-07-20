@@ -21,6 +21,9 @@ import java.util.TimerTask;
  * Created by karino on 6/26/13.
  */
 public class EncoderTask implements Runnable {
+    public interface FpsListener {
+        void push(long currentFrameMill);
+    }
 
     Bitmap bitmap;
     FrameRetrieval retrieval;
@@ -83,8 +86,16 @@ public class EncoderTask implements Runnable {
     // scheduleAtFixedRate(TimerTask task, long delay, long period)
     @Override
     public void run() {
+        checkFrameRate();
         retrieval.pullUpdateRegion(pixelBuf, invalRect);
         encodeFrame(pixelBuf);
+    }
+
+    private void checkFrameRate() {
+        if(fpsListener == null)
+            return;
+
+        fpsListener.push(System.currentTimeMillis());
     }
 
     public StringBuilder getErrorBuf() {
@@ -99,4 +110,10 @@ public class EncoderTask implements Runnable {
         beginMillis += suspendedDurMil;
 
     }
+
+    FpsListener fpsListener;
+    public void setFpsListener(FpsListener listener) {
+        fpsListener = listener;
+    }
+
 }

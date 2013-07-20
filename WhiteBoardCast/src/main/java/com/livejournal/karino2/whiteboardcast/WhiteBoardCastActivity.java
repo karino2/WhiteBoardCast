@@ -9,6 +9,8 @@ import android.content.ContentResolver;
 import android.content.ContentValues;
 import android.content.DialogInterface;
 import android.content.Intent;
+import android.content.pm.ApplicationInfo;
+import android.content.pm.PackageManager;
 import android.net.Uri;
 import android.os.Bundle;
 import android.os.Environment;
@@ -45,6 +47,16 @@ public class WhiteBoardCastActivity extends Activity {
     private ScheduledExecutorService scheduleExecuter = null;
     private EncoderTask encoderTask = null;
 
+    public void postShowMessage(final String msg) {
+        handler.postDelayed(new Runnable(){
+
+            @Override
+            public void run() {
+                showMessage(msg);
+            }
+        }, 0);
+    }
+
     public void showMessage(String msg) {
         Toast.makeText(this, msg, Toast.LENGTH_LONG ).show();
 
@@ -60,6 +72,8 @@ public class WhiteBoardCastActivity extends Activity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_whiteboardcast);
+        readDebuggableSetting();
+        getWhiteBoardCanvas().enableDebug(debuggable);
 
         if(workingFileExists()) {
             showDialog(DIALOG_ID_QUERY_MERGE_AGAIN);
@@ -78,6 +92,20 @@ public class WhiteBoardCastActivity extends Activity {
             return false;
         }
     }
+
+    boolean debuggable = false;
+    private void readDebuggableSetting() {
+        PackageManager pm = getPackageManager();
+        try {
+            ApplicationInfo ai = pm.getApplicationInfo(getPackageName(), 0);
+            if((ai.flags & ApplicationInfo.FLAG_DEBUGGABLE) != 0)
+            {
+                debuggable = true;
+            }
+        } catch (PackageManager.NameNotFoundException e) {
+        }
+    }
+
 
     public boolean canUndo() {
         WhiteBoardCanvas wb = getWhiteBoardCanvas();
@@ -199,6 +227,9 @@ public class WhiteBoardCastActivity extends Activity {
         wb.setWholeAreaInvalidate(); // for restart. make it a little heavy.
         try {
             encoderTask = new EncoderTask(wb, wb.getBitmap(), getWorkVideoPath());
+
+            if(debuggable)
+                encoderTask.setFpsListener(getWhiteBoardCanvas().getEncoderFpsCounter());
         } catch (IOException e) {
             showMessage("Fail to get workVideoPath: " + e.getMessage());
             return;
@@ -457,6 +488,9 @@ public class WhiteBoardCastActivity extends Activity {
     }
 
     private final int FPS = 12;
+//    private final int FPS = 6;
+//    private final int FPS = 30;
+
 
     private Button findButton(int id) {
         return (Button)findViewById(id);

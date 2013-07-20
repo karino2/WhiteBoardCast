@@ -7,19 +7,16 @@ import android.graphics.Color;
 import android.graphics.DashPathEffect;
 import android.graphics.Paint;
 import android.graphics.Path;
-import android.graphics.PorterDuff;
-import android.graphics.PorterDuffXfermode;
 import android.graphics.Rect;
 import android.graphics.RectF;
 import android.util.AttributeSet;
-import android.util.Log;
 import android.view.MotionEvent;
 import android.view.View;
 
 /**
  * Created by karino on 6/26/13.
  */
-public class WhiteBoardCanvas extends View implements FrameRetrieval {
+public class WhiteBoardCanvas extends View implements FrameRetrieval  {
 
     Bitmap viewBmp;
     Bitmap commitedBmp;
@@ -107,6 +104,31 @@ public class WhiteBoardCanvas extends View implements FrameRetrieval {
 
         overlay.onDraw(canvas);
 
+        drawFps(canvas);
+
+    }
+
+    Paint fpsPaint = new Paint();
+    private void drawFps(Canvas canvas) {
+        if(!showFpsBar)
+            return;
+        drawFpsBar(canvas, encoderFpsCounter.cycleFps(), 5, 0xFF0000FF);
+        drawFpsBar(canvas, paintFpsCounter.cycleFps(), 5+12, 0xFFFF0000);
+    }
+
+    private void drawFpsBar(Canvas canvas, int fps, int py, int fgColor) {
+        if(fps == -1)
+            return;
+        fpsPaint.setColor(fgColor);
+        final int px = 25;
+        int m = 5;
+        canvas.drawRect( new Rect( px, py, px + fps*m, py + 8), fpsPaint);
+
+        fpsPaint.setColor(0xFFFFFF00);
+        for (int i=0; i<=fps/10; i++)
+        {
+            canvas.drawRect( new Rect( px + i*m*10, py, px + i*m*10 + 2, py + 8), fpsPaint);
+        }
     }
 
     private final int CROSS_SIZE = 20;
@@ -139,6 +161,7 @@ public class WhiteBoardCanvas extends View implements FrameRetrieval {
     private Rect tmpInval = new Rect();
 
     public boolean onTouchEvent(MotionEvent event) {
+
         float x = event.getX();
         float y = event.getY();
         setBrushCursorPos(x, y);
@@ -156,6 +179,7 @@ public class WhiteBoardCanvas extends View implements FrameRetrieval {
                 invalidate();
                 break;
             case MotionEvent.ACTION_MOVE:
+                paintFpsCounter.push(System.currentTimeMillis());
                 if(overlay.onTouchMove(x, y)) {
                     invalidate();
                     break;
@@ -319,6 +343,23 @@ public class WhiteBoardCanvas extends View implements FrameRetrieval {
 
     public boolean canRedo() {
         return undoList.canRedo();
+    }
+
+    FpsCounter paintFpsCounter = new FpsCounter(3);
+    FpsCounter encoderFpsCounter = new FpsCounter(12);
+    private boolean showFpsBar = false;
+
+    public void enableDebug(boolean enabled) {
+        showFpsBar = enabled;
+    }
+
+    public EncoderTask.FpsListener getEncoderFpsCounter() {
+        return new EncoderTask.FpsListener() {
+            @Override
+            public void push(long currentFrameMill) {
+                encoderFpsCounter.push(currentFrameMill);
+            }
+        };
     }
 
 }
