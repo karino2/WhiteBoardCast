@@ -149,6 +149,7 @@ static vpx_image_t *my_img_wrap(vpx_codec_ctx_t *ctx, uint8* dstY) {
   return g_img;
 }
 
+// not yet call
 void yuvBufFinalize() {
   if(g_yuvBuf != NULL)
     free(g_yuvBuf);
@@ -171,24 +172,15 @@ bool convertEncodeRegion(vpx_codec_ctx_t *ctx, const uint8 *frame,
   const int dst_y_stride = (width + 1) & ~1;
   const int dst_uv_stride = (width + 1) / 2;
   const int dst_uv_size = dst_uv_stride * ((height + 1) / 2);
-  const int alignedInvalWidth = (invalWidth+15) & ~15;
-  const int alignedInvalHeight = (invalHeight+15) & ~15;
-  const int alignedInvalX = invalX & ~15;
-  const int alignedInvalY = invalY & ~15;
-/*
-  const int alignedInvalX = invalX & ~1;
-  const int alignedInvalY = invalY & ~1;
-*/
 
   ensureYuvBufInit(ctx, (dst_y_stride * height) + (2 * dst_uv_size));
   uint8 *dst_y = g_yuvBufAligned;
-  // align_buffer_64(dst_y, (dst_y_stride * height) + (2 * dst_uv_size));
   uint8 *dst_u = dst_y + (dst_y_stride * height);
   uint8 *dst_v = dst_u + dst_uv_size;
 
   uint8 *dst_y_withOffset = dst_y + invalY*dst_y_stride + invalX;
-  uint8 *dst_u_withOffset = dst_u + dst_uv_stride*(invalY+1)/2 + (invalX+1)/2;
-  uint8 *dst_v_withOffset = dst_v + dst_uv_stride*(invalY+1)/2 + (invalX+1)/2;
+  uint8 *dst_u_withOffset = dst_u + dst_uv_stride*((invalY+1)/2) + (invalX+1)/2;
+  uint8 *dst_v_withOffset = dst_v + dst_uv_stride*((invalY+1)/2) + (invalX+1)/2;
 
   if(invalWidth !=0 && invalHeight != 0) {
 
@@ -197,12 +189,8 @@ bool convertEncodeRegion(vpx_codec_ctx_t *ctx, const uint8 *frame,
                                  dst_u_withOffset, dst_uv_stride,
                                  dst_v_withOffset, dst_uv_stride,
                                  invalX, invalY,
-                                 // 0, 0,
-                                 // alignedInvalX, alignedInvalY,
                                  width, height,
 				invalWidth, invalHeight,
-                                 // alignedInvalWidth, alignedInvalHeight,
-                                 // dst_y_stride, height,
                                  libyuv::kRotate0, fourcc);
      if (rv != 0)
         success = false;
@@ -217,8 +205,6 @@ bool convertEncodeRegion(vpx_codec_ctx_t *ctx, const uint8 *frame,
       success = false;
     }
   }
-
-  // free_aligned_buffer_64(dst_y);
 
   return success;
 }
