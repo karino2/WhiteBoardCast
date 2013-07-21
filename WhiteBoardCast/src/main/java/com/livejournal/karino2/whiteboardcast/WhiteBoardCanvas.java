@@ -31,6 +31,7 @@ public class WhiteBoardCanvas extends View implements FrameRetrieval  {
     FloatingOverlay overlay;
 
     static final int DEFAULT_PEN_WIDTH = 6;
+    static final int ERASER_WIDTH = 60;
     UndoList undoList = new UndoList();
 
     public WhiteBoardCanvas(Context context, AttributeSet attrs) {
@@ -100,7 +101,8 @@ public class WhiteBoardCanvas extends View implements FrameRetrieval  {
         // canvas.drawPath(mPath, mPaint);
 
         // should write to viewBmp. but later.
-        canvas.drawOval(mBrushCursorRegion, mCursorPaint);
+        if(mBrushCursorRegion.width() >= 0.1)
+            canvas.drawOval(mBrushCursorRegion, mCursorPaint);
 
         overlay.onDraw(canvas);
 
@@ -150,9 +152,13 @@ public class WhiteBoardCanvas extends View implements FrameRetrieval  {
 
     private void setBrushCursorPos(float x, float y)
     {
-        mBrushCursorRegion = new RectF(x-getCursorSize()/2, y-getCursorSize()/2,
+        mBrushCursorRegion.set(x-getCursorSize()/2, y-getCursorSize()/2,
                 x+getCursorSize()/2, y+getCursorSize()/2);
 
+    }
+
+    private void eraseBrushCursor() {
+        mBrushCursorRegion.set(0f, 0f, 0f, 0f);
     }
 
 
@@ -218,6 +224,7 @@ public class WhiteBoardCanvas extends View implements FrameRetrieval  {
                 invalidate();
                 break;
             case MotionEvent.ACTION_UP:
+                eraseBrushCursor();
                 if(overlay.onTouchUp(x, y)) {
                     invalidate();
                     break;
@@ -261,12 +268,12 @@ public class WhiteBoardCanvas extends View implements FrameRetrieval  {
         invalRegion.union(pathBound());
     }
 
-    static final int BRUSH_WIDTH = 6;
     private void widen(Rect tmpInval) {
-        int newLeft = Math.max(0, tmpInval.left-BRUSH_WIDTH);
-        int newTop = Math.max(0, tmpInval.top - BRUSH_WIDTH);
-        int newRight = Math.min(mWidth, tmpInval.right+BRUSH_WIDTH);
-        int newBottom = Math.min(mHeight, tmpInval.bottom+BRUSH_WIDTH);
+        int penWidth = (int)getCursorSize();
+        int newLeft = Math.max(0, tmpInval.left- penWidth);
+        int newTop = Math.max(0, tmpInval.top - penWidth);
+        int newRight = Math.min(mWidth, tmpInval.right+ penWidth);
+        int newBottom = Math.min(mHeight, tmpInval.bottom+ penWidth);
         tmpInval.set(newLeft, newTop, newRight, newBottom);
     }
 
@@ -351,7 +358,7 @@ public class WhiteBoardCanvas extends View implements FrameRetrieval  {
                 break;
             case FloatingOverlay.PEN_INDEX_ERASER:
                 mPaint.setColor(Color.WHITE);
-                setPenWidth(40);
+                setPenWidth(ERASER_WIDTH);
                 break;
         }
     }
