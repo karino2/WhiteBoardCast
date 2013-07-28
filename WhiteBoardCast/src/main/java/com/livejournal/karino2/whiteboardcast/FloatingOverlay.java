@@ -4,6 +4,7 @@ import android.graphics.Bitmap;
 import android.graphics.Bitmap.Config;
 import android.graphics.BitmapFactory;
 import android.graphics.Canvas;
+import android.graphics.Color;
 import android.graphics.Matrix;
 import android.graphics.Paint;
 import android.graphics.Rect;
@@ -88,6 +89,10 @@ public class FloatingOverlay {
     Bitmap toolPen;
     ArrayList<Bitmap> toolPenIcon;
 
+    Bitmap toolThumbnail;
+    boolean thumbnailIsDirty = false;
+    Bitmap thumbnailHiglight;
+
     void initToolbarImage() {
         toolBar = Bitmap.createBitmap(toolHeight *8, toolHeight, Config.ARGB_8888);
         toolBarPanel = floatResource(R.drawable.float_base, toolHeight *8, toolHeight);
@@ -115,14 +120,33 @@ public class FloatingOverlay {
         recIcon.add(floatResource(R.drawable.rec_setupping, toolHeight, toolHeight));
         recIcon.add(floatResource(R.drawable.pause_button, toolHeight, toolHeight));
 
+        toolThumbnail = Bitmap.createBitmap(getThumbnailBaseWidth(), getThumbnailBaseHeight()*BoardList.THUMBNAIL_NUM, Config.ARGB_8888);
+        // re-use.
+        thumbnailHiglight = floatResource(R.drawable.pd_hilight, getThumbnailBaseWidth(), getThumbnailBaseHeight());
 
         updateToolbarImage();
+    }
+
+    final int THUMBNAIL_PADDING = 8;
+    int getThumbnailWidth() {
+        return getThumbnailBaseWidth()-THUMBNAIL_PADDING;
+    }
+    int getThumbnailHeight() {
+        return getThumbnailBaseHeight()-THUMBNAIL_PADDING;
+    }
+    int getThumbnailBaseWidth() {
+        return toolHeight*2;
+    }
+    int getThumbnailBaseHeight() {
+        return (toolHeight*3)/2;
     }
 
     int subIndex = -1;
     int penIndex = 0;
 
     private void updateToolbarImage() {
+        thumbnailIsDirty = true;
+
         Paint paint = new Paint();
         Paint disablePaint = new Paint();
         disablePaint.setAlpha(32);
@@ -157,6 +181,63 @@ public class FloatingOverlay {
             canvas.drawBitmap(pullDownBG, 0, toolHeight*i, paint);
             canvas.drawBitmap(toolPenIcon.get(i), 0, toolHeight*i, paint);
             if(i == subIndex) canvas.drawBitmap(pullDownHiglight, 0, toolHeight*i, paint);
+        }
+    }
+
+    BoardList getBoardList() {
+        return activity.getWhiteBoardCanvas().getBoardList();
+    }
+
+    private void updateThumbnailIfNecessary() {
+        if(thumbnailIsDirty) {
+            updateThumbnailImage();
+            thumbnailIsDirty = false;
+        }
+    }
+
+    private void updateThumbnailImage() {
+        thumbnailIsDirty = false;
+        Paint selectPaint = new Paint();
+        Paint currentPaint = new Paint();
+        Paint bgPaint = new Paint();
+        bgPaint.setColor(Color.LTGRAY);
+        selectPaint.setColor(Color.rgb(0xff, 0x5e, 0x19));
+
+        Paint paint = new Paint();
+        /*
+        Paint disablePaint = new Paint();
+//        disablePaint.setAlpha(32);
+        disablePaint.setAlpha(0xaa);
+        */
+
+
+
+        currentPaint.setColor(Color.rgb(0x32, 0xcc, 0xb6));
+        toolThumbnail.eraseColor(Color.LTGRAY);
+
+        Canvas canvas = new Canvas(toolThumbnail);
+        BoardList boards = getBoardList();
+        for(int i = 0; i < boards.size(); i++) {
+
+            if(boards.isCurrent(i)) {
+                canvas.drawRect(new Rect(0, getThumbnailBaseHeight()*i, getThumbnailBaseWidth(), getThumbnailBaseHeight()*(i+1)), currentPaint);
+                // canvas.drawRect(new Rect(THUMBNAIL_PADDING/2, THUMBNAIL_PADDING/2 + getThumbnailBaseHeight()*i, getThumbnailWidth(), THUMBNAIL_PADDING/2 + getThumbnailBaseHeight()*i+getThumbnailHeight()), bgPaint);
+            }
+            if(i==subIndex) {
+                canvas.drawRect(new Rect(0, getThumbnailBaseHeight()*i, getThumbnailBaseWidth(), getThumbnailBaseHeight()*(i+1)), selectPaint);
+            }
+            canvas.drawBitmap(boards.getBoard(i).getThumbnail(getThumbnailWidth(), getThumbnailHeight()), THUMBNAIL_PADDING/2, THUMBNAIL_PADDING/2 + getThumbnailBaseHeight()*i, paint);
+            /*
+            Paint paint = (i==subIndex)? selectPaint : disablePaint;
+            canvas.drawBitmap(boards.getBoard(i).getThumbnail(getThumbnailWidth(), getThumbnailHeight()), THUMBNAIL_PADDING/2, THUMBNAIL_PADDING/2 + getThumbnailBaseHeight()*i, paint);
+            */
+
+            /*
+            if(i == subIndex){
+                // canvas.drawBitmap(thumbnailHiglight, 0, getThumbnailBaseHeight()*i, paint);
+                canvas.drawRect(new Rect(0, getThumbnailBaseHeight()*i, getThumbnailBaseWidth(), getThumbnailBaseHeight()*(i+1)), selectPaint);
+            }
+            */
         }
     }
 
@@ -219,9 +300,18 @@ public class FloatingOverlay {
         forceToolPos();
         canvas.drawBitmap( toolBar, toolX, toolY, null );
 
+        Bitmap src = null;
+        int toolIndex = 0;
         if(penDown) {
-            Bitmap src = toolPen;
-            int x = toolX + toolHeight * TOOLBAR_PEN;
+            src = toolPen;
+            toolIndex = TOOLBAR_PEN;
+        } else if(pageDown) {
+            updateThumbnailIfNecessary();
+            src = toolThumbnail;
+            toolIndex = TOOLBAR_PAGE;
+        }
+        if(src != null) {
+            int x = toolX + toolHeight * toolIndex;
             int y = toolY - src.getHeight();
             if (toolY < height/2) y = toolY + toolHeight;
             canvas.drawBitmap( src, x, y, null );
@@ -244,6 +334,7 @@ public class FloatingOverlay {
     }
 
     boolean penDown = false;
+    boolean pageDown = false;
 
 
     // if return true, should not respond outsize.
@@ -269,7 +360,8 @@ public class FloatingOverlay {
                 updateToolbarImage();
             }
         } else if (idx == TOOLBAR_PAGE) {
-            activity.togglePage();
+            pageDown = true;
+            updateThumbnailImage();
         } else if (idx == TOOLBAR_MENU) {
             activity.openOptionsMenu();
         } else if (idx == TOOLBAR_CLEAR) {
@@ -330,6 +422,9 @@ public class FloatingOverlay {
         {
             if (popupRect.contains( ix, iy )) subIndex = (iy - popupRect.top) / toolHeight;
             updateToolbarImage();
+        } else if (pageDown) {
+            if (popupRect.contains( ix, iy )) subIndex = (iy - popupRect.top) / getThumbnailBaseHeight();
+            updateThumbnailImage();
         }
 
         return touching;
@@ -345,9 +440,12 @@ public class FloatingOverlay {
             penIndex = subIndex;
             updateToolbarImage();
             activity.setPenOrEraser(penIndex);
+        } else if(pageDown && subIndex != -1) {
+            activity.gotoBoard(subIndex);
         }
 
         penDown = false;
+        pageDown = false;
 
         cancelOperation();
 

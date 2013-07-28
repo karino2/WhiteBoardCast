@@ -262,7 +262,7 @@ public class WhiteBoardCanvas extends View implements FrameRetrieval  {
 
     private void pushUndoCommand(Rect region, Bitmap undo, Bitmap redo) {
         getUndoList().pushUndoCommand(region.left, region.top, undo, redo);
-        getCurrentBoard().invalidateSamnail();
+        getCurrentBoard().invalidateThumbnail();
     }
 
 
@@ -411,8 +411,13 @@ public class WhiteBoardCanvas extends View implements FrameRetrieval  {
         return getCurrentBoard().getUndoList();
     }
 
-    public void togglePage() {
-        boardList.toggleBoard();
+
+    public BoardList getBoardList() {
+        return boardList;
+    }
+
+    public void gotoBoard(int boardIdx) {
+        boardList.gotoBoard(boardIdx);
         // TODO: slow.
         viewBmp = getCommittedBmp().copy(Bitmap.Config.ARGB_8888, true);
 
@@ -424,5 +429,4 @@ public class WhiteBoardCanvas extends View implements FrameRetrieval  {
 
         invalidate();
     }
-
 }

@@ -172,8 +172,8 @@ public class WhiteBoardCastActivity extends Activity {
         getWhiteBoardCanvas().redo();
     }
 
-    public void togglePage() {
-        getWhiteBoardCanvas().togglePage();
+    public void gotoBoard(int boardIdx) {
+        getWhiteBoardCanvas().gotoBoard(boardIdx);
     }
 
     public enum RecordStatus {
@@ -274,7 +274,7 @@ public class WhiteBoardCastActivity extends Activity {
         futuer = scheduleExecuter.scheduleAtFixedRate(encoderTask, 0, 1000 / FPS, TimeUnit.MILLISECONDS);
     }
 
-    private WhiteBoardCanvas getWhiteBoardCanvas() {
+    public WhiteBoardCanvas getWhiteBoardCanvas() {
         return (WhiteBoardCanvas)findViewById(R.id.fullscreen_content);
     }
 

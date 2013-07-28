@@ -17,8 +17,7 @@ public class BoardList {
             height = h;
             getCurrent().resetCanvas(w, h);
 
-            // TODO: toggle code.
-            setupToggle();
+            setupBoards();
         }
     }
 
@@ -38,36 +37,28 @@ public class BoardList {
         list.add(new Board(width, height));
     }
 
+    public static final int THUMBNAIL_NUM = 3;
 
+
+    public boolean isCurrent(int idx) {
+        return idx == currentPos;
+    }
+    public Board getBoard(int idx) {
+        return list.get(idx);
+    }
 
     // temp implementation.
-    public void setupToggle() {
-        if(size() == 2)
+    public void setupBoards() {
+        if(size() == THUMBNAIL_NUM)
             return;
-        addNewBoard();
-    }
-
-    public void toggleBoard() {
-        if(currentPos == 0)
-            currentPos = 1;
-        else
-            currentPos = 0;
-    }
-
-    public Board next() {
-        currentPos++;
-        if(list.size() == currentPos) {
+        for(int i = 1; i < THUMBNAIL_NUM; i++)
             addNewBoard();
-            return getCurrent();
-        }
-        return getCurrent();
     }
 
-    public Board prev() {
-        if(currentPos == 0)
-            return null;
-        currentPos--;
-        return getCurrent();
-    }
 
+    public void gotoBoard(int boardIdx) {
+        if(size() <= boardIdx)
+            throw new IllegalArgumentException("boardIdx: " + boardIdx + ", size:" + size());
+        currentPos = boardIdx;
+    }
 }
