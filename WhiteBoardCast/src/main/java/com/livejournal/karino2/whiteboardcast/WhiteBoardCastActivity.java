@@ -172,6 +172,10 @@ public class WhiteBoardCastActivity extends Activity {
         getWhiteBoardCanvas().redo();
     }
 
+    public void togglePage() {
+        getWhiteBoardCanvas().togglePage();
+    }
+
     public enum RecordStatus {
         DORMANT, SETUP, RECORDING, PAUSE, DONE_PROCESS, DONE
     }

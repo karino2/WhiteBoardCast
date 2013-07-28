@@ -61,7 +61,8 @@ public class FloatingOverlay {
     final int TOOLBAR_REDO = 4;
     final int TOOLBAR_DONE = 5;
     final int TOOLBAR_CLEAR = 6;
-    final int TOOLBAR_MENU = 7;
+    final int TOOLBAR_PAGE = 7;
+    final int TOOLBAR_MENU = 8;
 
     public static final int PEN_INDEX_BLACK = 0;
     public static final int PEN_INDEX_RED = 1;
@@ -79,6 +80,7 @@ public class FloatingOverlay {
     Bitmap redoButton;
     Bitmap doneButton;
     Bitmap clearButton;
+    Bitmap pageButton;
     Bitmap menuButton;
 
     Bitmap pullDownBG;
@@ -94,6 +96,7 @@ public class FloatingOverlay {
         redoButton = floatResource(R.drawable.redo_button, toolHeight, toolHeight);
         doneButton = floatResource(R.drawable.done_button, toolHeight, toolHeight);
         clearButton = floatResource(R.drawable.clear_button, toolHeight, toolHeight);
+        pageButton = floatResource(R.drawable.page_button, toolHeight, toolHeight);
         menuButton = floatResource(R.drawable.menu_button, toolHeight, toolHeight);
 
         pullDownBG = floatResource(R.drawable.pd_bg, toolHeight, toolHeight);
@@ -140,7 +143,8 @@ public class FloatingOverlay {
         Paint doenPaint = activity.canStop()? null: disablePaint;
         canvas.drawBitmap(doneButton, toolHeight * 5, 0, doenPaint);
         canvas.drawBitmap(clearButton, toolHeight * 6, 0, null);
-        canvas.drawBitmap(menuButton, toolHeight * 7, 0, null);
+        canvas.drawBitmap(pageButton, toolHeight * 7, 0, null);
+        canvas.drawBitmap(menuButton, toolHeight * 8, 0, null);
 
         updateToolPenImage(paint);
     }
@@ -264,6 +268,8 @@ public class FloatingOverlay {
                 activity.stopRecord();
                 updateToolbarImage();
             }
+        } else if (idx == TOOLBAR_PAGE) {
+            activity.togglePage();
         } else if (idx == TOOLBAR_MENU) {
             activity.openOptionsMenu();
         } else if (idx == TOOLBAR_CLEAR) {

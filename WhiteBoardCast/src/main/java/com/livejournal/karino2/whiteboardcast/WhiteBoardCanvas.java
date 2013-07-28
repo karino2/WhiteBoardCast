@@ -19,20 +19,20 @@ import android.view.View;
 public class WhiteBoardCanvas extends View implements FrameRetrieval  {
 
     Bitmap viewBmp;
-    Bitmap commitedBmp;
     private Canvas mCanvas;
-    Canvas commitedCanvas;
+    Canvas committedCanvas;
     private Path mPath;
     private Paint mBitmapPaint;
     private Paint       mPaint;
     private Paint mCursorPaint;
     private Rect invalRegion;
 
+    BoardList boardList;
+
     FloatingOverlay overlay;
 
     static final int DEFAULT_PEN_WIDTH = 6;
     static final int ERASER_WIDTH = 60;
-    UndoList undoList = new UndoList();
 
     public WhiteBoardCanvas(Context context, AttributeSet attrs) {
         super(context, attrs);
@@ -54,7 +54,11 @@ public class WhiteBoardCanvas extends View implements FrameRetrieval  {
         mCursorPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
         mCursorPaint.setStyle(Paint.Style.STROKE);
         mCursorPaint.setPathEffect(new DashPathEffect(new float[]{5, 2}, 0));
+
+        boardList = new BoardList();
     }
+
+
 
     int mWidth;
     int mHeight;
@@ -85,10 +89,10 @@ public class WhiteBoardCanvas extends View implements FrameRetrieval  {
     public void resetCanvas(int w, int h) {
         viewBmp = Bitmap.createBitmap(w, h, Bitmap.Config.ARGB_8888);
         viewBmp.eraseColor(Color.WHITE);
-        commitedBmp = Bitmap.createBitmap(w, h, Bitmap.Config.ARGB_8888);
-        commitedBmp.eraseColor(Color.WHITE);
+        boardList.setSize(w, h);
+        getCommittedBmp().eraseColor(Color.WHITE);
         mCanvas = new Canvas(viewBmp);
-        commitedCanvas = new Canvas(commitedBmp);
+        committedCanvas = new Canvas(getCommittedBmp());
     }
 
     protected void onDraw(Canvas canvas) {
@@ -234,17 +238,19 @@ public class WhiteBoardCanvas extends View implements FrameRetrieval  {
                 mDownHandled = false;
                 mPath.lineTo(mX, mY);
 
-                boolean canUndoBefore = undoList.canUndo();
+                boolean canUndoBefore = getUndoList().canUndo();
 
                 Rect region = pathBound();
-                Bitmap undo = Bitmap.createBitmap(commitedBmp, region.left, region.top, region.width(), region.height() );
-                commitedCanvas.drawPath(mPath, mPaint);
-                Bitmap redo = Bitmap.createBitmap(commitedBmp, region.left, region.top, region.width(), region.height());
-                undoList.pushUndoCommand(region.left, region.top, undo, redo);
+                Bitmap undo = Bitmap.createBitmap(getCommittedBmp(), region.left, region.top, region.width(), region.height() );
+                committedCanvas.drawPath(mPath, mPaint);
+                Bitmap redo = Bitmap.createBitmap(getCommittedBmp(), region.left, region.top, region.width(), region.height());
+
+                pushUndoCommand(region, undo, redo);
+
                 invalRegion.union(region);
                 mCanvas.drawPath(mPath, mPaint);
                 mPath.reset();
-                if(undoList.canUndo() != canUndoBefore) {
+                if(getUndoList().canUndo() != canUndoBefore) {
                     overlay.changeUndoStatus();
                 }
                 invalidate();
@@ -254,6 +260,10 @@ public class WhiteBoardCanvas extends View implements FrameRetrieval  {
 
     }
 
+    private void pushUndoCommand(Rect region, Bitmap undo, Bitmap redo) {
+        getUndoList().pushUndoCommand(region.left, region.top, undo, redo);
+        getCurrentBoard().invalidateSamnail();
+    }
 
 
     private Rect pathBound() {
@@ -284,22 +294,22 @@ public class WhiteBoardCanvas extends View implements FrameRetrieval  {
     }
 
     public boolean canUndo() {
-        return undoList.canUndo();
+        return getUndoList().canUndo();
     }
 
     public void undo() {
-        Rect undoInval = undoList.undo(commitedCanvas, mPaint);
+        Rect undoInval = getUndoList().undo(committedCanvas, mPaint);
         afterUndoRedo(undoInval);
     }
 
     public void redo() {
-        Rect undoInval = undoList.redo(commitedCanvas, mPaint);
+        Rect undoInval = getUndoList().redo(committedCanvas, mPaint);
         afterUndoRedo(undoInval);
     }
 
     private void afterUndoRedo(Rect undoInval) {
         synchronized (viewBmp) {
-            mCanvas.drawBitmap(commitedBmp, undoInval, undoInval, mPaint);
+            mCanvas.drawBitmap(getCommittedBmp(), undoInval, undoInval, mPaint);
             invalRegion.union(undoInval);
         }
         invalidate(undoInval);
@@ -319,16 +329,16 @@ public class WhiteBoardCanvas extends View implements FrameRetrieval  {
     }
 
     public void clearCanvas() {
-        boolean canUndoBefore = undoList.canUndo();
-        Bitmap undo = Bitmap.createBitmap(commitedBmp, 0, 0, viewBmp.getWidth(), viewBmp.getHeight() );
+        boolean canUndoBefore = getUndoList().canUndo();
+        Bitmap undo = Bitmap.createBitmap(getCommittedBmp(), 0, 0, viewBmp.getWidth(), viewBmp.getHeight() );
 
-        commitedBmp.eraseColor(Color.WHITE);
+        getCommittedBmp().eraseColor(Color.WHITE);
         viewBmp.eraseColor(Color.WHITE);
         invalRegion.set(0, 0, viewBmp.getWidth(), viewBmp.getHeight());
 
-        Bitmap redo = Bitmap.createBitmap(commitedBmp, 0, 0, viewBmp.getWidth(), viewBmp.getHeight() );
-        undoList.pushUndoCommand(0, 0, undo, redo);
-        if(undoList.canUndo() != canUndoBefore) {
+        Bitmap redo = Bitmap.createBitmap(getCommittedBmp(), 0, 0, viewBmp.getWidth(), viewBmp.getHeight() );
+        getUndoList().pushUndoCommand(0, 0, undo, redo);
+        if(getUndoList().canUndo() != canUndoBefore) {
             overlay.changeUndoStatus();
         }
     }
@@ -369,7 +379,7 @@ public class WhiteBoardCanvas extends View implements FrameRetrieval  {
     }
 
     public boolean canRedo() {
-        return undoList.canRedo();
+        return getUndoList().canRedo();
     }
 
     FpsCounter paintFpsCounter = new FpsCounter(3);
@@ -387,6 +397,32 @@ public class WhiteBoardCanvas extends View implements FrameRetrieval  {
                 encoderFpsCounter.push(currentFrameMill);
             }
         };
+    }
+
+    private Board getCurrentBoard() {
+        return boardList.getCurrent();
+    }
+
+    private Bitmap getCommittedBmp() {
+        return getCurrentBoard().getBoardBmp();
+    }
+
+    private UndoList getUndoList() {
+        return getCurrentBoard().getUndoList();
+    }
+
+    public void togglePage() {
+        boardList.toggleBoard();
+        // TODO: slow.
+        viewBmp = getCommittedBmp().copy(Bitmap.Config.ARGB_8888, true);
+
+        mCanvas = new Canvas(viewBmp);
+        committedCanvas = new Canvas(getCommittedBmp());
+
+        overlay.changeUndoStatus();
+        setWholeAreaInvalidate();
+
+        invalidate();
     }
 
 }
