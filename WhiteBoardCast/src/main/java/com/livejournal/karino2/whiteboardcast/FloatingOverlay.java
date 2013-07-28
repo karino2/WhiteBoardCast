@@ -64,6 +64,7 @@ public class FloatingOverlay {
     final int TOOLBAR_CLEAR = 6;
     final int TOOLBAR_PAGE = 7;
     final int TOOLBAR_MENU = 8;
+    final int TOOLBAR_BUTTON_NUM = TOOLBAR_MENU+1;
 
     public static final int PEN_INDEX_BLACK = 0;
     public static final int PEN_INDEX_RED = 1;
@@ -94,8 +95,8 @@ public class FloatingOverlay {
     Bitmap thumbnailHiglight;
 
     void initToolbarImage() {
-        toolBar = Bitmap.createBitmap(toolHeight *8, toolHeight, Config.ARGB_8888);
-        toolBarPanel = floatResource(R.drawable.float_base, toolHeight *8, toolHeight);
+        toolBar = Bitmap.createBitmap(toolHeight *TOOLBAR_BUTTON_NUM, toolHeight, Config.ARGB_8888);
+        toolBarPanel = floatResource(R.drawable.float_base, toolHeight *TOOLBAR_BUTTON_NUM, toolHeight);
 
         undoButton = floatResource(R.drawable.undo_button, toolHeight, toolHeight);
         redoButton = floatResource(R.drawable.redo_button, toolHeight, toolHeight);
@@ -197,22 +198,15 @@ public class FloatingOverlay {
 
     private void updateThumbnailImage() {
         thumbnailIsDirty = false;
+
+        Paint paint = new Paint();
         Paint selectPaint = new Paint();
         Paint currentPaint = new Paint();
         Paint bgPaint = new Paint();
         bgPaint.setColor(Color.LTGRAY);
         selectPaint.setColor(Color.rgb(0xff, 0x5e, 0x19));
+        currentPaint.setColor(Color.rgb(0x1c, 0x05, 0xff));
 
-        Paint paint = new Paint();
-        /*
-        Paint disablePaint = new Paint();
-//        disablePaint.setAlpha(32);
-        disablePaint.setAlpha(0xaa);
-        */
-
-
-
-        currentPaint.setColor(Color.rgb(0x32, 0xcc, 0xb6));
         toolThumbnail.eraseColor(Color.LTGRAY);
 
         Canvas canvas = new Canvas(toolThumbnail);
@@ -221,23 +215,11 @@ public class FloatingOverlay {
 
             if(boards.isCurrent(i)) {
                 canvas.drawRect(new Rect(0, getThumbnailBaseHeight()*i, getThumbnailBaseWidth(), getThumbnailBaseHeight()*(i+1)), currentPaint);
-                // canvas.drawRect(new Rect(THUMBNAIL_PADDING/2, THUMBNAIL_PADDING/2 + getThumbnailBaseHeight()*i, getThumbnailWidth(), THUMBNAIL_PADDING/2 + getThumbnailBaseHeight()*i+getThumbnailHeight()), bgPaint);
             }
             if(i==subIndex) {
                 canvas.drawRect(new Rect(0, getThumbnailBaseHeight()*i, getThumbnailBaseWidth(), getThumbnailBaseHeight()*(i+1)), selectPaint);
             }
             canvas.drawBitmap(boards.getBoard(i).getThumbnail(getThumbnailWidth(), getThumbnailHeight()), THUMBNAIL_PADDING/2, THUMBNAIL_PADDING/2 + getThumbnailBaseHeight()*i, paint);
-            /*
-            Paint paint = (i==subIndex)? selectPaint : disablePaint;
-            canvas.drawBitmap(boards.getBoard(i).getThumbnail(getThumbnailWidth(), getThumbnailHeight()), THUMBNAIL_PADDING/2, THUMBNAIL_PADDING/2 + getThumbnailBaseHeight()*i, paint);
-            */
-
-            /*
-            if(i == subIndex){
-                // canvas.drawBitmap(thumbnailHiglight, 0, getThumbnailBaseHeight()*i, paint);
-                canvas.drawRect(new Rect(0, getThumbnailBaseHeight()*i, getThumbnailBaseWidth(), getThumbnailBaseHeight()*(i+1)), selectPaint);
-            }
-            */
         }
     }
 
