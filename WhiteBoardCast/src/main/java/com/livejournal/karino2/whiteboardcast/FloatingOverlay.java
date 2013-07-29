@@ -204,8 +204,9 @@ public class FloatingOverlay {
         Paint currentPaint = new Paint();
         Paint bgPaint = new Paint();
         bgPaint.setColor(Color.LTGRAY);
-        selectPaint.setColor(Color.rgb(0xff, 0x5e, 0x19));
-        currentPaint.setColor(Color.rgb(0x1c, 0x05, 0xff));
+        selectPaint.setColor(Color.rgb(0xb7, 0xc4, 0xe0));
+        currentPaint.setColor(Color.rgb(0, 0x80, 0xff));
+        selectPaint.setAlpha(128);
 
         toolThumbnail.eraseColor(Color.LTGRAY);
 
@@ -216,10 +217,10 @@ public class FloatingOverlay {
             if(boards.isCurrent(i)) {
                 canvas.drawRect(new Rect(0, getThumbnailBaseHeight()*i, getThumbnailBaseWidth(), getThumbnailBaseHeight()*(i+1)), currentPaint);
             }
+            canvas.drawBitmap(boards.getBoard(i).getThumbnail(getThumbnailWidth(), getThumbnailHeight()), THUMBNAIL_PADDING/2, THUMBNAIL_PADDING/2 + getThumbnailBaseHeight()*i, paint);
             if(i==subIndex) {
                 canvas.drawRect(new Rect(0, getThumbnailBaseHeight()*i, getThumbnailBaseWidth(), getThumbnailBaseHeight()*(i+1)), selectPaint);
             }
-            canvas.drawBitmap(boards.getBoard(i).getThumbnail(getThumbnailWidth(), getThumbnailHeight()), THUMBNAIL_PADDING/2, THUMBNAIL_PADDING/2 + getThumbnailBaseHeight()*i, paint);
         }
     }
 
