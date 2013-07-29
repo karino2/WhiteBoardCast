@@ -64,10 +64,16 @@ public class Board {
             if(boardBmp == null) {
                 thumbnail = getEmptyThumbnail(width, height);
             } else {
-                thumbnail = Bitmap.createScaledBitmap(boardBmp, width, height, true);
+                thumbnail = createThumbnail(width, height);
             }
         }
         return thumbnail;
+    }
+
+    private Bitmap createThumbnail(int width, int height) {
+        Bitmap dest = Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888);
+        FloatingOverlay.highQualityStretch(boardBmp, dest);
+        return dest;
     }
 
 
