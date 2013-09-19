@@ -7,32 +7,20 @@ import android.graphics.Color;
  * Created by karino on 7/27/13.
  */
 public class Board {
-    static Bitmap s_emptyThumbnail;
-    static Bitmap getEmptyThumbnail(int w, int h) {
-        if(s_emptyThumbnail == null) {
-            s_emptyThumbnail = Bitmap.createBitmap(w, h, Bitmap.Config.ARGB_8888);
-            s_emptyThumbnail.eraseColor(Color.WHITE);
-        }
-        return s_emptyThumbnail;
-    }
-
 
     Bitmap boardBmp;
     UndoList undoList;
-    Bitmap thumbnail;
     int width;
     int height;
 
     public Board(int w, int h) {
         boardBmp = null;
-        thumbnail = null;
         undoList = new UndoList();
         resetCanvas(w, h);
     }
 
     public Board() {
         boardBmp = null;
-        thumbnail = null;
         width = height = 0;
         undoList = new UndoList();
     }
@@ -55,33 +43,8 @@ public class Board {
         return boardBmp;
     }
 
-    public void invalidateThumbnail() {
-        thumbnail = null;
-    }
-
-    public Bitmap getThumbnail(int width, int height) {
-        if(thumbnail == null) {
-            if(boardBmp == null) {
-                thumbnail = getEmptyThumbnail(width, height);
-            } else {
-                thumbnail = createThumbnail(width, height);
-            }
-        }
-        return thumbnail;
-    }
-
-    private Bitmap createThumbnail(int width, int height) {
-        Bitmap dest = Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888);
-        FloatingOverlay.highQualityStretch(boardBmp, dest);
-        return dest;
-    }
-
-
     public UndoList getUndoList() {
         return undoList;
     }
-
-
-
 
 }

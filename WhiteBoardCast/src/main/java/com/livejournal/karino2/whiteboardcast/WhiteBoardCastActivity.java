@@ -172,10 +172,6 @@ public class WhiteBoardCastActivity extends Activity {
         getWhiteBoardCanvas().redo();
     }
 
-    public void gotoBoard(int boardIdx) {
-        getWhiteBoardCanvas().gotoBoard(boardIdx);
-    }
-
     public enum RecordStatus {
         DORMANT, SETUP, RECORDING, PAUSE, DONE_PROCESS, DONE
     }
@@ -229,11 +225,13 @@ public class WhiteBoardCastActivity extends Activity {
     }
 
     public void pageUp() {
-        showMessage("NYI: page up");
+        if(!getWhiteBoardCanvas().pageUp()) {
+            showMessage("First page, couldn't go up!");
+        }
     }
 
     public void pageDown() {
-        showMessage("NYI: page down");
+        getWhiteBoardCanvas().pageDown();
     }
 
     private void startRecordSecondPhase() {

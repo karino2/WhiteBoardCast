@@ -63,8 +63,7 @@ public class FloatingOverlay {
     final int TOOLBAR_REDO = 4;
     final int TOOLBAR_DONE = 5;
     final int TOOLBAR_CLEAR = 6;
-    final int TOOLBAR_PAGE = 7;
-    final int TOOLBAR_MENU = 8;
+    final int TOOLBAR_MENU = 7;
     final int TOOLBAR_BUTTON_NUM = TOOLBAR_MENU+1;
 
     public static final int PEN_INDEX_BLACK = 0;
@@ -88,17 +87,12 @@ public class FloatingOverlay {
     Bitmap redoButton;
     Bitmap doneButton;
     Bitmap clearButton;
-    Bitmap pageButton;
     Bitmap menuButton;
 
     Bitmap pullDownBG;
     Bitmap pullDownHiglight;
     Bitmap toolPen;
     ArrayList<Bitmap> toolPenIcon;
-
-    Bitmap toolThumbnail;
-    boolean thumbnailIsDirty = false;
-    Bitmap thumbnailHiglight;
 
     void initToolbarImage() {
         toolBar = Bitmap.createBitmap(toolHeight *TOOLBAR_BUTTON_NUM, toolHeight, Config.ARGB_8888);
@@ -108,7 +102,6 @@ public class FloatingOverlay {
         redoButton = floatResource(R.drawable.redo_button, toolHeight, toolHeight);
         doneButton = floatResource(R.drawable.done_button, toolHeight, toolHeight);
         clearButton = floatResource(R.drawable.clear_button, toolHeight, toolHeight);
-        pageButton = floatResource(R.drawable.page_button, toolHeight, toolHeight);
         menuButton = floatResource(R.drawable.menu_button, toolHeight, toolHeight);
 
         pullDownBG = floatResource(R.drawable.pd_bg, toolHeight, toolHeight);
@@ -126,10 +119,6 @@ public class FloatingOverlay {
         recIcon.add(floatResource(R.drawable.rec_button, toolHeight, toolHeight));
         recIcon.add(floatResource(R.drawable.rec_setupping, toolHeight, toolHeight));
         recIcon.add(floatResource(R.drawable.pause_button, toolHeight, toolHeight));
-
-        toolThumbnail = Bitmap.createBitmap(getThumbnailBaseWidth(), getThumbnailBaseHeight()*BoardList.THUMBNAIL_NUM, Config.ARGB_8888);
-        // re-use.
-        thumbnailHiglight = floatResource(R.drawable.pd_hilight, getThumbnailBaseWidth(), getThumbnailBaseHeight());
 
         updateToolbarImage();
     }
@@ -159,8 +148,6 @@ public class FloatingOverlay {
     int penIndex = 0;
 
     private void updateToolbarImage() {
-        thumbnailIsDirty = true;
-
         Paint paint = new Paint();
         Paint disablePaint = new Paint();
         disablePaint.setAlpha(32);
@@ -181,8 +168,7 @@ public class FloatingOverlay {
         Paint doenPaint = activity.canStop()? null: disablePaint;
         canvas.drawBitmap(doneButton, toolHeight * 5, 0, doenPaint);
         canvas.drawBitmap(clearButton, toolHeight * 6, 0, null);
-        canvas.drawBitmap(pageButton, toolHeight * 7, 0, null);
-        canvas.drawBitmap(menuButton, toolHeight * 8, 0, null);
+        canvas.drawBitmap(menuButton, toolHeight * 7, 0, null);
 
         updateToolPenImage(paint);
     }
@@ -200,41 +186,6 @@ public class FloatingOverlay {
 
     BoardList getBoardList() {
         return activity.getWhiteBoardCanvas().getBoardList();
-    }
-
-    private void updateThumbnailIfNecessary() {
-        if(thumbnailIsDirty) {
-            updateThumbnailImage();
-            thumbnailIsDirty = false;
-        }
-    }
-
-    private void updateThumbnailImage() {
-        thumbnailIsDirty = false;
-
-        Paint paint = new Paint();
-        Paint selectPaint = new Paint();
-        Paint currentPaint = new Paint();
-        Paint bgPaint = new Paint();
-        bgPaint.setColor(Color.LTGRAY);
-        selectPaint.setColor(Color.rgb(0xb7, 0xc4, 0xe0));
-        currentPaint.setColor(Color.rgb(0, 0x80, 0xff));
-        selectPaint.setAlpha(128);
-
-        toolThumbnail.eraseColor(Color.LTGRAY);
-
-        Canvas canvas = new Canvas(toolThumbnail);
-        BoardList boards = getBoardList();
-        for(int i = 0; i < boards.size(); i++) {
-
-            if(boards.isCurrent(i)) {
-                canvas.drawRect(new Rect(0, getThumbnailBaseHeight()*i, getThumbnailBaseWidth(), getThumbnailBaseHeight()*(i+1)), currentPaint);
-            }
-            canvas.drawBitmap(boards.getBoard(i).getThumbnail(getThumbnailWidth(), getThumbnailHeight()), THUMBNAIL_PADDING/2, THUMBNAIL_PADDING/2 + getThumbnailBaseHeight()*i, paint);
-            if(i==subIndex) {
-                canvas.drawRect(new Rect(0, getThumbnailBaseHeight()*i, getThumbnailBaseWidth(), getThumbnailBaseHeight()*(i+1)), selectPaint);
-            }
-        }
     }
 
     WhiteBoardCastActivity activity;
@@ -323,10 +274,6 @@ public class FloatingOverlay {
         if(penDown) {
             src = toolPen;
             toolIndex = TOOLBAR_PEN;
-        } else if(pageDown) {
-            updateThumbnailIfNecessary();
-            src = toolThumbnail;
-            toolIndex = TOOLBAR_PAGE;
         }
         if(src != null) {
             int x = toolX + toolHeight * toolIndex;
@@ -352,7 +299,6 @@ public class FloatingOverlay {
     }
 
     boolean penDown = false;
-    boolean pageDown = false;
 
 
     // if return true, should not respond outsize.
@@ -387,9 +333,6 @@ public class FloatingOverlay {
                 activity.stopRecord();
                 updateToolbarImage();
             }
-        } else if (idx == TOOLBAR_PAGE) {
-            pageDown = true;
-            updateThumbnailImage();
         } else if (idx == TOOLBAR_MENU) {
             activity.openOptionsMenu();
         } else if (idx == TOOLBAR_CLEAR) {
@@ -450,9 +393,6 @@ public class FloatingOverlay {
         {
             if (popupRect.contains( ix, iy )) subIndex = (iy - popupRect.top) / toolHeight;
             updateToolbarImage();
-        } else if (pageDown) {
-            if (popupRect.contains( ix, iy )) subIndex = (iy - popupRect.top) / getThumbnailBaseHeight();
-            updateThumbnailImage();
         }
 
         return touchingToolBar;
@@ -468,12 +408,9 @@ public class FloatingOverlay {
             penIndex = subIndex;
             updateToolbarImage();
             activity.setPenOrEraser(penIndex);
-        } else if(pageDown && subIndex != -1) {
-            activity.gotoBoard(subIndex);
         }
 
         penDown = false;
-        pageDown = false;
 
         cancelOperation();
 
