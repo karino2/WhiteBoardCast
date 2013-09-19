@@ -228,6 +228,14 @@ public class WhiteBoardCastActivity extends Activity {
         });
     }
 
+    public void pageUp() {
+        showMessage("NYI: page up");
+    }
+
+    public void pageDown() {
+        showMessage("NYI: page down");
+    }
+
     private void startRecordSecondPhase() {
         WhiteBoardCanvas wb = getWhiteBoardCanvas();
         wb.setWholeAreaInvalidate(); // for restart. make it a little heavy.

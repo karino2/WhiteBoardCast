@@ -17,6 +17,7 @@ import java.util.ArrayList;
  */
 public class FloatingOverlay {
 
+
     public static void highQualityStretch( Bitmap src, Bitmap dest )
     {
         dest.eraseColor( 0 );
@@ -50,7 +51,7 @@ public class FloatingOverlay {
     private int width = 32;
     private int height = 32;
 
-    boolean touching;
+    boolean touchingToolBar;
     int touchOfsX = 0;
     int touchOfsY = 0;
     boolean dragging = false;
@@ -76,6 +77,11 @@ public class FloatingOverlay {
     static final int REC_SETUP = 1;
     static final int REC_PAUSE = 2;
 
+
+    Rect upButtonRect;
+    Rect downButtonRect;
+    Bitmap upButton;
+    Bitmap downButton;
 
     ArrayList<Bitmap> recIcon;
     Bitmap undoButton;
@@ -127,6 +133,13 @@ public class FloatingOverlay {
 
         updateToolbarImage();
     }
+
+
+    private void initPageUpDownImage() {
+        upButton = floatResource(R.drawable.page_up_button, toolHeight, toolHeight);
+        downButton = floatResource(R.drawable.page_down_button, toolHeight, toolHeight);
+    }
+
 
     final int THUMBNAIL_PADDING = 8;
     int getThumbnailWidth() {
@@ -230,7 +243,7 @@ public class FloatingOverlay {
         activity = act;
 
         DisplayMetrics metrics = new DisplayMetrics();
-        act.getWindowManager().getDefaultDisplay().getMetrics( metrics );
+        act.getWindowManager().getDefaultDisplay().getMetrics(metrics);
 
         dpi = (metrics.xdpi + metrics.ydpi) / 2;
         if (dpi < 10) dpi = 10;
@@ -252,6 +265,10 @@ public class FloatingOverlay {
         if (toolHeight < 10) toolHeight = 10;
         if (toolHeight > 512) toolHeight = 512;
 
+        upButtonRect = new Rect();
+        downButtonRect = new Rect();
+
+        initPageUpDownImage();
         initToolbarImage();
 
 
@@ -280,6 +297,24 @@ public class FloatingOverlay {
 
     public void onDraw( Canvas canvas )
     {
+        drawPageUpDownButton(canvas);
+        drawToolBar(canvas);
+    }
+
+    private void drawPageUpDownButton(Canvas canvas) {
+        Paint semiTransparentPaint = new Paint();
+        semiTransparentPaint.setAlpha(128);
+        int pageUpDownX = width - upButton.getWidth();
+        int pageDownY = height - upButton.getHeight();
+
+        canvas.drawBitmap( upButton, pageUpDownX, 0, semiTransparentPaint );
+        upButtonRect.set(pageUpDownX, 0, pageUpDownX+upButton.getWidth(), upButton.getHeight());
+
+        canvas.drawBitmap( downButton, pageUpDownX, pageDownY, semiTransparentPaint);
+        downButtonRect.set(pageUpDownX, pageDownY, pageUpDownX+downButton.getWidth(), pageDownY+downButton.getHeight());
+    }
+
+    private void drawToolBar(Canvas canvas) {
         forceToolPos();
         canvas.drawBitmap( toolBar, toolX, toolY, null );
 
@@ -327,9 +362,19 @@ public class FloatingOverlay {
         int iy = (int)gy;
 
         int idx = insideIndex( gx, gy );
-        touching = (idx != -1);
+        touchingToolBar = (idx != -1);
+        if (!touchingToolBar) {
+            if(upButtonRect.contains(ix, iy)) {
+                activity.pageUp();
+                return true;
+            } else if(downButtonRect.contains(ix, iy)) {
+                activity.pageDown();
+                return true;
+            }
+        }
+
         dragging = (idx == TOOLBAR_HANDLE);
-        if (touching)
+        if (touchingToolBar)
         {
             touchOfsX = (int)gx - toolX;
             touchOfsY = (int)gy - toolY;
@@ -364,7 +409,7 @@ public class FloatingOverlay {
             }
         }
 
-        return touching;
+        return touchingToolBar;
     }
 
     private void handleRecordButtonPressed() {
@@ -410,14 +455,14 @@ public class FloatingOverlay {
             updateThumbnailImage();
         }
 
-        return touching;
+        return touchingToolBar;
     }
 
     public boolean onTouchUp( float gx, float gy )
     {
         int ix = (int)gx;
         int iy = (int)gy;
-        boolean res = touching;
+        boolean res = touchingToolBar;
 
         if(penDown && subIndex != -1) {
             penIndex = subIndex;
@@ -437,7 +482,7 @@ public class FloatingOverlay {
 
     public void cancelOperation()
     {
-        touching = false;
+        touchingToolBar = false;
         dragging = false;
     }
 
