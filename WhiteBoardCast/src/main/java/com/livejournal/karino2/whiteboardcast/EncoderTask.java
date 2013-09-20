@@ -55,7 +55,9 @@ public class EncoderTask implements Runnable {
 
     int stride;
     public void updateBitmap(Bitmap parentBmp) {
-        bitmap = Bitmap.createBitmap(parentBmp);
+        synchronized (parentBmp) {
+            bitmap = Bitmap.createBitmap(parentBmp);
+        }
         width = bitmap.getWidth();
         height = bitmap.getHeight();
         int bufLen = width*height;

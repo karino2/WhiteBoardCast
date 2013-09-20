@@ -62,6 +62,13 @@ public class WhiteBoardCastActivity extends Activity {
 
     }
 
+    ScheduledExecutorService getScheduleExecutor() {
+        if(scheduleExecuter == null) {
+            scheduleExecuter = Executors.newScheduledThreadPool(2);
+        }
+        return scheduleExecuter;
+    }
+
 
     Handler handler = new Handler();
     VorbisMediaRecorder recorder;
@@ -136,11 +143,39 @@ public class WhiteBoardCastActivity extends Activity {
         changeRecStatus(RecordStatus.DONE_PROCESS);
         showMessage("record end, start post process...");
         scheduleExecuter.shutdown();
-        scheduleExecuter = Executors.newSingleThreadScheduledExecutor();
+
         recorder.stop();
         recorder.release();
+
         changeRecStatus(RecordStatus.DONE);
 
+        new Thread(new Runnable() {
+            @Override
+            public void run() {
+                try {
+                    scheduleExecuter.awaitTermination(10, TimeUnit.SECONDS);
+                    scheduleExecuter = Executors.newScheduledThreadPool(2);
+                    animator.setExecutor(scheduleExecuter);
+                    handler.post(new Runnable() {
+                        @Override
+                        public void run() {
+                            showMessage("finalize encoder...");
+                            afterTerminateScheduler();
+                        }
+                    });
+                } catch (InterruptedException e) {
+                    postShowMessage("wait interrupted: " + e.getMessage());
+                }
+
+            }
+        }).start();
+
+
+
+
+    }
+
+    private void afterTerminateScheduler() {
         if(!encoderTask.doneEncoder(new Encoder.FinalizeListener(){
             @Override
             public void done() {
@@ -222,7 +257,6 @@ public class WhiteBoardCastActivity extends Activity {
             return;
         }
         changeRecStatus(RecordStatus.SETUP);
-        scheduleExecuter = Executors.newSingleThreadScheduledExecutor();
         handler.post(new Runnable() {
             @Override
             public void run() {
@@ -244,7 +278,7 @@ public class WhiteBoardCastActivity extends Activity {
 
     private void startRecordSecondPhase() {
         WhiteBoardCanvas wb = getWhiteBoardCanvas();
-        wb.setWholeAreaInvalidate(); // for restart. make it a little heavy.
+        wb.invalWholeRegionForEncoder(); // for restart. make it a little heavy.
         try {
             encoderTask = new EncoderTask(wb, wb.getBitmap(), getWorkVideoPath());
 
@@ -285,7 +319,7 @@ public class WhiteBoardCastActivity extends Activity {
     }
 
     private void scheduleEncodeTask() {
-        future = scheduleExecuter.scheduleAtFixedRate(encoderTask, 0, 1000 / FPS, TimeUnit.MILLISECONDS);
+        future = getScheduleExecutor().scheduleAtFixedRate(encoderTask, 0, 1000 / FPS, TimeUnit.MILLISECONDS);
     }
 
     public WhiteBoardCanvas getWhiteBoardCanvas() {

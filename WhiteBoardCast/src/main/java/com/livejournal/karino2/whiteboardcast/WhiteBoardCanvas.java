@@ -175,14 +175,18 @@ public class WhiteBoardCanvas extends View implements FrameRetrieval, PageScroll
         region.roundOut(lastBrushCursorRegion);
         widen(lastBrushCursorRegion, CURSOR_MARGIN);
         Rect dest = new Rect(0, 0, lastBrushCursorRegion.width(), lastBrushCursorRegion.height());
-        cursorBackupCanvas.drawBitmap(viewBmp, lastBrushCursorRegion, dest, null);
+        synchronized (viewBmp) {
+            cursorBackupCanvas.drawBitmap(viewBmp, lastBrushCursorRegion, dest, null);
+        }
     }
 
     private void revertBrushDrawnRegionIfNecessary() {
         if(!isRectValid(lastBrushCursorRegion))
             return;
         Rect tmp = new Rect(0, 0, lastBrushCursorRegion.width(), lastBrushCursorRegion.height());
-        mCanvas.drawBitmap(cursorBackupBmp, tmp, lastBrushCursorRegion, null);
+        synchronized(viewBmp) {
+            mCanvas.drawBitmap(cursorBackupBmp, tmp, lastBrushCursorRegion, null);
+        }
 
         invalViewBmpRegion(lastBrushCursorRegion);
 
@@ -206,7 +210,9 @@ public class WhiteBoardCanvas extends View implements FrameRetrieval, PageScroll
 
         if(isRectFValid(mBrushCursorRegion)) {
             backupCursorRegion(mBrushCursorRegion);
-            mCanvas.drawOval(mBrushCursorRegion, mCursorPaint);
+            synchronized (viewBmp) {
+                mCanvas.drawOval(mBrushCursorRegion, mCursorPaint);
+            }
             invalViewBmpRegionF(mBrushCursorRegion);
         }
     }
@@ -310,7 +316,9 @@ public class WhiteBoardCanvas extends View implements FrameRetrieval, PageScroll
                         }
                     }
                     updateInvalRegion();
-                    mCanvas.drawPath(mPath, mPaint);
+                    synchronized (viewBmp) {
+                        mCanvas.drawPath(mPath, mPaint);
+                    }
                 }
                 // no tolerance
                 /*
@@ -345,7 +353,9 @@ public class WhiteBoardCanvas extends View implements FrameRetrieval, PageScroll
                 pushUndoCommand(region, undo, redo);
 
                 invalRegion.union(region);
-                mCanvas.drawPath(mPath, mPaint);
+                synchronized (viewBmp) {
+                    mCanvas.drawPath(mPath, mPaint);
+                }
                 mPath.reset();
                 if(getUndoList().canUndo() != canUndoBefore) {
                     overlay.changeUndoStatus();
@@ -387,9 +397,6 @@ public class WhiteBoardCanvas extends View implements FrameRetrieval, PageScroll
 
     public Bitmap getBitmap() { return viewBmp;}
 
-    public void setWholeAreaInvalidate() {
-        invalRegion.set(0, 0, mWidth, mHeight);
-    }
 
     public boolean canUndo() {
         return getUndoList().canUndo();
@@ -432,13 +439,17 @@ public class WhiteBoardCanvas extends View implements FrameRetrieval, PageScroll
 
         getCommittedBmp().eraseColor(Color.WHITE);
         viewBmp.eraseColor(Color.WHITE);
-        invalRegion.set(0, 0, viewBmp.getWidth(), viewBmp.getHeight());
+        invalWholeRegionForEncoder();
 
         Bitmap redo = Bitmap.createBitmap(getCommittedBmp(), 0, 0, viewBmp.getWidth(), viewBmp.getHeight() );
         getUndoList().pushUndoCommand(0, 0, undo, redo);
         if(getUndoList().canUndo() != canUndoBefore) {
             overlay.changeUndoStatus();
         }
+    }
+
+    public void invalWholeRegionForEncoder() {
+        invalRegion.set(0, 0, viewBmp.getWidth(), viewBmp.getHeight());
     }
 
     private int penWidth = DEFAULT_PEN_WIDTH;
@@ -522,7 +533,7 @@ public class WhiteBoardCanvas extends View implements FrameRetrieval, PageScroll
         committedCanvas = new Canvas(getCommittedBmp());
 
         overlay.changeUndoStatus();
-        setWholeAreaInvalidate();
+        invalWholeRegionForEncoder();
 
         invalidate();
     }
@@ -541,7 +552,7 @@ public class WhiteBoardCanvas extends View implements FrameRetrieval, PageScroll
     }
 
     void updateScreenUIThread() {
-        invalRegion.set(0, 0, viewBmp.getWidth(), viewBmp.getHeight());
+        invalWholeRegionForEncoder();
         invalidate();
     }
 

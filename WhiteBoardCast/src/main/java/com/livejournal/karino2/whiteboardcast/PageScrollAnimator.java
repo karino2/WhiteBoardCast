@@ -42,6 +42,10 @@ public class PageScrollAnimator implements Runnable{
         blackPaint.setColor(Color.BLACK);
     }
 
+    public void setExecutor(ScheduledExecutorService executor1) {
+        executor = executor1;
+    }
+
     ScheduledFuture<?> future;
     Bitmap destBmpForLock;
     public void start(Bitmap prev, Bitmap next, Bitmap dest, Direction dir) {
@@ -74,12 +78,10 @@ public class PageScrollAnimator implements Runnable{
             int height = prevPage.getHeight();
             int width = prevPage.getWidth();
 
-            synchronized (destBmpForLock) {
-                if(scrollDirection == Direction.Next) {
-                    tickNext(rate, height, width);
-                }else {
-                    tickPrev(rate, height, width);
-                }
+            if(scrollDirection == Direction.Next) {
+                tickNext(rate, height, width);
+            }else {
+                tickPrev(rate, height, width);
             }
         }catch(Exception e) {
             Log.d("WhiteBoardCast", "exception at animation thread: " + e.getMessage());
@@ -95,6 +97,18 @@ public class PageScrollAnimator implements Runnable{
             tickPrevLast(width, height);
     }
 
+    void drawBmpDestCanvasSafe(Bitmap bmp, Rect src, Rect dest, Paint paint) {
+        synchronized(destBmpForLock) {
+            destCanvas.drawBitmap(bmp, src, dest, paint);
+        }
+    }
+
+    void drawRectDestCanvasSafe(Rect rect, Paint paint) {
+        synchronized(destBmpForLock) {
+            destCanvas.drawRect(rect, paint);
+        }
+    }
+
     private void tickPrev(double rate, int height, int width) {
         if(height*rate+1 >= height) {
             tickPrevLast(height, width);
@@ -105,21 +119,21 @@ public class PageScrollAnimator implements Runnable{
 
         srcRegion.set(0, height-border, width, height);
         destRegion.set(0, 0, width, border);
-        destCanvas.drawBitmap(prevPage, srcRegion, destRegion, null);
+        drawBmpDestCanvasSafe(prevPage, srcRegion, destRegion, null);
 
         srcRegion.set(0, border, width, border+1);
-        destCanvas.drawRect(srcRegion, blackPaint);
+        drawRectDestCanvasSafe(srcRegion, blackPaint);
 
         srcRegion.set(0, 0, width, height-border-1);
         destRegion.set(0, border+1, width, height);
-        destCanvas.drawBitmap(nextPage, srcRegion, destRegion, null);
+        drawBmpDestCanvasSafe(nextPage, srcRegion, destRegion, null);
         target.updateScreen();
     }
 
     private void tickPrevLast(int height, int width) {
         srcRegion.set(0, 0, width, height);
         destRegion.set(0, 0, width, height);
-        destCanvas.drawBitmap(prevPage, srcRegion, destRegion, null);
+        drawBmpDestCanvasSafe(prevPage, srcRegion, destRegion, null);
     }
 
 
@@ -132,21 +146,21 @@ public class PageScrollAnimator implements Runnable{
         int border = height - (int)(height*rate);
         srcRegion.set(0, height-border+1, width, height);
         destRegion.set(0, 0, width, border-1);
-        destCanvas.drawBitmap(prevPage, srcRegion, destRegion, null);
+        drawBmpDestCanvasSafe(prevPage, srcRegion, destRegion, null);
 
         srcRegion.set(0, border-1, width, border);
-        destCanvas.drawRect(srcRegion, blackPaint);
+        drawRectDestCanvasSafe(srcRegion, blackPaint);
 
         srcRegion.set(0, 0, width, height-border);
         destRegion.set(0, border, width, height);
-        destCanvas.drawBitmap(nextPage, srcRegion, destRegion, null);
+        drawBmpDestCanvasSafe(nextPage, srcRegion, destRegion, null);
         target.updateScreen();
     }
 
     private void tickNextLast(int height, int width) {
         srcRegion.set(0, 0, width, height);
         destRegion.set(0, 0, width, height);
-        destCanvas.drawBitmap(nextPage, srcRegion, destRegion, null);
+        drawBmpDestCanvasSafe(nextPage, srcRegion, destRegion, null);
     }
 
 }
