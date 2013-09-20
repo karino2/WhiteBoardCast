@@ -11,6 +11,7 @@ import android.graphics.Rect;
 import android.graphics.RectF;
 import android.os.Handler;
 import android.util.AttributeSet;
+import android.util.Log;
 import android.view.MotionEvent;
 import android.view.View;
 
@@ -21,6 +22,10 @@ public class WhiteBoardCanvas extends View implements FrameRetrieval, PageScroll
 
     Bitmap viewBmp;
     private Canvas mCanvas;
+    Bitmap cursorBackupBmp;
+    Canvas cursorBackupCanvas;
+
+
     Canvas committedCanvas;
     private Path mPath;
     private Paint mBitmapPaint;
@@ -59,6 +64,8 @@ public class WhiteBoardCanvas extends View implements FrameRetrieval, PageScroll
         mCursorPaint.setPathEffect(new DashPathEffect(new float[]{5, 2}, 0));
 
         boardList = new BoardList();
+        cursorBackupBmp = Bitmap.createBitmap(ERASER_WIDTH+2*CURSOR_MARGIN, ERASER_WIDTH+2*CURSOR_MARGIN, Bitmap.Config.ARGB_8888);
+        cursorBackupCanvas = new Canvas(cursorBackupBmp);
     }
 
 
@@ -98,6 +105,8 @@ public class WhiteBoardCanvas extends View implements FrameRetrieval, PageScroll
         committedCanvas = new Canvas(getCommittedBmp());
     }
 
+
+
     protected void onDraw(Canvas canvas) {
         canvas.drawColor(0xFFFFFFFF);
 
@@ -108,11 +117,6 @@ public class WhiteBoardCanvas extends View implements FrameRetrieval, PageScroll
         if(isAnimating)
             return;
 
-        // canvas.drawPath(mPath, mPaint);
-
-        // should write to viewBmp. but later.
-        if(mBrushCursorRegion.width() >= 0.1)
-            canvas.drawOval(mBrushCursorRegion, mCursorPaint);
 
         overlay.onDraw(canvas);
 
@@ -155,6 +159,57 @@ public class WhiteBoardCanvas extends View implements FrameRetrieval, PageScroll
     private static final float TOUCH_TOLERANCE = 4;
 
     RectF mBrushCursorRegion = new RectF(0f, 0f, 0f, 0f);
+    Rect lastBrushCursorRegion = new Rect(0, 0, 0, 0);
+
+    boolean isRectValid(Rect region) {
+        return region.width() != 0;
+    }
+
+    boolean isRectFValid(RectF region) {
+        return region.width() >= 0.1;
+    }
+
+    static final int CURSOR_MARGIN = 2;
+
+    void backupCursorRegion(RectF region) {
+        region.roundOut(lastBrushCursorRegion);
+        widen(lastBrushCursorRegion, CURSOR_MARGIN);
+        Rect dest = new Rect(0, 0, lastBrushCursorRegion.width(), lastBrushCursorRegion.height());
+        cursorBackupCanvas.drawBitmap(viewBmp, lastBrushCursorRegion, dest, null);
+    }
+
+    private void revertBrushDrawnRegionIfNecessary() {
+        if(!isRectValid(lastBrushCursorRegion))
+            return;
+        Rect tmp = new Rect(0, 0, lastBrushCursorRegion.width(), lastBrushCursorRegion.height());
+        mCanvas.drawBitmap(cursorBackupBmp, tmp, lastBrushCursorRegion, null);
+
+        invalViewBmpRegion(lastBrushCursorRegion);
+
+        makeRegionInvalid(lastBrushCursorRegion);
+    }
+
+    private void invalViewBmpRegionF(RectF regionF) {
+        Rect region = new Rect();
+        regionF.roundOut(region);
+        invalViewBmpRegion(region);
+    }
+
+    private void invalViewBmpRegion(Rect region) {
+        invalRegion.union(region);
+        invalidate(region.left, region.top, region.right, region.bottom);
+    }
+
+
+    void drawBrushCursorIfNecessary() {
+        revertBrushDrawnRegionIfNecessary();
+
+        if(isRectFValid(mBrushCursorRegion)) {
+            backupCursorRegion(mBrushCursorRegion);
+            mCanvas.drawOval(mBrushCursorRegion, mCursorPaint);
+            invalViewBmpRegionF(mBrushCursorRegion);
+        }
+    }
 
     private float getCursorSize() {
         return (float)penWidth;
@@ -167,8 +222,17 @@ public class WhiteBoardCanvas extends View implements FrameRetrieval, PageScroll
 
     }
 
+    void makeRegionInvalid(Rect region)
+    {
+        region.set(0, 0, 0, 0);
+    }
+    void makeRegionInvalidF(RectF region) {
+        region.set(0f, 0f, 0f, 0f);
+    }
+    
     private void eraseBrushCursor() {
-        mBrushCursorRegion.set(0f, 0f, 0f, 0f);
+        makeRegionInvalidF(mBrushCursorRegion);
+        revertBrushDrawnRegionIfNecessary();
     }
 
 
@@ -182,6 +246,23 @@ public class WhiteBoardCanvas extends View implements FrameRetrieval, PageScroll
         return (dx >= TOUCH_TOLERANCE || dy >= TOUCH_TOLERANCE);
     }
 
+    @Override
+    public boolean onHoverEvent(MotionEvent event) {
+        if(event.getAction() == MotionEvent.ACTION_HOVER_EXIT) {
+            eraseBrushCursor();
+        }else {
+            float x = event.getX();
+            float y = event.getY();
+            drawBrush(x, y);
+        }
+        return super.onHoverEvent(event);
+    }
+
+    private void drawBrush(float x, float y) {
+        setBrushCursorPos(x, y);
+        drawBrushCursorIfNecessary();
+    }
+
     public boolean onTouchEvent(MotionEvent event) {
         if(isAnimating)
             return true;
@@ -189,6 +270,14 @@ public class WhiteBoardCanvas extends View implements FrameRetrieval, PageScroll
         float x = event.getX();
         float y = event.getY();
         setBrushCursorPos(x, y);
+        revertBrushDrawnRegionIfNecessary();
+        onTouchWithoutCursor(event, x, y);
+        drawBrushCursorIfNecessary();
+        return true;
+
+    }
+
+    private void onTouchWithoutCursor(MotionEvent event, float x, float y) {
         switch (event.getAction()) {
             case MotionEvent.ACTION_DOWN:
                 if(overlay.onTouchDown(x, y)) {
@@ -264,8 +353,6 @@ public class WhiteBoardCanvas extends View implements FrameRetrieval, PageScroll
                 invalidate();
                 break;
         }
-        return true;
-
     }
 
     private void pushUndoCommand(Rect region, Bitmap undo, Bitmap redo) {
@@ -276,7 +363,7 @@ public class WhiteBoardCanvas extends View implements FrameRetrieval, PageScroll
     private Rect pathBound() {
         mPath.computeBounds(invalF, false);
         invalF.roundOut(tmpInval);
-        widen(tmpInval);
+        widenPenWidth(tmpInval);
         return tmpInval;
     }
 
@@ -285,12 +372,16 @@ public class WhiteBoardCanvas extends View implements FrameRetrieval, PageScroll
         invalRegion.union(pathBound());
     }
 
-    private void widen(Rect tmpInval) {
+    private void widenPenWidth(Rect tmpInval) {
         int penWidth = (int)getCursorSize();
-        int newLeft = Math.max(0, tmpInval.left- penWidth);
-        int newTop = Math.max(0, tmpInval.top - penWidth);
-        int newRight = Math.min(mWidth, tmpInval.right+ penWidth);
-        int newBottom = Math.min(mHeight, tmpInval.bottom+ penWidth);
+        widen(tmpInval, penWidth);
+    }
+
+    private void widen(Rect tmpInval, int width) {
+        int newLeft = Math.max(0, tmpInval.left- width);
+        int newTop = Math.max(0, tmpInval.top - width);
+        int newRight = Math.min(mWidth, tmpInval.right+ width);
+        int newBottom = Math.min(mHeight, tmpInval.bottom+ width);
         tmpInval.set(newLeft, newTop, newRight, newBottom);
     }
 
