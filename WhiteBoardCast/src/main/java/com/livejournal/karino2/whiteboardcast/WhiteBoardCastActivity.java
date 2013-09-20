@@ -65,7 +65,9 @@ public class WhiteBoardCastActivity extends Activity {
 
     Handler handler = new Handler();
     VorbisMediaRecorder recorder;
-    Future<?> futuer = null;
+    Future<?> future = null;
+
+    PageScrollAnimator animator;
 
 
     @Override
@@ -74,6 +76,7 @@ public class WhiteBoardCastActivity extends Activity {
         setContentView(R.layout.activity_whiteboardcast);
         readDebuggableSetting();
         getWhiteBoardCanvas().enableDebug(debuggable);
+        animator = new PageScrollAnimator(Executors.newSingleThreadScheduledExecutor(), getWhiteBoardCanvas());
 
         if(workingFileExists()) {
             showDialog(DIALOG_ID_QUERY_MERGE_AGAIN);
@@ -116,6 +119,11 @@ public class WhiteBoardCastActivity extends Activity {
 
     public void undo() {
         getWhiteBoardCanvas().undo();
+    }
+
+    boolean duringAnimation = false;
+    void setDuringAnimation(boolean animation) {
+        duringAnimation = animation;
     }
 
 
@@ -188,8 +196,8 @@ public class WhiteBoardCastActivity extends Activity {
 
     public void pauseRecord() {
         changeRecStatus(RecordStatus.PAUSE);
-        futuer.cancel(false);
-        futuer = null;
+        future.cancel(false);
+        future = null;
         recorder.stop();
         encoderTask.stop();
         showMessage("pause");
@@ -225,13 +233,13 @@ public class WhiteBoardCastActivity extends Activity {
     }
 
     public void pageUp() {
-        if(!getWhiteBoardCanvas().pageUp()) {
+        if(!getWhiteBoardCanvas().beginPagePrev(animator)) {
             showMessage("First page, couldn't go up!");
         }
     }
 
     public void pageDown() {
-        getWhiteBoardCanvas().pageDown();
+        getWhiteBoardCanvas().beginPageNext(animator);
     }
 
     private void startRecordSecondPhase() {
@@ -277,7 +285,7 @@ public class WhiteBoardCastActivity extends Activity {
     }
 
     private void scheduleEncodeTask() {
-        futuer = scheduleExecuter.scheduleAtFixedRate(encoderTask, 0, 1000 / FPS, TimeUnit.MILLISECONDS);
+        future = scheduleExecuter.scheduleAtFixedRate(encoderTask, 0, 1000 / FPS, TimeUnit.MILLISECONDS);
     }
 
     public WhiteBoardCanvas getWhiteBoardCanvas() {

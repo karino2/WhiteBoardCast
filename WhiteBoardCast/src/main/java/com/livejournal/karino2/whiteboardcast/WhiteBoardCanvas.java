@@ -9,6 +9,7 @@ import android.graphics.Paint;
 import android.graphics.Path;
 import android.graphics.Rect;
 import android.graphics.RectF;
+import android.os.Handler;
 import android.util.AttributeSet;
 import android.view.MotionEvent;
 import android.view.View;
@@ -16,7 +17,7 @@ import android.view.View;
 /**
  * Created by karino on 6/26/13.
  */
-public class WhiteBoardCanvas extends View implements FrameRetrieval  {
+public class WhiteBoardCanvas extends View implements FrameRetrieval, PageScrollAnimator.Animatee  {
 
     Bitmap viewBmp;
     private Canvas mCanvas;
@@ -33,6 +34,8 @@ public class WhiteBoardCanvas extends View implements FrameRetrieval  {
 
     static final int DEFAULT_PEN_WIDTH = 6;
     static final int ERASER_WIDTH = 60;
+
+    private boolean isAnimating = false;
 
     public WhiteBoardCanvas(Context context, AttributeSet attrs) {
         super(context, attrs);
@@ -101,6 +104,9 @@ public class WhiteBoardCanvas extends View implements FrameRetrieval  {
         synchronized(viewBmp) {
             canvas.drawBitmap(viewBmp, 0, 0, mBitmapPaint);
         }
+
+        if(isAnimating)
+            return;
 
         // canvas.drawPath(mPath, mPaint);
 
@@ -177,6 +183,8 @@ public class WhiteBoardCanvas extends View implements FrameRetrieval  {
     }
 
     public boolean onTouchEvent(MotionEvent event) {
+        if(isAnimating)
+            return true;
 
         float x = event.getX();
         float y = event.getY();
@@ -428,7 +436,7 @@ public class WhiteBoardCanvas extends View implements FrameRetrieval  {
         invalidate();
     }
 
-    public boolean pageUp() {
+    boolean pageUp() {
         if(boardList.pagePrev()) {
             afterChangeBoard();
             return true;
@@ -436,8 +444,61 @@ public class WhiteBoardCanvas extends View implements FrameRetrieval  {
         return false;
     }
 
-    public void pageDown() {
+    void pageDown() {
        boardList.pageNext();
        afterChangeBoard();
+    }
+
+    void updateScreenUIThread() {
+        invalRegion.set(0, 0, viewBmp.getWidth(), viewBmp.getHeight());
+        invalidate();
+    }
+
+    @Override
+    public void start() {
+        isAnimating = true;
+    }
+
+    Handler handler = new Handler();
+    Runnable updateScreenRunnable = new Runnable() {
+        @Override
+        public void run() {
+            updateScreenUIThread();
+        }
+    };
+    @Override
+    public void updateScreen() {
+        handler.post(updateScreenRunnable);
+    }
+
+    @Override
+    public void done(PageScrollAnimator.Direction dir) {
+        isAnimating = false;
+        if(dir == PageScrollAnimator.Direction.Next) {
+            handler.post(new Runnable() {
+                @Override
+                public void run() {
+                    pageDown();
+                }
+            });
+        } else {
+            handler.post(new Runnable() {
+                @Override
+                public void run() {
+                    pageUp();
+                }
+            });
+        }
+    }
+
+    public boolean beginPagePrev(PageScrollAnimator animator) {
+        if(!boardList.hasPrevPage())
+            return false;
+        animator.start(boardList.getPrevBmp(), getCommittedBmp(), viewBmp, PageScrollAnimator.Direction.Prev);
+        return true;
+    }
+
+    public void beginPageNext(PageScrollAnimator animator) {
+        animator.start(getCommittedBmp(), boardList.getNextBmp(),  viewBmp, PageScrollAnimator.Direction.Next);
     }
 }
