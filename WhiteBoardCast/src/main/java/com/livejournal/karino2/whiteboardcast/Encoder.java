@@ -18,19 +18,8 @@ import java.util.ArrayList;
  * Created by karino on 6/27/13.
  */
 public class Encoder {
-    public interface FinalizeListener {
-        void done();
-    }
 
-    boolean pendingDone = false;
-
-    FinalizeListener listener;
-    public boolean doneEncoder(StringBuilder error, FinalizeListener listen) {
-        listener = listen;
-        if(duringEncoding) {
-            pendingDone = true;
-            return true;
-        }
+    public synchronized boolean doneEncoder(StringBuilder error) {
         return doneEncoderCore(error);
     }
 
@@ -48,7 +37,6 @@ public class Encoder {
         } finally {
             finalizeEncoder();
         }
-        listener.done();
         return true;
     }
 
@@ -64,23 +52,13 @@ public class Encoder {
         }
     }
 
-    private boolean duringEncoding = false;
 
-    public boolean encodeFrames(int[] srcFrame, Rect invalRect, int framesToEncode, long fourcc, StringBuilder error) {
-        duringEncoding = true;
-        try {
-            if(!encodeOneFrame(srcFrame, invalRect, framesToEncode, fourcc, error))
-                return false;
-            framesIn = framesToEncode;
+    public synchronized boolean encodeFrames(int[] srcFrame, Rect invalRect, int framesToEncode, long fourcc, StringBuilder error) {
+        if(!encodeOneFrame(srcFrame, invalRect, framesToEncode, fourcc, error))
+            return false;
+        framesIn = framesToEncode;
 
-            if(pendingDone) {
-                pendingDone = false;
-                return doneEncoderCore(error);
-            }
-            return true;
-        }finally {
-            duringEncoding = false;
-        }
+        return true;
     }
 
     LibVpxEncConfig encoderConfig = null;

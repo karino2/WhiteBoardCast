@@ -47,6 +47,16 @@ public class WhiteBoardCastActivity extends Activity {
     private ScheduledExecutorService scheduleExecuter = null;
     private EncoderTask encoderTask = null;
 
+    public void postErrorMessage(final String msg) {
+        handler.postDelayed(new Runnable(){
+
+            @Override
+            public void run() {
+                showError(msg);
+            }
+        }, 0);
+    }
+
     public void postShowMessage(final String msg) {
         handler.postDelayed(new Runnable(){
 
@@ -147,7 +157,6 @@ public class WhiteBoardCastActivity extends Activity {
         // under processing.
         changeRecStatus(RecordStatus.DONE_PROCESS);
         showMessage("record end, start post process...");
-        scheduleExecuter.shutdown();
 
         recorder.stop();
         recorder.release();
@@ -157,51 +166,26 @@ public class WhiteBoardCastActivity extends Activity {
         new Thread(new Runnable() {
             @Override
             public void run() {
-                try {
-                    scheduleExecuter.awaitTermination(10, TimeUnit.SECONDS);
-                    scheduleExecuter = Executors.newScheduledThreadPool(2);
-                    animator.setExecutor(scheduleExecuter);
-                    handler.post(new Runnable() {
-                        @Override
-                        public void run() {
-                            showMessage("finalize encoder...");
-                            afterTerminateScheduler();
-                        }
-                    });
-                } catch (InterruptedException e) {
-                    postShowMessage("wait interrupted: " + e.getMessage());
+                future.cancel(false);
+                future = null;
+                if(!encoderTask.doneEncoder()) {
+                    postErrorMessage("fail finalize encode: " + encoderTask.getErrorBuf().toString());
+                    return;
                 }
+
+                postShowMessage("post process done.");
+                handler.post(new Runnable(){
+                    @Override
+                    public void run() {
+                        beginAudioVideoMergeTask();
+                    }
+                }
+                );
 
             }
         }).start();
-
-
-
-
     }
 
-    private void afterTerminateScheduler() {
-        if(!encoderTask.doneEncoder(new Encoder.FinalizeListener(){
-            @Override
-            public void done() {
-                beginAudioVideoMergeTask();
-                handler.postDelayed(new Runnable(){
-                    @Override
-                    public void run() {
-                        // for debug.
-                        if(encoderTask.getErrorBuf().length() != 0) {
-                            String errorMsg = encoderTask.getErrorBuf().toString();
-                            showError("deb error: " + errorMsg);
-                        }
-
-                    }
-                }, 0);
-
-            }
-        })) {
-            showError("done encoder fail");
-        }
-    }
 
     public boolean canStop() {
         return recStats == RecordStatus.RECORDING ||

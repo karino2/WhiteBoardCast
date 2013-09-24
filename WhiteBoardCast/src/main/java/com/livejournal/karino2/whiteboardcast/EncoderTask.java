@@ -76,8 +76,8 @@ public class EncoderTask implements Runnable {
 
 
     // when call doneEncoder, you do not need to call finalizeEncoder()
-    public boolean doneEncoder(Encoder.FinalizeListener listener) {
-        return encoder.doneEncoder(errorBuf, listener);
+    public synchronized boolean doneEncoder() {
+        return encoder.doneEncoder(errorBuf);
     }
 
     public void finalizeEncoder() {
@@ -85,9 +85,17 @@ public class EncoderTask implements Runnable {
     }
 
     Rect invalRect = new Rect();
-    // scheduleAtFixedRate(TimerTask task, long delay, long period)
     @Override
     public void run() {
+        try {
+            doWholeTask();
+        }catch(Exception e) {
+            Log.d("WhiteBoardCast", "unknown encoder exception: " + e.getMessage());
+            throw new RuntimeException(e);
+        }
+    }
+
+    private synchronized void doWholeTask() {
         checkFrameRate();
         retrieval.pullUpdateRegion(pixelBuf, invalRect);
         encodeFrame(pixelBuf, invalRect);
