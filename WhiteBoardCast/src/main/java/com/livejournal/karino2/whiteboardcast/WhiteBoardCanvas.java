@@ -527,11 +527,14 @@ public class WhiteBoardCanvas extends View implements FrameRetrieval, PageScroll
     }
 
     private void afterChangeBoard() {
-        // TODO: slow.
-        viewBmp = getCommittedBmp().copy(Bitmap.Config.ARGB_8888, true);
+        Bitmap bmpForLock = viewBmp;
+        synchronized (bmpForLock) {
+            // TODO: slow.
+            viewBmp = getCommittedBmp().copy(Bitmap.Config.ARGB_8888, true);
 
-        mCanvas = new Canvas(viewBmp);
-        committedCanvas = new Canvas(getCommittedBmp());
+            mCanvas = new Canvas(viewBmp);
+            committedCanvas = new Canvas(getCommittedBmp());
+        }
 
         overlay.changeUndoStatus();
         invalWholeRegionForEncoder();
