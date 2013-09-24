@@ -263,8 +263,10 @@ public class AudioVideoMergeTask extends AsyncTask<String, Integer, String> {
     }
 
     protected void onPostExecute(String result) {
-        if(result != null)
+        if(result != null) {
+            Log.d("WBCast", "onPostExecute: " + result);
             Toast.makeText(context, result, Toast.LENGTH_LONG ).show();
+        }
         dialog.dismiss();
     }
 }

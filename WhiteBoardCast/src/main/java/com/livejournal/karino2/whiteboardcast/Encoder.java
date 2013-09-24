@@ -34,10 +34,15 @@ public class Encoder {
         return doneEncoderCore(error);
     }
 
+    void showError(StringBuilder errorDest, String msg) {
+        errorDest.append(msg);
+        Log.d("WhiteBoardCast", msg);
+    }
+
     private boolean doneEncoderCore(StringBuilder error) {
         try {
             if (!muxerSegment.finalizeSegment()) {
-                error.append("Finalization of segment failed.");
+                showError(error, "Finalization of segment failed.");
                 return false;
             }
         } finally {
@@ -103,13 +108,13 @@ public class Encoder {
 
             mkvWriter = new MkvWriter();
             if (!mkvWriter.open(webmOutputName)) {
-                error.append("WebM Output name is invalid or error while opening.");
+                showError(error, "WebM Output name is invalid or error while opening.");
                 return false;
             }
 
             muxerSegment = new Segment();
             if (!muxerSegment.init(mkvWriter)) {
-                error.append("Could not initialize muxer segment.");
+                showError(error, "Could not initialize muxer segment.");
                 return false;
             }
 
@@ -118,12 +123,12 @@ public class Encoder {
 
             newVideoTrackNumber = muxerSegment.addVideoTrack(width, height, 0);
             if (newVideoTrackNumber == 0) {
-                error.append("Could not add video track.");
+                showError(error, "Could not add video track.");
                 return false;
             }
         }
         catch (LibVpxException e) {
-            error.append("Encoder error : " + e);
+            showError(error, "Encoder error : " + e);
             return false;
         }
         return true;
@@ -144,12 +149,12 @@ public class Encoder {
                 final boolean isKey = (pkt.flags & 0x1) == 1;
 
                 if (!muxerSegment.addFrame(pkt.buffer, newVideoTrackNumber, pkt.pts, isKey)) {
-                    error.append("Could not add frame.");
+                    showError(error, "Could not add frame.");
                     return false;
                 }
             }
         } catch (LibVpxException e) {
-            error.append("Encoder error : " + e);
+            showError(error, "Encoder error : " + e);
             return false;
         }
         return true;

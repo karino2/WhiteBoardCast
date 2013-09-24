@@ -57,6 +57,11 @@ public class WhiteBoardCastActivity extends Activity {
         }, 0);
     }
 
+    public void showError(String msg) {
+        Log.d("WBCast", msg);
+        showMessage(msg);
+    }
+
     public void showMessage(String msg) {
         Toast.makeText(this, msg, Toast.LENGTH_LONG ).show();
 
@@ -98,7 +103,7 @@ public class WhiteBoardCastActivity extends Activity {
                 return true;
             return false;
         } catch (IOException e) {
-            showMessage("IO Exception while working file check: " + e.getMessage());
+            showError("IO Exception while working file check: " + e.getMessage());
             return false;
         }
     }
@@ -186,8 +191,7 @@ public class WhiteBoardCastActivity extends Activity {
                         // for debug.
                         if(encoderTask.getErrorBuf().length() != 0) {
                             String errorMsg = encoderTask.getErrorBuf().toString();
-                            showMessage("deb error: " + errorMsg);
-                            Log.d("WBCast", errorMsg);
+                            showError("deb error: " + errorMsg);
                         }
 
                     }
@@ -195,7 +199,7 @@ public class WhiteBoardCastActivity extends Activity {
 
             }
         })) {
-            showMessage("done encoder fail");
+            showError("done encoder fail");
         }
     }
 
@@ -285,13 +289,13 @@ public class WhiteBoardCastActivity extends Activity {
             if(debuggable)
                 encoderTask.setFpsListener(getWhiteBoardCanvas().getEncoderFpsCounter());
         } catch (IOException e) {
-            showMessage("Fail to get workVideoPath: " + e.getMessage());
+            showError("Fail to get workVideoPath: " + e.getMessage());
             return;
         }
         long currentMill = System.currentTimeMillis();
 
         if(!encoderTask.initEncoder(currentMill)) {
-            showMessage("init encode fail");
+            showError("init encode fail");
             return;
         }
         recorder = new VorbisMediaRecorder();
@@ -299,16 +303,16 @@ public class WhiteBoardCastActivity extends Activity {
         try {
             recorder.setOutputFile(getWorkAudioPath());
         } catch (IOException e) {
-            showMessage("IOException: Create WhiteBoardCast folder fail: " + e.getMessage());
+            showError("IOException: Create WhiteBoardCast folder fail: " + e.getMessage());
             return;
         }
         try {
             recorder.prepare();
         } catch (IOException e) {
-            showMessage("IOException: MediaRecoder prepare fail: " + e.getMessage());
+            showError("IOException: MediaRecoder prepare fail: " + e.getMessage());
             return;
         } catch (VorbisException e) {
-            showMessage("VorbisException: MediaRecoder prepare fail: " + e.getMessage());
+            showError("VorbisException: MediaRecoder prepare fail: " + e.getMessage());
             return;
         }
         recorder.start();
@@ -396,14 +400,14 @@ public class WhiteBoardCastActivity extends Activity {
                                 renameAndDeleteWorkFiles();
                                 showDialog(DIALOG_ID_QUERY_VIEW_SHARE);
                             } catch (IOException e) {
-                                showMessage("Rename encoded file fail: " + e.getMessage());
+                                showError("Rename encoded file fail: " + e.getMessage());
                             }
                         }
                     }, 500);
                 }
             }).execute(getWorkVideoPath(), getWorkAudioPath(), getResultPath());
         } catch (IOException e) {
-            showMessage("Fail to create WhiteBoardCast folder(2). " + e.getMessage());
+            showError("Fail to create WhiteBoardCast folder(2). " + e.getMessage());
         }
     }
 
