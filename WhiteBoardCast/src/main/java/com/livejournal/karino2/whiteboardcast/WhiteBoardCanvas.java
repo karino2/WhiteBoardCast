@@ -201,6 +201,7 @@ public class WhiteBoardCanvas extends View implements FrameRetrieval, PageScroll
 
     private void invalViewBmpRegion(Rect region) {
         invalRegion.union(region);
+        invalRegion.intersect(0, 0, mWidth, mHeight);
         invalidate(region.left, region.top, region.right, region.bottom);
     }
 
