@@ -91,7 +91,7 @@ public class AudioVideoMergeTask extends AsyncTask<String, Integer, String> {
         try {
             doMergeAudioVideo(videoPath, audioPath, resultPath);
         }catch (Exception e) {
-            Log.d("WBCast", e.getMessage());
+            Log.d("WhiteBoardCast", e.getMessage());
             return new String("Caught error in main encode loop. " + e.getMessage());
         }
         return null;
@@ -264,7 +264,7 @@ public class AudioVideoMergeTask extends AsyncTask<String, Integer, String> {
 
     protected void onPostExecute(String result) {
         if(result != null) {
-            Log.d("WBCast", "onPostExecute: " + result);
+            Log.d("WhiteBoardCast", "onPostExecute: " + result);
             Toast.makeText(context, result, Toast.LENGTH_LONG ).show();
         }
         dialog.dismiss();

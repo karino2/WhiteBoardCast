@@ -58,7 +58,7 @@ public class WhiteBoardCastActivity extends Activity {
     }
 
     public void showError(String msg) {
-        Log.d("WBCast", msg);
+        Log.d("WhiteBoardCast", msg);
         showMessage(msg);
     }
 
@@ -141,7 +141,7 @@ public class WhiteBoardCastActivity extends Activity {
 
     public void stopRecord() {
         if(!canStop()) {
-            Log.d("WBCast", "stop record called but not recording. " + recStats);
+            Log.d("WhiteBoardCast", "stop record called but not recording. " + recStats);
             return;
         }
         // under processing.
@@ -257,7 +257,7 @@ public class WhiteBoardCastActivity extends Activity {
     public void startRecord() {
         if(recStats != RecordStatus.DORMANT &&
                 recStats != RecordStatus.DONE) {
-            Log.d("WBCast", "record start but status is not dormant: " + recStats);
+            Log.d("WhiteBoardCast", "record start but status is not dormant: " + recStats);
             return;
         }
         changeRecStatus(RecordStatus.SETUP);
