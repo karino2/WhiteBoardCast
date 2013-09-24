@@ -88,7 +88,7 @@ public class WhiteBoardCastActivity extends Activity {
         setContentView(R.layout.activity_whiteboardcast);
         readDebuggableSetting();
         getWhiteBoardCanvas().enableDebug(debuggable);
-        animator = new PageScrollAnimator(Executors.newSingleThreadScheduledExecutor(), getWhiteBoardCanvas());
+        animator = new PageScrollAnimator(getScheduleExecutor(), getWhiteBoardCanvas());
 
         if(workingFileExists()) {
             showDialog(DIALOG_ID_QUERY_MERGE_AGAIN);
