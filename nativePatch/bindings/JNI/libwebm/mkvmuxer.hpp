@@ -1103,6 +1103,9 @@ class Segment {
   // it returns the number of frames written.
   int WriteFramesAll();
 
+  int WriteFramesAllForFinalize();
+  bool MakeNewClusterForFinalize(uint64 timestamp_ns);
+
   // Output all frames that are queued that have an end time that is less
   // then |timestamp|. Returns true on success and if there are no frames
   // queued.
@@ -1125,6 +1128,7 @@ class Segment {
   // Create a new cluster, using the earlier of the first enqueued
   // frame, or the indicated time. Returns true on success.
   bool MakeNewCluster(uint64 timestamp_ns);
+  
 
   // Checks whether a new cluster needs to be created, and if so
   // creates a new cluster. Returns false if creation of a new cluster

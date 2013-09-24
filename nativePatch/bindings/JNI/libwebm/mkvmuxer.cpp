@@ -91,6 +91,9 @@ bool WriteEbmlHeader(IMkvWriter* writer) {
   return true;
 }
 
+
+#include <android/log.h>
+
 bool ChunkedCopy(mkvparser::IMkvReader* source,
                  mkvmuxer::IMkvWriter* dst,
                  mkvmuxer::int64 start, int64 size) {
@@ -1520,35 +1523,50 @@ bool Cluster::DoWriteBlock(
     uint64 abs_timecode,
     uint64 generic_arg,
     WriteBlock write_block) {
-  if (frame == NULL || length == 0)
-    return false;
+	if (frame == NULL || length == 0) {
+		__android_log_print(ANDROID_LOG_DEBUG, "WhiteBoardCast", "DoWriteBlock deb1");
+		
+		return false;
+	}
 
   // To simplify things, we require that there be fewer than 127
   // tracks -- this allows us to serialize the track number value for
   // a stream using a single byte, per the Matroska encoding.
 
-  if (track_number == 0 || track_number > 0x7E)
-    return false;
+	if (track_number == 0 || track_number > 0x7E) {
+		__android_log_print(ANDROID_LOG_DEBUG, "WhiteBoardCast", "DoWriteBlock deb2");
+		return false;
+	}
 
   const int64 cluster_timecode = this->Cluster::timecode();
   const int64 rel_timecode =
       static_cast<int64>(abs_timecode) - cluster_timecode;
 
-  if (rel_timecode < 0)
-    return false;
+	if (rel_timecode < 0) {
+		__android_log_print(ANDROID_LOG_DEBUG, "WhiteBoardCast", "DoWriteBlock deb3");		
+		return false;
+	}
 
-  if (rel_timecode > kMaxBlockTimecode)
-    return false;
+	if (rel_timecode > kMaxBlockTimecode) {
+		__android_log_print(ANDROID_LOG_DEBUG, "WhiteBoardCast", "DoWriteBlock deb4, rel: %llu, maxBlock: %llu", rel_timecode, kMaxBlockTimecode);
+		return false;
+	}
 
-  if (write_block == NULL)
-    return false;
+	if (write_block == NULL){
+				__android_log_print(ANDROID_LOG_DEBUG, "WhiteBoardCast", "DoWriteBlock deb5");
+		return false;
+	}
 
-  if (finalized_)
-    return false;
+	if (finalized_) {
+		__android_log_print(ANDROID_LOG_DEBUG, "WhiteBoardCast", "DoWriteBlock deb6");		
+		return false;
+	}
 
   if (!header_written_)
-    if (!WriteClusterHeader())
-      return false;
+	if (!WriteClusterHeader()) {
+		__android_log_print(ANDROID_LOG_DEBUG, "WhiteBoardCast", "DoWriteBlock deb7");		
+		return false;
+	}
 
   const uint64 element_size = (*write_block)(writer_,
                                              frame,
@@ -1557,8 +1575,10 @@ bool Cluster::DoWriteBlock(
                                              rel_timecode,
                                              generic_arg);
 
-  if (element_size == 0)
-    return false;
+	if (element_size == 0) {
+		__android_log_print(ANDROID_LOG_DEBUG, "WhiteBoardCast", "DoWriteBlock deb8");
+		return false;
+	}
 
   AddPayloadSize(element_size);
   blocks_added_++;
@@ -2111,17 +2131,25 @@ bool Segment::CopyAndMoveCuesBeforeClusters(mkvparser::IMkvReader* reader,
   return true;
 }
 
+
 bool Segment::Finalize() {
-  if (WriteFramesAll() < 0)
-    return false;
+	// __android_log_print(ANDROID_LOG_DEBUG, "WhiteBoardCast", "Segment::Finalize deb0, called");
+	
+	if (WriteFramesAllForFinalize() < 0) {
+		__android_log_print(ANDROID_LOG_DEBUG, "WhiteBoardCast", "Segment::Finalize deb1-1");
+		return false;
+	}
 
   if (mode_ == kFile) {
     if (cluster_list_size_ > 0) {
       // Update last cluster's size
       Cluster* const old_cluster = cluster_list_[cluster_list_size_-1];
 
-      if (!old_cluster || !old_cluster->Finalize())
-        return false;
+			if (!old_cluster || !old_cluster->Finalize()) {
+						__android_log_print(ANDROID_LOG_DEBUG, "WhiteBoardCast", "Segment::Finalize deb2");
+
+				return false;
+			}
     }
 
     if (chunking_ && chunk_writer_cluster_) {
@@ -2132,62 +2160,91 @@ bool Segment::Finalize() {
     const double duration =
         static_cast<double>(last_timestamp_) / segment_info_.timecode_scale();
     segment_info_.set_duration(duration);
-    if (!segment_info_.Finalize(writer_header_))
-      return false;
+		if (!segment_info_.Finalize(writer_header_)) {
+			__android_log_print(ANDROID_LOG_DEBUG, "WhiteBoardCast", "Segment::Finalize deb3");
+			return false;
+		}
 
     if (output_cues_)
-      if (!seek_head_.AddSeekEntry(kMkvCues, MaxOffset()))
-        return false;
+		if (!seek_head_.AddSeekEntry(kMkvCues, MaxOffset())){
+			__android_log_print(ANDROID_LOG_DEBUG, "WhiteBoardCast", "Segment::Finalize deb4");
+			return false;
+		}
 
     if (chunking_) {
-      if (!chunk_writer_cues_)
-        return false;
+			if (!chunk_writer_cues_){
+			__android_log_print(ANDROID_LOG_DEBUG, "WhiteBoardCast", "Segment::Finalize deb5");
+				return false;
+			}
 
       char* name = NULL;
-      if (!UpdateChunkName("cues", &name))
-        return false;
+			if (!UpdateChunkName("cues", &name)){
+							__android_log_print(ANDROID_LOG_DEBUG, "WhiteBoardCast", "Segment::Finalize deb6");
+				return false;
+			}
 
       const bool cues_open = chunk_writer_cues_->Open(name);
       delete [] name;
-      if (!cues_open)
-        return false;
+			if (!cues_open){
+							__android_log_print(ANDROID_LOG_DEBUG, "WhiteBoardCast", "Segment::Finalize deb7");
+				return false;
+			}
     }
 
     cluster_end_offset_ = writer_cluster_->Position();
 
     // Write the seek headers and cues
     if (output_cues_)
-      if (!cues_.Write(writer_cues_))
-        return false;
+		if (!cues_.Write(writer_cues_)){
+						__android_log_print(ANDROID_LOG_DEBUG, "WhiteBoardCast", "Segment::Finalize deb8");
 
-    if (!seek_head_.Finalize(writer_header_))
-      return false;
+			return false;
+		}
+
+		if (!seek_head_.Finalize(writer_header_)){
+						__android_log_print(ANDROID_LOG_DEBUG, "WhiteBoardCast", "Segment::Finalize deb9");
+			return false;
+		}
 
     if (writer_header_->Seekable()) {
-      if (size_position_ == -1)
-        return false;
+			if (size_position_ == -1){
+							__android_log_print(ANDROID_LOG_DEBUG, "WhiteBoardCast", "Segment::Finalize deb10");
+				return false;
+			}
 
       const int64 pos = writer_header_->Position();
       const int64 segment_size = MaxOffset();
 
-      if (segment_size < 1)
-        return false;
+			if (segment_size < 1) {
+							__android_log_print(ANDROID_LOG_DEBUG, "WhiteBoardCast", "Segment::Finalize deb11");
+				return false;
+			}
 
-      if (writer_header_->Position(size_position_))
-        return false;
+			if (writer_header_->Position(size_position_)){
+							__android_log_print(ANDROID_LOG_DEBUG, "WhiteBoardCast", "Segment::Finalize deb12");
 
-      if (WriteUIntSize(writer_header_, segment_size, 8))
-        return false;
+				return false;
+			}
 
-      if (writer_header_->Position(pos))
-        return false;
+			if (WriteUIntSize(writer_header_, segment_size, 8)) {
+							__android_log_print(ANDROID_LOG_DEBUG, "WhiteBoardCast", "Segment::Finalize deb13");
+
+				return false;
+			}
+
+			if (writer_header_->Position(pos)) {
+							__android_log_print(ANDROID_LOG_DEBUG, "WhiteBoardCast", "Segment::Finalize deb14");
+				return false;
+			}
     }
 
     if (chunking_) {
       // Do not close any writers until the segment size has been written,
       // otherwise the size may be off.
-      if (!chunk_writer_cues_ || !chunk_writer_header_)
-        return false;
+			if (!chunk_writer_cues_ || !chunk_writer_header_){
+							__android_log_print(ANDROID_LOG_DEBUG, "WhiteBoardCast", "Segment::Finalize deb15");
+				return false;
+			}
 
       chunk_writer_cues_->Close();
       chunk_writer_header_->Close();
@@ -2682,6 +2739,90 @@ int Segment::TestFrame(uint64 track_number,
   return 0;
 }
 
+bool Segment::MakeNewClusterForFinalize(uint64 frame_timestamp_ns) {
+  const int32 new_size = cluster_list_size_ + 1;
+  // __android_log_print(ANDROID_LOG_DEBUG, "WhiteBoardCast", "MakeNewClusterForFianlize deb1");
+
+  if (new_size > cluster_list_capacity_) {
+    // Add more clusters.
+    const int32 new_capacity =
+        (cluster_list_capacity_ <= 0) ? 1 : cluster_list_capacity_ * 2;
+    Cluster** const clusters =
+        new (std::nothrow) Cluster*[new_capacity];  // NOLINT
+    if (!clusters)
+      return false;
+
+    for (int32 i = 0; i < cluster_list_size_; ++i) {
+      clusters[i] = cluster_list_[i];
+    }
+
+    delete [] cluster_list_;
+
+    cluster_list_ = clusters;
+    cluster_list_capacity_ = new_capacity;
+  }
+
+  // __android_log_print(ANDROID_LOG_DEBUG, "WhiteBoardCast", "MakeNewClusterForFianlize deb2");
+  if (mode_ == kFile) {
+    if (cluster_list_size_ > 0) {
+      // Update old cluster's size
+      Cluster* const old_cluster = cluster_list_[cluster_list_size_ - 1];
+
+      if (!old_cluster || !old_cluster->Finalize())
+        return false;
+    }
+
+    if (output_cues_)
+      new_cuepoint_ = true;
+  }
+
+  if (chunking_ && cluster_list_size_ > 0) {
+    chunk_writer_cluster_->Close();
+    chunk_count_++;
+
+    if (!UpdateChunkName("chk", &chunk_name_))
+      return false;
+    if (!chunk_writer_cluster_->Open(chunk_name_))
+      return false;
+  }
+
+  const uint64 timecode_scale = segment_info_.timecode_scale();
+  // __android_log_print(ANDROID_LOG_DEBUG, "WhiteBoardCast", "MakeNewClusterForFianlize deb3, %llu, %llu", timecode_scale, frame_timestamp_ns);
+  const uint64 frame_timecode = frame_timestamp_ns / timecode_scale;
+  // __android_log_print(ANDROID_LOG_DEBUG, "WhiteBoardCast", "MakeNewClusterForFianlize deb4, %llu", frame_timecode);
+
+  uint64 cluster_timecode = frame_timecode;
+	
+	/*some of the frame is already deleted, the passed frame is the latest one. */
+	/*
+  if (frames_size_ > 0) {
+  __android_log_print(ANDROID_LOG_DEBUG, "WhiteBoardCast", "MakeNewClusterForFianlize deb4.1");
+    const Frame* const f = frames_[0];  // earliest queued frame
+    const uint64 ns = f->timestamp();
+  __android_log_print(ANDROID_LOG_DEBUG, "WhiteBoardCast", "MakeNewClusterForFianlize deb4.2, %llu", ns);
+    const uint64 tc = ns / timecode_scale;
+
+    if (tc < cluster_timecode)
+      cluster_timecode = tc;
+	}
+	*/
+
+  // __android_log_print(ANDROID_LOG_DEBUG, "WhiteBoardCast", "MakeNewClusterForFianlize deb5");
+  Cluster*& cluster = cluster_list_[cluster_list_size_];
+  const int64 offset = MaxOffset();
+  cluster = new (std::nothrow) Cluster(cluster_timecode, offset);  // NOLINT
+  if (!cluster)
+    return false;
+
+  if (!cluster->Init(writer_cluster_))
+    return false;
+
+  cluster_list_size_ = new_size;
+  // __android_log_print(ANDROID_LOG_DEBUG, "WhiteBoardCast", "MakeNewClusterForFianlize deb6");
+  return true;
+}
+
+
 bool Segment::MakeNewCluster(uint64 frame_timestamp_ns) {
   const int32 new_size = cluster_list_size_ + 1;
 
@@ -2901,17 +3042,119 @@ bool Segment::QueueFrame(Frame* frame) {
   return true;
 }
 
-int Segment::WriteFramesAll() {
-  if (frames_ == NULL)
-    return 0;
+int Segment::WriteFramesAllForFinalize() {
+	if (frames_ == NULL) {
+		return 0;
+	}
 
-  if (cluster_list_size_ < 1)
-    return -1;
+	if (cluster_list_size_ < 1) {
+	__android_log_print(ANDROID_LOG_DEBUG, "WhiteBoardCast", "WriteFramesAll deb2");
+		return -1;
+	}
+
+  Cluster*  cluster = cluster_list_[cluster_list_size_-1];
+
+	if (!cluster) {
+	__android_log_print(ANDROID_LOG_DEBUG, "WhiteBoardCast", "WriteFramesAll deb3");
+		return -1;
+	}
+
+  const uint64 timecode_scale = segment_info_.timecode_scale();
+  // __android_log_print(ANDROID_LOG_DEBUG, "WhiteBoardCast", "WriteFramesAllForFinalize deb3.1, timecode_scale=%llu", timecode_scale);
+
+  for (int32 i = 0; i < frames_size_; ++i) {
+    Frame*& frame = frames_[i];
+    const uint64 frame_timestamp = frame->timestamp();  // ns
+    const uint64 frame_timecode = frame_timestamp / timecode_scale;
+
+    if (!cluster->AddFrame(frame->frame(),
+                           frame->length(),
+                           frame->track_number(),
+                           frame_timecode,
+						frame->is_key())) {
+			__android_log_print(ANDROID_LOG_DEBUG, "WhiteBoardCast", "WriteFramesAllForFinalize deb4, timestamp=%llu, key=%d", frame_timestamp, frame->is_key());
+			if(!MakeNewClusterForFinalize(frame_timestamp)) {
+				__android_log_print(ANDROID_LOG_DEBUG, "WhiteBoardCast", "WriteFramesAllForFinalize deb4.1, fail NewCluster");
+				return -1;
+			}
+			cluster = cluster_list_[cluster_list_size_-1];
+			if (!cluster->AddFrame(frame->frame(),
+                           frame->length(),
+                           frame->track_number(),
+                           frame_timecode,
+							frame->is_key())) {
+				__android_log_print(ANDROID_LOG_DEBUG, "WhiteBoardCast", "WriteFramesAllForFinalize deb4.2, Second AddFrame fail.");
+				return -1;
+			}
+			__android_log_print(ANDROID_LOG_DEBUG, "WhiteBoardCast", "WriteFramesAllForFinalize deb4.3, Second AddFrame success.");
+		}
+
+    if (new_cuepoint_ && cues_track_ == frame->track_number()) {
+			if (!AddCuePoint(frame_timestamp, cues_track_)) {
+	__android_log_print(ANDROID_LOG_DEBUG, "WhiteBoardCast", "WriteFramesAll deb5");
+				return -1;
+			}
+    }
+
+    if (frame_timestamp > last_timestamp_)
+      last_timestamp_ = frame_timestamp;
+
+    delete frame;
+    frame = NULL;
+  }
+
+  const int result = frames_size_;
+  frames_size_ = 0;
+
+  return result;
+	/*
+    if (!cluster->AddFrame(frame->frame(),
+                           frame->length(),
+                           frame->track_number(),
+                           frame_timecode,
+						frame->is_key())) {
+	*/
+	/*
+    Frame*& last_frame = frames_[frames_size_-1];
+    const uint64 frame_timestamp = last_frame->timestamp()+1;  // ns	
+	
+	const int result = TestFrame(last_frame->track_number(), frame_timestamp, last_frame->is_key());
+	if (result < 0)  // error 
+	{
+		__android_log_print(ANDROID_LOG_DEBUG, "WhiteBoardCast", "WriteFramesAllForFinalize deb1,  TestFrame fail");
+		return -1;
+	}
+	
+  // A non-zero result means create a new cluster.
+	if (result > 0 && !MakeNewCluster(frame_timestamp)) {
+		__android_log_print(ANDROID_LOG_DEBUG, "WhiteBoardCast", "WriteFramesAllForFinalize deb2,  MakeNewCluster fail");
+		return -1;
+	}
+	
+	int frame_count = WriteFramesAll();
+	
+	__android_log_print(ANDROID_LOG_DEBUG, "WhiteBoardCast", "WriteFramesAllForFinalize deb3, %d", frame_count);
+	return frame_count;	
+	*/
+	
+}
+
+int Segment::WriteFramesAll() {
+	if (frames_ == NULL) {
+		return 0;
+	}
+
+	if (cluster_list_size_ < 1) {
+	__android_log_print(ANDROID_LOG_DEBUG, "WhiteBoardCast", "WriteFramesAll deb2");
+		return -1;
+	}
 
   Cluster* const cluster = cluster_list_[cluster_list_size_-1];
 
-  if (!cluster)
-    return -1;
+	if (!cluster) {
+	__android_log_print(ANDROID_LOG_DEBUG, "WhiteBoardCast", "WriteFramesAll deb3");
+		return -1;
+	}
 
   const uint64 timecode_scale = segment_info_.timecode_scale();
 
@@ -2924,12 +3167,16 @@ int Segment::WriteFramesAll() {
                            frame->length(),
                            frame->track_number(),
                            frame_timecode,
-                           frame->is_key()))
-      return -1;
+						frame->is_key())) {
+			__android_log_print(ANDROID_LOG_DEBUG, "WhiteBoardCast", "WriteFramesAll deb4, timestamp=%d, key=%d", frame_timestamp, frame->is_key());
+			return -1;
+		}
 
     if (new_cuepoint_ && cues_track_ == frame->track_number()) {
-      if (!AddCuePoint(frame_timestamp, cues_track_))
-        return -1;
+			if (!AddCuePoint(frame_timestamp, cues_track_)) {
+	__android_log_print(ANDROID_LOG_DEBUG, "WhiteBoardCast", "WriteFramesAll deb5");
+				return -1;
+			}
     }
 
     if (frame_timestamp > last_timestamp_)
