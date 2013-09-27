@@ -36,7 +36,7 @@ import java.util.concurrent.Future;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 
-public class WhiteBoardCastActivity extends Activity {
+public class WhiteBoardCastActivity extends Activity implements EncoderTask.ErrorListener {
 
     static final int DIALOG_ID_ABOUT = 1;
     static final int DIALOG_ID_QUERY_VIEW_SHARE = 2;
@@ -268,7 +268,7 @@ public class WhiteBoardCastActivity extends Activity {
         WhiteBoardCanvas wb = getWhiteBoardCanvas();
         wb.invalWholeRegionForEncoder(); // for restart. make it a little heavy.
         try {
-            encoderTask = new EncoderTask(wb, wb.getBitmap(), getWorkVideoPath());
+            encoderTask = new EncoderTask(wb, wb.getBitmap(), getWorkVideoPath(), this);
 
             if(debuggable)
                 encoderTask.setFpsListener(getWhiteBoardCanvas().getEncoderFpsCounter());

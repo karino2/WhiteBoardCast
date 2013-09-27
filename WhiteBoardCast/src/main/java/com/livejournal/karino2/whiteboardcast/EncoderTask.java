@@ -25,6 +25,11 @@ public class EncoderTask implements Runnable {
         void push(long currentFrameMill);
     }
 
+    public interface ErrorListener {
+        void postErrorMessage(String msg);
+    }
+
+    ErrorListener errorListener;
     Bitmap bitmap;
     FrameRetrieval retrieval;
     int[] pixelBuf;
@@ -35,12 +40,13 @@ public class EncoderTask implements Runnable {
     long beginMillis=0;
     String workVideoPath;
 
-    public EncoderTask(FrameRetrieval frameR, Bitmap parentBmp, String workVideoPath) {
+    public EncoderTask(FrameRetrieval frameR, Bitmap parentBmp, String workVideoPath, ErrorListener elistn) {
         retrieval = frameR;
         updateBitmap(parentBmp);
         errorBuf = new StringBuilder();
         encoder = new Encoder();
         this.workVideoPath = workVideoPath;
+        errorListener = elistn;
     }
 
     static final int FPS_NUM = 24;
@@ -89,9 +95,8 @@ public class EncoderTask implements Runnable {
     public void run() {
         try {
             doWholeTask();
-        }catch(Exception e) {
-            Log.d("WhiteBoardCast", "unknown encoder exception: " + e.getMessage());
-            throw new RuntimeException(e);
+        }catch(RuntimeException e) {
+            errorListener.postErrorMessage("Unknown encoder runtime exception: " + e.getMessage());
         }
     }
 
