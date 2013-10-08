@@ -103,7 +103,7 @@ public class AudioVideoMergeTask extends AsyncTask<String, Integer, String> {
         WebmReader webmReader = new WebmReader();
 
         if(!webmReader.open(videoPath)) {
-            throw new Exception("Input file is invalid or error while opening.");
+            throw new Exception("Input file is invalid or error while opening. " + webmReader.getError());
         }
         webmReader.initTracks();
         com.google.libwebm.mkvparser.VideoTrack firstTrack = (com.google.libwebm.mkvparser.VideoTrack)webmReader.getCurrentTrack();

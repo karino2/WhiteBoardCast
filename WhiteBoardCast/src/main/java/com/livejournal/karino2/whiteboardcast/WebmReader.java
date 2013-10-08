@@ -17,6 +17,10 @@ public class WebmReader {
     MkvReader reader;
     com.google.libwebm.mkvparser.Segment parserSegment;
 
+    public String getError() {
+        return error.toString();
+    }
+
     public boolean open(String path) {
         reader = new MkvReader();
         if(0 != reader.open(path)) {
@@ -38,7 +42,7 @@ public class WebmReader {
 
         result = parserSegment.load();
         if (result < 0) {
-            error.append("Segment.load() failed.");
+            error.append("Segment.load() failed. " + result);
             return false;
         }
 
