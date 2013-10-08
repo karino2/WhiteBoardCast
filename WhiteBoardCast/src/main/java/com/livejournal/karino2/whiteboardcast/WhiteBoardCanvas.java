@@ -69,27 +69,7 @@ public class WhiteBoardCanvas extends View implements FrameRetrieval, PageScroll
         mCursorPaint.setStrokeWidth(4);
         mCursorPaint.setStyle(Paint.Style.STROKE);
 
-        /*
-        float mx [] = {
-                -1.0f,  0.0f,  0.0f,  0.0f,  255.0f,
-                0.0f,  -1.0f,  0.0f,  0.0f,  255.0f,
-                0.0f,  0.0f,  -1.0f,  0.0f,  255.0f,
-                0.0f,  0.0f,  0.0f,  1.0f,  0.0f
-        };
-        ColorMatrix cm = new ColorMatrix(mx);
-
-        mCursorPaint.setColorFilter(new ColorMatrixColorFilter(cm));
-        */
         mCursorPaint.setColor(Color.argb(0xff, 0xff, 0x80, 0x80));
-        // mCursorPaint.setColor(Color.RED);
-        // mCursorPaint.setXfermode(new PorterDuffXfermode(PorterDuff.Mode.XOR));
-
-        // mCursorPaint.setPathEffect(new DashPathEffect(new float[]{5, 2}, 0));
-        /*
-                        mPaint.setXfermode(new PorterDuffXfermode(
-                        PorterDuff.Mode.CLEAR));
-
-         */
 
         boardList = new BoardList();
         cursorBackupBmp = Bitmap.createBitmap(ERASER_WIDTH+2*CURSOR_MARGIN, ERASER_WIDTH+2*CURSOR_MARGIN, Bitmap.Config.ARGB_8888);
@@ -108,8 +88,6 @@ public class WhiteBoardCanvas extends View implements FrameRetrieval, PageScroll
         w = (w+15) & ~15;
         h = (h+15) & ~15;
         // Log.d("WBCast", "after, w,h=" + w+ "," + h);
-        mCenterX = ((float)w)/2F;
-        mCenterY = ((float)h)/2F;
         mWidth = w;
         mHeight = h;
         mX1 = CROSS_SIZE*2;
@@ -120,10 +98,6 @@ public class WhiteBoardCanvas extends View implements FrameRetrieval, PageScroll
         overlay.onSize(w, h);
     }
 
-    public void resetCanvas() {
-        resetCanvas(viewBmp.getWidth(), viewBmp.getHeight());
-        invalidate();
-    }
     public void resetCanvas(int w, int h) {
         viewBmp = Bitmap.createBitmap(w, h, Bitmap.Config.ARGB_8888);
         viewBmp.eraseColor(Color.WHITE);
@@ -177,14 +151,9 @@ public class WhiteBoardCanvas extends View implements FrameRetrieval, PageScroll
 
     private final int CROSS_SIZE = 20;
     private void drawCross(Canvas canvas, float x, float y) {
-        // mCursorPaint.setShader(new LinearGradient(x-CROSS_SIZE, y-CROSS_SIZE, x+CROSS_SIZE, y+CROSS_SIZE, Color.RED, Color.argb(0xff, 0xee, 0x80, 0x80), Shader.TileMode.MIRROR));
-
-
         canvas.drawLine(x-CROSS_SIZE, y, x+CROSS_SIZE, y, mCursorPaint);
         canvas.drawLine(x, y-CROSS_SIZE, x, y+CROSS_SIZE, mCursorPaint);
     }
-
-    private float mCenterX, mCenterY;
 
     private float mX, mY;
     private static final float TOUCH_TOLERANCE = 4;
