@@ -4,14 +4,20 @@ import android.content.Context;
 import android.graphics.Bitmap;
 import android.graphics.Canvas;
 import android.graphics.Color;
+import android.graphics.ColorMatrix;
+import android.graphics.ColorMatrixColorFilter;
 import android.graphics.DashPathEffect;
+import android.graphics.LinearGradient;
 import android.graphics.Paint;
 import android.graphics.Path;
+import android.graphics.PixelXorXfermode;
+import android.graphics.PorterDuff;
+import android.graphics.PorterDuffXfermode;
 import android.graphics.Rect;
 import android.graphics.RectF;
+import android.graphics.Shader;
 import android.os.Handler;
 import android.util.AttributeSet;
-import android.util.Log;
 import android.view.MotionEvent;
 import android.view.View;
 
@@ -60,8 +66,30 @@ public class WhiteBoardCanvas extends View implements FrameRetrieval, PageScroll
         invalRegion = new Rect(0, 0, 0, 0);
 
         mCursorPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
+        mCursorPaint.setStrokeWidth(4);
         mCursorPaint.setStyle(Paint.Style.STROKE);
-        mCursorPaint.setPathEffect(new DashPathEffect(new float[]{5, 2}, 0));
+
+        /*
+        float mx [] = {
+                -1.0f,  0.0f,  0.0f,  0.0f,  255.0f,
+                0.0f,  -1.0f,  0.0f,  0.0f,  255.0f,
+                0.0f,  0.0f,  -1.0f,  0.0f,  255.0f,
+                0.0f,  0.0f,  0.0f,  1.0f,  0.0f
+        };
+        ColorMatrix cm = new ColorMatrix(mx);
+
+        mCursorPaint.setColorFilter(new ColorMatrixColorFilter(cm));
+        */
+        mCursorPaint.setColor(Color.argb(0xff, 0xff, 0x80, 0x80));
+        // mCursorPaint.setColor(Color.RED);
+        // mCursorPaint.setXfermode(new PorterDuffXfermode(PorterDuff.Mode.XOR));
+
+        // mCursorPaint.setPathEffect(new DashPathEffect(new float[]{5, 2}, 0));
+        /*
+                        mPaint.setXfermode(new PorterDuffXfermode(
+                        PorterDuff.Mode.CLEAR));
+
+         */
 
         boardList = new BoardList();
         cursorBackupBmp = Bitmap.createBitmap(ERASER_WIDTH+2*CURSOR_MARGIN, ERASER_WIDTH+2*CURSOR_MARGIN, Bitmap.Config.ARGB_8888);
@@ -149,6 +177,9 @@ public class WhiteBoardCanvas extends View implements FrameRetrieval, PageScroll
 
     private final int CROSS_SIZE = 20;
     private void drawCross(Canvas canvas, float x, float y) {
+        // mCursorPaint.setShader(new LinearGradient(x-CROSS_SIZE, y-CROSS_SIZE, x+CROSS_SIZE, y+CROSS_SIZE, Color.RED, Color.argb(0xff, 0xee, 0x80, 0x80), Shader.TileMode.MIRROR));
+
+
         canvas.drawLine(x-CROSS_SIZE, y, x+CROSS_SIZE, y, mCursorPaint);
         canvas.drawLine(x, y-CROSS_SIZE, x, y+CROSS_SIZE, mCursorPaint);
     }
@@ -216,14 +247,14 @@ public class WhiteBoardCanvas extends View implements FrameRetrieval, PageScroll
         if(isRectFValid(mBrushCursorRegion)) {
             backupCursorRegion(mBrushCursorRegion);
             synchronized (viewBmp) {
-                mCanvas.drawOval(mBrushCursorRegion, mCursorPaint);
+                drawCross(mCanvas, mBrushCursorRegion.centerX(), mBrushCursorRegion.centerY());
             }
             invalViewBmpRegionF(mBrushCursorRegion);
         }
     }
 
     private float getCursorSize() {
-        return (float)penWidth;
+        return (float)CROSS_SIZE*2;
     }
 
     private void setBrushCursorPos(float x, float y)
@@ -278,17 +309,10 @@ public class WhiteBoardCanvas extends View implements FrameRetrieval, PageScroll
         if(isAnimating)
             return true;
 
+        eraseBrushCursor();
         float x = event.getX();
         float y = event.getY();
-        setBrushCursorPos(x, y);
-        revertBrushDrawnRegionIfNecessary();
-        onTouchWithoutCursor(event, x, y);
-        drawBrushCursorIfNecessary();
-        return true;
 
-    }
-
-    private void onTouchWithoutCursor(MotionEvent event, float x, float y) {
         switch (event.getAction()) {
             case MotionEvent.ACTION_DOWN:
                 if(overlay.onTouchDown(x, y)) {
@@ -368,6 +392,8 @@ public class WhiteBoardCanvas extends View implements FrameRetrieval, PageScroll
                 invalidate();
                 break;
         }
+        return true;
+
     }
 
     private void pushUndoCommand(Rect region, Bitmap undo, Bitmap redo) {
@@ -458,11 +484,8 @@ public class WhiteBoardCanvas extends View implements FrameRetrieval, PageScroll
         invalRegion.set(0, 0, viewBmp.getWidth(), viewBmp.getHeight());
     }
 
-    private int penWidth = DEFAULT_PEN_WIDTH;
-
     private void setPenWidth(int width) {
         mPaint.setStrokeWidth(width);
-        penWidth = width;
     }
 
     public void setPenOrEraser(int penIndex) {
