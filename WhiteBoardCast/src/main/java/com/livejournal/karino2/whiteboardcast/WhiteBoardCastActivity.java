@@ -383,7 +383,7 @@ public class WhiteBoardCastActivity extends Activity implements EncoderTask.Erro
                         public void run() {
                             try {
                                 renameAndDeleteWorkFiles();
-                                startDetailActivityWithLastResult();
+                                showDialog(DIALOG_ID_QUERY_VIEW_SHARE);
                             } catch (IOException e) {
                                 showError("Rename encoded file fail: " + e.getMessage());
                             }
@@ -394,12 +394,6 @@ public class WhiteBoardCastActivity extends Activity implements EncoderTask.Erro
         } catch (IOException e) {
             showError("Fail to create WhiteBoardCast folder(2). " + e.getMessage());
         }
-    }
-
-    private void startDetailActivityWithLastResult() {
-        Intent intent = new Intent(this, VideoListActivity.class);
-        intent.putExtra("DetailUri", lastResultUri);
-        startActivity(intent);
     }
 
     File lastResult = null;
@@ -462,10 +456,6 @@ public class WhiteBoardCastActivity extends Activity implements EncoderTask.Erro
     @Override
     public boolean onMenuItemSelected(int featureId, MenuItem item) {
         switch(item.getItemId()) {
-            case R.id.menu_id_videos:
-                Intent intent = new Intent(this, VideoListActivity.class);
-                startActivity(intent);
-                return true;
             case R.id.menu_id_about:
                 showDialog(DIALOG_ID_ABOUT);
                 return true;
