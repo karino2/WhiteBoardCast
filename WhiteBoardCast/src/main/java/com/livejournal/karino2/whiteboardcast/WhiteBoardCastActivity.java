@@ -352,6 +352,12 @@ public class WhiteBoardCastActivity extends Activity implements EncoderTask.Erro
         Intent i = new Intent(Intent.ACTION_SEND);
         i.setType("video/webm");
 
+        i.putExtra(Intent.EXTRA_STREAM, lastResultUri);
+        startActivity(Intent.createChooser(i, "Share video"));
+
+    }
+
+    private Uri insertLastResultToContentResolver() {
         SimpleDateFormat timeStampFormat = new SimpleDateFormat("yyyy-MM-dd-HH:mm");
         String title = timeStampFormat.format(new Date()) + " recorded";
 
@@ -364,12 +370,7 @@ public class WhiteBoardCastActivity extends Activity implements EncoderTask.Erro
         content.put(MediaStore.Video.Media.MIME_TYPE, "video/webm");
         content.put(MediaStore.Video.Media.DATA, lastResult.getAbsolutePath());
         ContentResolver resolver = getBaseContext().getContentResolver();
-        Uri uri = resolver.insert(MediaStore.Video.Media.EXTERNAL_CONTENT_URI, content);
-
-
-        i.putExtra(Intent.EXTRA_STREAM, uri);
-        startActivity(Intent.createChooser(i, "Share video"));
-
+        return resolver.insert(MediaStore.Video.Media.EXTERNAL_CONTENT_URI, content);
     }
 
     private void beginAudioVideoMergeTask() {
@@ -410,7 +411,12 @@ public class WhiteBoardCastActivity extends Activity implements EncoderTask.Erro
         result.renameTo(lastResult);
         workVideo.delete();
         workAudio.delete();
+
+        lastResultUri = insertLastResultToContentResolver();
+
     }
+
+    Uri lastResultUri = null;
 
 
     @Override
