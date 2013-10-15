@@ -6,11 +6,13 @@ import android.app.Activity;
 import android.app.AlertDialog;
 import android.app.Dialog;
 import android.content.ContentResolver;
+import android.content.ContentUris;
 import android.content.ContentValues;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.pm.ApplicationInfo;
 import android.content.pm.PackageManager;
+import android.database.Cursor;
 import android.net.Uri;
 import android.os.Bundle;
 import android.os.Environment;
@@ -25,6 +27,7 @@ import android.view.MenuItem;
 import android.view.View;
 import android.webkit.WebView;
 import android.widget.Button;
+import android.widget.EditText;
 import android.widget.Toast;
 
 import java.io.File;
@@ -41,6 +44,7 @@ public class WhiteBoardCastActivity extends Activity implements EncoderTask.Erro
     static final int DIALOG_ID_ABOUT = 1;
     static final int DIALOG_ID_QUERY_VIEW_SHARE = 2;
     static final int DIALOG_ID_QUERY_MERGE_AGAIN = 3;
+    static final int DIALOG_ID_FILE_RENAME = 4;
 
     private static final String AUDIO_FNAME = "temp.mkv";
 
@@ -414,6 +418,7 @@ public class WhiteBoardCastActivity extends Activity implements EncoderTask.Erro
 
         lastResultUri = insertLastResultToContentResolver();
 
+
     }
 
     Uri lastResultUri = null;
@@ -475,9 +480,81 @@ public class WhiteBoardCastActivity extends Activity implements EncoderTask.Erro
                 return createQueryViewShareDialog();
             case DIALOG_ID_QUERY_MERGE_AGAIN:
                 return createQueryMergeWorkingFileDialog();
+            case DIALOG_ID_FILE_RENAME:
+                return createFileRenameDialog();
         }
         return super.onCreateDialog(id);
     }
+
+
+    @Override
+    protected void onPrepareDialog(int id, Dialog dialog) {
+        switch(id) {
+            case DIALOG_ID_FILE_RENAME:
+                EditText et = (EditText)dialog.findViewById(R.id.edit_filename);
+                et.setText(lastResult.getName());
+                break;
+        }
+        super.onPrepareDialog(id, dialog);
+    }
+
+    Dialog fileRenameDialog;
+
+
+    private Dialog createFileRenameDialog() {
+        LayoutInflater inflater = LayoutInflater.from(this);
+        final View view = inflater.inflate(R.layout.rename, null);
+        setOnClickListener(view, R.id.button_cancel, new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                fileRenameDialog.dismiss();
+            }
+        });
+        setOnClickListener(view, R.id.button_save, new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                EditText et = (EditText)view.findViewById(R.id.edit_filename);
+                boolean success = renameFileNameTo(et.getText().toString());
+                if(success)
+                    fileRenameDialog.dismiss();
+            }
+        });
+        fileRenameDialog = new AlertDialog.Builder(this).setTitle(R.string.label_rename)
+                .setView(view)
+                .create();
+        return fileRenameDialog;
+    }
+
+    private boolean renameFileNameTo(String newName) {
+        if(newName.equals(""))
+        {
+            showMessage("Empty file name!");
+            return false;
+        }
+
+        File newNameFile = new File(lastResult.getParentFile(), newName);
+        if(newNameFile.exists()) {
+            showMessage("This file is already exists");
+            return false;
+        }
+        lastResult.renameTo(newNameFile);
+        lastResult = newNameFile;
+        updateNewFIleNameToContentDB(lastResult);
+        return true;
+    }
+
+    private void updateNewFIleNameToContentDB(File newFile) {
+        ContentValues content = new ContentValues(2);
+
+        long id = ContentUris.parseId(lastResultUri);
+
+
+        content.put(MediaStore.Video.Media.DATA, newFile.getAbsolutePath());
+        content.put(MediaStore.Video.Media.DISPLAY_NAME, newFile.getName());
+        ContentResolver resolver = getBaseContext().getContentResolver();
+        resolver.update(MediaStore.Video.Media.EXTERNAL_CONTENT_URI, content, "_id = ?", new String[] {String.valueOf(id)});
+    }
+
 
     private Dialog createQueryMergeWorkingFileDialog() {
         return new AlertDialog.Builder(this).setTitle(R.string.query_merge_title)
@@ -512,9 +589,19 @@ public class WhiteBoardCastActivity extends Activity implements EncoderTask.Erro
                 shareVideoIntent();
             }
         });
+        setOnClickListener(view, R.id.button_rename, new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                renameVideoFileName();
+            }
+        });
         return new AlertDialog.Builder(this).setTitle(R.string.query_title)
                 .setView(view)
                 .create();
+    }
+
+    private void renameVideoFileName() {
+        showDialog(DIALOG_ID_FILE_RENAME);
     }
 
     private void setOnClickListener(View view, int id, View.OnClickListener onclick) {
