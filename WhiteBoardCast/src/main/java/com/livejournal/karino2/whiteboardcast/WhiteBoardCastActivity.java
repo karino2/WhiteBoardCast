@@ -318,7 +318,7 @@ public class WhiteBoardCastActivity extends Activity implements EncoderTask.Erro
         return (WhiteBoardCanvas)findViewById(R.id.fullscreen_content);
     }
 
-    private static  void ensureDirExist(File dir) throws IOException {
+    public static void ensureDirExist(File dir) throws IOException {
         if(!dir.exists()) {
             if(!dir.mkdir()){
                 throw new IOException();
@@ -466,6 +466,10 @@ public class WhiteBoardCastActivity extends Activity implements EncoderTask.Erro
                 return true;
             case R.id.menu_id_quit:
                 finish();
+                return true;
+            case R.id.menu_id_slides:
+                Intent intent = new Intent(this, SlideListActivity.class);
+                startActivity(intent);
                 return true;
         }
         return super.onMenuItemSelected(featureId, item);
