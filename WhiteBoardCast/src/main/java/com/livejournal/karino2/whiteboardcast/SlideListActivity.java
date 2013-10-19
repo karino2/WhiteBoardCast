@@ -4,16 +4,20 @@ import android.app.ListActivity;
 import android.content.Context;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
+import android.graphics.Point;
 import android.os.Bundle;
 import android.app.Activity;
+import android.view.Display;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.support.v4.app.NavUtils;
 import android.view.View;
 import android.view.ViewGroup;
+import android.view.WindowManager;
 import android.widget.ArrayAdapter;
 import android.widget.BaseAdapter;
 import android.widget.ImageView;
+import android.widget.LinearLayout;
 import android.widget.ListAdapter;
 import android.widget.SimpleAdapter;
 
@@ -29,9 +33,13 @@ public class SlideListActivity extends ListActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_slide_list);
+        WindowManager wm = (WindowManager)getSystemService(Context.WINDOW_SERVICE);
+        Display disp = wm.getDefaultDisplay();
+        Point windowSize = new Point();
+        disp.getSize(windowSize);
 
         try {
-            FileImageAdapter adapter = new FileImageAdapter(this, getSlideFiles());
+            FileImageAdapter adapter = new FileImageAdapter(this, getSlideFiles(), windowSize.x, windowSize.y/6);
             setListAdapter(adapter);
         } catch (IOException e) {
             e.printStackTrace();
@@ -44,10 +52,13 @@ public class SlideListActivity extends ListActivity {
 
     public class FileImageAdapter extends BaseAdapter implements ListAdapter {
         File[] files;
-        Context context;
-        public FileImageAdapter(Context ctx, File[] fs) {
+        ListActivity context;
+        int width, height;
+        public FileImageAdapter(ListActivity ctx, File[] fs, int itemWidth, int itemHeight) {
             context = ctx;
             files = fs;
+            width = itemWidth;
+            height = itemHeight;
         }
 
         @Override
@@ -68,17 +79,21 @@ public class SlideListActivity extends ListActivity {
         @Override
         public View getView(int i, View convertView, ViewGroup viewGroup) {
             ImageView iv;
+            View view;
             if(convertView == null) {
-                iv = new ImageView(context);
+                view = context.getLayoutInflater().inflate(R.layout.slide_item, null);
+                iv = (ImageView)view.findViewById(R.id.imageView);
+                iv.setLayoutParams(new LinearLayout.LayoutParams(width, height));
             } else {
-                iv = (ImageView)convertView;
+                view = convertView;
+                iv = (ImageView)convertView.findViewById(R.id.imageView);
             }
             File f = files[i];
             BitmapFactory.Options options = new BitmapFactory.Options();
             options.inSampleSize = 4;
             Bitmap bmp = BitmapFactory.decodeFile(f.getAbsolutePath(), options);
             iv.setImageBitmap(bmp);
-            return iv;
+            return view;
         }
     }
 
