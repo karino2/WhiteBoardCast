@@ -2,11 +2,13 @@ package com.livejournal.karino2.whiteboardcast;
 
 import android.app.ListActivity;
 import android.content.Context;
+import android.content.Intent;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.Point;
+import android.net.Uri;
 import android.os.Bundle;
-import android.app.Activity;
+import android.os.Handler;
 import android.view.Display;
 import android.view.Menu;
 import android.view.MenuItem;
@@ -14,20 +16,28 @@ import android.support.v4.app.NavUtils;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.WindowManager;
-import android.widget.ArrayAdapter;
 import android.widget.BaseAdapter;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.ListAdapter;
-import android.widget.SimpleAdapter;
 
 import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
 import java.io.FilenameFilter;
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
+import java.text.SimpleDateFormat;
 import java.util.Arrays;
 import java.util.Comparator;
+import java.util.Date;
 
 public class SlideListActivity extends ListActivity {
+    final int REQUEST_PICK_IMAGE = 1;
+
+    int screenWidth, screenHeight;
+    FileImageAdapter adapter;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -37,9 +47,16 @@ public class SlideListActivity extends ListActivity {
         Display disp = wm.getDefaultDisplay();
         Point windowSize = new Point();
         disp.getSize(windowSize);
+        screenWidth = windowSize.x;
+        screenHeight = windowSize.y;
+        // use this for image copying. so always treat as landscape.
+        if(screenWidth<screenHeight) {
+            screenWidth = windowSize.y;
+            screenHeight = windowSize.x;
+        }
 
         try {
-            FileImageAdapter adapter = new FileImageAdapter(this, getSlideFiles(), windowSize.x, windowSize.y/6);
+            adapter = new FileImageAdapter(this, getSlideFiles(), windowSize.x, windowSize.y/6);
             setListAdapter(adapter);
         } catch (IOException e) {
             e.printStackTrace();
@@ -60,6 +77,12 @@ public class SlideListActivity extends ListActivity {
             width = itemWidth;
             height = itemHeight;
         }
+
+        public void reload() throws IOException {
+            files = reloadSlideFiles();
+            notifyDataSetChanged();
+        }
+
 
         @Override
         public int getCount() {
@@ -121,6 +144,12 @@ public class SlideListActivity extends ListActivity {
         return slideFiles;
     }
 
+    public File[] reloadSlideFiles() throws IOException {
+        slideFiles = null;
+        return getSlideFiles();
+    }
+
+
     public static File getSlideListDirectory() throws IOException {
         File parent = WhiteBoardCastActivity.getFileStoreDirectory();
         File dir = new File(parent, "slides");
@@ -158,8 +187,87 @@ public class SlideListActivity extends ListActivity {
                 //
                 NavUtils.navigateUpFromSameTask(this);
                 return true;
+            case R.id.action_add:
+                Intent intent = new Intent(Intent.ACTION_PICK);
+                intent.setType("image/*");
+                intent.setAction(Intent.ACTION_GET_CONTENT);
+                startActivityForResult(intent, REQUEST_PICK_IMAGE);
+                return true;
         }
         return super.onOptionsItemSelected(item);
     }
 
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+        switch(requestCode) {
+            case REQUEST_PICK_IMAGE:
+                if(resultCode == RESULT_OK){
+                    copyImage(data);
+                    try {
+                        adapter.reload();
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                    }
+                }
+        }
+    }
+
+    int calculateResizeFactor(int orgWidth, int orgHeight,
+                                     int limitWidth, int limitHeight) {
+        int widthResizeFactor = Math.max(1, (orgWidth+limitWidth-1)/limitWidth);
+        int heightResizeFactor = Math.max(1, (orgHeight+limitHeight-1)/limitHeight);
+        int resizeFactor = Math.max(widthResizeFactor, heightResizeFactor);
+        return resizeFactor;
+    }
+
+
+    int sequenceId = 0;
+    String getNewSequentialFile() {
+        SimpleDateFormat timeStampFormat = new SimpleDateFormat("yyyyMMddHHmmssSS");
+        return timeStampFormat.format(new Date()) + "_" + sequenceId++ +".png";
+    }
+
+    private void copyImage(Intent data) {
+        Uri imageUri = data.getData();
+        try {
+            int resizeFactor = getResizeFactor(imageUri);
+            BitmapFactory.Options options;
+
+            options = new BitmapFactory.Options();
+            options.inSampleSize = resizeFactor;
+
+            InputStream is = getContentResolver().openInputStream(imageUri);
+            try {
+                Bitmap bitmap = BitmapFactory.decodeStream(is, null, options);
+                // currently, always resize even though it sometime not necessary.
+                Bitmap resizedbitmap = Bitmap.createScaledBitmap(bitmap, screenWidth, screenHeight, true);
+
+
+                OutputStream stream = new FileOutputStream(new File(getSlideListDirectory(), getNewSequentialFile()));
+                resizedbitmap.compress(Bitmap.CompressFormat.PNG, 80, stream);
+                stream.close();
+            }finally {
+                is.close();
+            }
+
+        } catch (FileNotFoundException e) {
+            e.printStackTrace();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+    private int getResizeFactor(Uri imageUri) throws IOException {
+        InputStream is = getContentResolver().openInputStream(imageUri);
+        try {
+            BitmapFactory.Options options = new BitmapFactory.Options();
+            options.inJustDecodeBounds = true;
+            BitmapFactory.decodeStream(is, null, options);
+
+            return calculateResizeFactor(options.outWidth, options.outHeight, screenWidth, screenHeight);
+        }finally {
+            is.close();
+        }
+    }
 }
