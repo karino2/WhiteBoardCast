@@ -9,17 +9,22 @@ import android.graphics.Point;
 import android.net.Uri;
 import android.os.Bundle;
 import android.os.Handler;
+import android.view.ActionMode;
 import android.view.Display;
 import android.view.Menu;
+import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.support.v4.app.NavUtils;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.WindowManager;
+import android.widget.AbsListView;
 import android.widget.BaseAdapter;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.ListAdapter;
+import android.widget.ListView;
+import android.widget.Toast;
 
 import java.io.File;
 import java.io.FileNotFoundException;
@@ -54,6 +59,55 @@ public class SlideListActivity extends ListActivity {
             screenWidth = windowSize.y;
             screenHeight = windowSize.x;
         }
+
+        getListView().setChoiceMode(ListView.CHOICE_MODE_MULTIPLE_MODAL);
+        getListView().setMultiChoiceModeListener(new AbsListView.MultiChoiceModeListener() {
+            @Override
+            public void onItemCheckedStateChanged(ActionMode actionMode, int i, long l, boolean b) {
+
+            }
+
+            @Override
+            public boolean onCreateActionMode(ActionMode actionMode, Menu menu) {
+                MenuInflater inflater = actionMode.getMenuInflater();
+                inflater.inflate(R.menu.slide_list_ctx, menu);
+                return true;
+            }
+
+            @Override
+            public boolean onPrepareActionMode(ActionMode actionMode, Menu menu) {
+                return false;
+            }
+
+            String selectedIdDump() {
+                long[] ids = getListView().getCheckedItemIds();
+                StringBuffer buf = new StringBuffer();
+                for(long id : ids) {
+                    buf.append(id);
+                    buf.append(",");
+                }
+                return buf.toString();
+            }
+
+
+            @Override
+            public boolean onActionItemClicked(ActionMode actionMode, MenuItem menuItem) {
+                switch(menuItem.getItemId()) {
+                    case R.id.action_up:
+                        Toast.makeText(SlideListActivity.this, "up " + selectedIdDump(), Toast.LENGTH_LONG).show();
+                        return true;
+                    case R.id.action_down:
+                        Toast.makeText(SlideListActivity.this, "down " + selectedIdDump(), Toast.LENGTH_LONG).show();
+                        return true;
+                }
+                return false;
+            }
+
+            @Override
+            public void onDestroyActionMode(ActionMode actionMode) {
+
+            }
+        });
 
         try {
             adapter = new FileImageAdapter(this, getSlideFiles(), windowSize.x, windowSize.y/6);
@@ -117,6 +171,11 @@ public class SlideListActivity extends ListActivity {
             Bitmap bmp = BitmapFactory.decodeFile(f.getAbsolutePath(), options);
             iv.setImageBitmap(bmp);
             return view;
+        }
+
+        @Override
+        public boolean hasStableIds() {
+            return true;
         }
     }
 
