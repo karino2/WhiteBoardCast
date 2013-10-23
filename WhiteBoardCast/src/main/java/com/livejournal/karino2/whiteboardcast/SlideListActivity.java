@@ -8,7 +8,7 @@ import android.graphics.BitmapFactory;
 import android.graphics.Point;
 import android.net.Uri;
 import android.os.Bundle;
-import android.os.Handler;
+import android.util.Log;
 import android.view.ActionMode;
 import android.view.Display;
 import android.view.Menu;
@@ -29,20 +29,29 @@ import android.widget.Toast;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
-import java.io.FilenameFilter;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.text.SimpleDateFormat;
-import java.util.Arrays;
-import java.util.Comparator;
 import java.util.Date;
+import java.util.List;
 
 public class SlideListActivity extends ListActivity {
     final int REQUEST_PICK_IMAGE = 1;
 
     int screenWidth, screenHeight;
     FileImageAdapter adapter;
+
+    void showMessage(String msg) {
+        Toast.makeText(this, msg, Toast.LENGTH_LONG).show();
+    }
+
+    @Override
+    protected void onListItemClick(ListView l, View v, int position, long id) {
+        // Make the newly clicked item the currently selected one.
+        getListView().setItemChecked(position, true);
+    }
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -63,8 +72,15 @@ public class SlideListActivity extends ListActivity {
         getListView().setChoiceMode(ListView.CHOICE_MODE_MULTIPLE_MODAL);
         getListView().setMultiChoiceModeListener(new AbsListView.MultiChoiceModeListener() {
             @Override
-            public void onItemCheckedStateChanged(ActionMode actionMode, int i, long l, boolean b) {
+            public void onItemCheckedStateChanged(ActionMode actionMode, int position, long id, boolean checked) {
+                // actionMode.getMenu().clear();
+                /*
+                long[] ids = getListView().getCheckedItemIds();
+                if(ids.length >= 2) {
 
+                }
+                */
+                showMessage("check state changed: " + selectedIdDump());
             }
 
             @Override
@@ -89,15 +105,37 @@ public class SlideListActivity extends ListActivity {
                 return buf.toString();
             }
 
+            int[] getSelectedIds() {
+                long[] idsLong = getListView().getCheckedItemIds();
+                int[] ids = new int[idsLong.length];
+                for(int i = 0; i < ids.length; i++) {
+                    ids[i] = (int)idsLong[i];
+                }
+                return ids;
+            }
 
             @Override
             public boolean onActionItemClicked(ActionMode actionMode, MenuItem menuItem) {
                 switch(menuItem.getItemId()) {
                     case R.id.action_up:
-                        Toast.makeText(SlideListActivity.this, "up " + selectedIdDump(), Toast.LENGTH_LONG).show();
+                        showMessage( "up " + selectedIdDump());
+                        slideList.upFiles(getSelectedIds());
+                        try {
+                            adapter.reload();
+                        } catch (IOException e) {
+                            showError("reload adapter fail on up: " + e.getMessage());
+                        }
+                        actionMode.finish();
                         return true;
                     case R.id.action_down:
-                        Toast.makeText(SlideListActivity.this, "down " + selectedIdDump(), Toast.LENGTH_LONG).show();
+                        showMessage( "down " + selectedIdDump());
+                        slideList.downFiles(getSelectedIds());
+                        try {
+                            adapter.reload();
+                        } catch (IOException e) {
+                            showError("reload adapter fail on down: " + e.getMessage());
+                        }
+                        actionMode.finish();
                         return true;
                 }
                 return false;
@@ -121,11 +159,16 @@ public class SlideListActivity extends ListActivity {
         setupActionBar();
     }
 
+    private void showError(String msg) {
+        Log.d("WhiteBoardCast", msg);
+        showMessage(msg);
+    }
+
     public class FileImageAdapter extends BaseAdapter implements ListAdapter {
-        File[] files;
+        List<File> files;
         ListActivity context;
         int width, height;
-        public FileImageAdapter(ListActivity ctx, File[] fs, int itemWidth, int itemHeight) {
+        public FileImageAdapter(ListActivity ctx, List<File> fs, int itemWidth, int itemHeight) {
             context = ctx;
             files = fs;
             width = itemWidth;
@@ -140,12 +183,12 @@ public class SlideListActivity extends ListActivity {
 
         @Override
         public int getCount() {
-            return files.length;
+            return files.size();
         }
 
         @Override
         public Object getItem(int i) {
-            return files[i];
+            return files.get(i);
         }
 
         @Override
@@ -165,7 +208,7 @@ public class SlideListActivity extends ListActivity {
                 view = convertView;
                 iv = (ImageView)convertView.findViewById(R.id.imageView);
             }
-            File f = files[i];
+            File f = files.get(i);
             BitmapFactory.Options options = new BitmapFactory.Options();
             options.inSampleSize = 4;
             Bitmap bmp = BitmapFactory.decodeFile(f.getAbsolutePath(), options);
@@ -179,32 +222,22 @@ public class SlideListActivity extends ListActivity {
         }
     }
 
-    File[] slideFiles;
-    public File[] getSlideFiles() throws IOException {
-        if(slideFiles == null) {
+    SlideList slideList;
+
+    SlideList getSlideList() throws IOException {
+        if(slideList == null) {
             File dir = getSlideListDirectory();
-            slideFiles = dir.listFiles(new FilenameFilter(){
-                @Override
-                public boolean accept(File dir, String filename) {
-                    if(filename.endsWith(".png") || filename.endsWith(".PNG") ||
-                            filename.endsWith(".jpg") || filename.endsWith(".JPG"))
-                        return true;
-                    return false;
-                }
-            });
-            Arrays.sort(slideFiles, new Comparator<File>() {
-                public int compare(File f1, File f2) {
-                    return Long.valueOf(f2.lastModified()).compareTo(f1.lastModified());
-                }
-
-            });
-
+            SlideListSerializer parser = new SlideListSerializer(dir);
+            slideList = new SlideList(parser.parseFileList(), parser.getActualSlideFiles());
+            slideList.syncListedActual();
         }
-        return slideFiles;
+        return slideList;
+    }
+    public List<File> getSlideFiles() throws IOException {
+        return getSlideList().getFiles();
     }
 
-    public File[] reloadSlideFiles() throws IOException {
-        slideFiles = null;
+    public List<File> reloadSlideFiles() throws IOException {
         return getSlideFiles();
     }
 
@@ -257,6 +290,17 @@ public class SlideListActivity extends ListActivity {
     }
 
     @Override
+    protected void onStop() {
+        super.onStop();
+        try {
+            SlideListSerializer serializer = new SlideListSerializer(getSlideListDirectory());
+            serializer.save(slideList.getFiles());
+        } catch (IOException e) {
+            showError("IO error when stop: " + e.getMessage());
+        }
+    }
+
+    @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
         switch(requestCode) {
@@ -290,6 +334,8 @@ public class SlideListActivity extends ListActivity {
     private void copyImage(Intent data) {
         Uri imageUri = data.getData();
         try {
+            File result = new File(getSlideListDirectory(), getNewSequentialFile());
+
             int resizeFactor = getResizeFactor(imageUri);
             BitmapFactory.Options options;
 
@@ -303,9 +349,10 @@ public class SlideListActivity extends ListActivity {
                 Bitmap resizedbitmap = Bitmap.createScaledBitmap(bitmap, screenWidth, screenHeight, true);
 
 
-                OutputStream stream = new FileOutputStream(new File(getSlideListDirectory(), getNewSequentialFile()));
+                OutputStream stream = new FileOutputStream(result);
                 resizedbitmap.compress(Bitmap.CompressFormat.PNG, 80, stream);
                 stream.close();
+                slideList.add(result);
             }finally {
                 is.close();
             }
