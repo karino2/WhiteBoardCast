@@ -9,6 +9,7 @@ import android.graphics.Color;
 public class Board {
 
     Bitmap boardBmp;
+    Bitmap backgroundBmp;
     UndoList undoList;
     int width;
     int height;
@@ -46,5 +47,27 @@ public class Board {
     public UndoList getUndoList() {
         return undoList;
     }
+
+    public Bitmap getBackgroundBmp() {
+        if(backgroundBmp == null) {
+            backgroundBmp = getWhiteBackGround(width, height);
+        }
+        return backgroundBmp;
+    }
+
+    public void setBackgroundBmp(Bitmap newBG) {
+        backgroundBmp = newBG;
+    }
+
+
+    static Bitmap s_whiteBackGround;
+    static Bitmap getWhiteBackGround(int w, int h) {
+        if(s_whiteBackGround == null) {
+            s_whiteBackGround = Bitmap.createBitmap(w, h, Bitmap.Config.ARGB_8888);
+            s_whiteBackGround.eraseColor(Color.WHITE);
+        }
+        return s_whiteBackGround;
+    }
+
 
 }

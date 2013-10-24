@@ -92,4 +92,22 @@ public class SlideListSerializer {
         writer.write(array.toString());
         writer.close();
     }
+
+    public static File getSlideListDirectory() throws IOException {
+        File parent = WhiteBoardCastActivity.getFileStoreDirectory();
+        File dir = new File(parent, "slides");
+        WhiteBoardCastActivity.ensureDirExist(dir);
+        return dir;
+    }
+
+    public static SlideListSerializer createSlideSelializer() throws IOException {
+        return new SlideListSerializer(getSlideListDirectory());
+    }
+
+    public static SlideList createSlideListWithDefaultFolder() throws IOException {
+        SlideListSerializer parser = SlideListSerializer.createSlideSelializer();
+        SlideList slideList = new SlideList(parser.parseFileList(), parser.getActualSlideFiles());
+        return slideList;
+    }
+
 }

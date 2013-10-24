@@ -13,6 +13,8 @@ import android.content.Intent;
 import android.content.pm.ApplicationInfo;
 import android.content.pm.PackageManager;
 import android.database.Cursor;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.net.Uri;
 import android.os.Bundle;
 import android.os.Environment;
@@ -31,9 +33,12 @@ import android.widget.EditText;
 import android.widget.Toast;
 
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.text.SimpleDateFormat;
 import java.util.Date;
+import java.util.List;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 import java.util.concurrent.ScheduledExecutorService;
@@ -205,6 +210,42 @@ public class WhiteBoardCastActivity extends Activity implements EncoderTask.Erro
 
     public void redo() {
         getWhiteBoardCanvas().redo();
+    }
+
+    // TODO: move to Canvas.
+    SlideList slideList;
+    SlideList getSlideList() throws IOException {
+        if(slideList == null) {
+            slideList = SlideListSerializer.createSlideListWithDefaultFolder();
+            slideList.syncListedActual();
+        }
+        return slideList;
+    }
+
+    List<File> getSlideFiles() throws IOException {
+        return getSlideList().getFiles();
+    }
+
+    int slideIndex = 0;
+
+    public void popSlide() {
+        try {
+            if(slideIndex == getSlideFiles().size())  {
+                showMessage("can't pop anymore.");
+                return;
+            }
+            File newBGFile = getSlideFiles().get(slideIndex++);
+            InputStream is = new FileInputStream(newBGFile);
+            try{
+                Bitmap newBG = BitmapFactory.decodeStream(is);
+                getWhiteBoardCanvas().insertNewBackground(newBG);
+            }finally {
+                is.close();
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
     }
 
     public enum RecordStatus {

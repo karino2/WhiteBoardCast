@@ -226,9 +226,7 @@ public class SlideListActivity extends ListActivity {
 
     SlideList getSlideList() throws IOException {
         if(slideList == null) {
-            File dir = getSlideListDirectory();
-            SlideListSerializer parser = new SlideListSerializer(dir);
-            slideList = new SlideList(parser.parseFileList(), parser.getActualSlideFiles());
+            slideList = SlideListSerializer.createSlideListWithDefaultFolder();
             slideList.syncListedActual();
         }
         return slideList;

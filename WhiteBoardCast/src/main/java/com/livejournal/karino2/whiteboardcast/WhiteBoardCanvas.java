@@ -7,6 +7,8 @@ import android.graphics.Color;
 import android.graphics.DashPathEffect;
 import android.graphics.Paint;
 import android.graphics.Path;
+import android.graphics.PorterDuff;
+import android.graphics.PorterDuffXfermode;
 import android.graphics.Rect;
 import android.graphics.RectF;
 import android.os.Handler;
@@ -20,9 +22,14 @@ import android.view.View;
  */
 public class WhiteBoardCanvas extends View implements FrameRetrieval, PageScrollAnimator.Animatee  {
 
+    // penCanvasBmp + BGBmp = viewBmp.
     Bitmap viewBmp;
+    Bitmap penCanvasBmp;
+
     private Canvas mCanvas;
+    Canvas viewCanvas;
     Bitmap cursorBackupBmp;
+    int[] cursorBackupPixels;
     Canvas cursorBackupCanvas;
 
 
@@ -41,6 +48,8 @@ public class WhiteBoardCanvas extends View implements FrameRetrieval, PageScroll
     static final int ERASER_WIDTH = 60;
 
     private boolean isAnimating = false;
+
+    int penCursorWidth, penCursorHeight;
 
     public WhiteBoardCanvas(Context context, AttributeSet attrs) {
         super(context, attrs);
@@ -64,7 +73,11 @@ public class WhiteBoardCanvas extends View implements FrameRetrieval, PageScroll
         mCursorPaint.setPathEffect(new DashPathEffect(new float[]{5, 2}, 0));
 
         boardList = new BoardList();
-        cursorBackupBmp = Bitmap.createBitmap(ERASER_WIDTH+2*CURSOR_MARGIN, ERASER_WIDTH+2*CURSOR_MARGIN, Bitmap.Config.ARGB_8888);
+        penCursorWidth = (ERASER_WIDTH+2*CURSOR_MARGIN);
+        penCursorHeight = (ERASER_WIDTH+2*CURSOR_MARGIN);
+        cursorBackupPixels = new int[penCursorWidth*penCursorHeight];
+        cursorBackupBmp = Bitmap.createBitmap(penCursorWidth, penCursorHeight, Bitmap.Config.ARGB_8888);
+        cursorBackupBmp.eraseColor(Color.TRANSPARENT);
         cursorBackupCanvas = new Canvas(cursorBackupBmp);
     }
 
@@ -91,11 +104,14 @@ public class WhiteBoardCanvas extends View implements FrameRetrieval, PageScroll
     }
 
     public void resetCanvas(int w, int h) {
+        penCanvasBmp = Bitmap.createBitmap(w, h, Bitmap.Config.ARGB_8888);
+        penCanvasBmp.eraseColor(Color.TRANSPARENT);
         viewBmp = Bitmap.createBitmap(w, h, Bitmap.Config.ARGB_8888);
-        viewBmp.eraseColor(Color.WHITE);
+        viewCanvas = new Canvas(viewBmp);
+
         boardList.setSize(w, h);
-        getCommittedBmp().eraseColor(Color.WHITE);
-        mCanvas = new Canvas(viewBmp);
+        getCommittedBmp().eraseColor(Color.TRANSPARENT);
+        mCanvas = new Canvas(penCanvasBmp);
         committedCanvas = new Canvas(getCommittedBmp());
     }
 
@@ -105,8 +121,10 @@ public class WhiteBoardCanvas extends View implements FrameRetrieval, PageScroll
         canvas.drawColor(0xFFFFFFFF);
 
         synchronized(viewBmp) {
-            canvas.drawBitmap(viewBmp, 0, 0, mBitmapPaint);
+            viewCanvas.drawBitmap(getCurrentBackground(), 0, 0, mBitmapPaint);
+            viewCanvas.drawBitmap(penCanvasBmp, 0, 0, mBitmapPaint);
         }
+        canvas.drawBitmap(viewBmp, 0, 0, mBitmapPaint);
 
         if(isAnimating)
             return;
@@ -166,19 +184,35 @@ public class WhiteBoardCanvas extends View implements FrameRetrieval, PageScroll
     void backupCursorRegion(RectF region) {
         region.roundOut(lastBrushCursorRegion);
         widen(lastBrushCursorRegion, CURSOR_MARGIN);
+        fitIntoBrushSize(lastBrushCursorRegion);
+        penCanvasBmp.getPixels(cursorBackupPixels, 0, penCursorWidth,
+                lastBrushCursorRegion.left, lastBrushCursorRegion.top,
+                lastBrushCursorRegion.width(), lastBrushCursorRegion.height());
+        /*
         Rect dest = new Rect(0, 0, lastBrushCursorRegion.width(), lastBrushCursorRegion.height());
-        synchronized (viewBmp) {
-            cursorBackupCanvas.drawBitmap(viewBmp, lastBrushCursorRegion, dest, null);
-        }
+        // TODO: too slow?
+        cursorBackupBmp.eraseColor(Color.TRANSPARENT);
+        cursorBackupCanvas.drawBitmap(penCanvasBmp, lastBrushCursorRegion, dest, null);
+        */
+    }
+
+    private void fitIntoBrushSize(Rect lastBrushCursorRegion) {
+        fitInsideScreen(lastBrushCursorRegion);
+        lastBrushCursorRegion.set(lastBrushCursorRegion.left, lastBrushCursorRegion.top,
+                lastBrushCursorRegion.left+Math.min(lastBrushCursorRegion.width(), penCursorWidth),
+                lastBrushCursorRegion.top+Math.min(lastBrushCursorRegion.height(), penCursorHeight));
     }
 
     private void revertBrushDrawnRegionIfNecessary() {
         if(!isRectValid(lastBrushCursorRegion))
             return;
+        /*
         Rect tmp = new Rect(0, 0, lastBrushCursorRegion.width(), lastBrushCursorRegion.height());
-        synchronized(viewBmp) {
-            mCanvas.drawBitmap(cursorBackupBmp, tmp, lastBrushCursorRegion, null);
-        }
+        mCanvas.drawBitmap(cursorBackupBmp, tmp, lastBrushCursorRegion, null);
+        */
+        penCanvasBmp.setPixels(cursorBackupPixels, 0, penCursorWidth,
+                lastBrushCursorRegion.left, lastBrushCursorRegion.top,
+                lastBrushCursorRegion.width(), lastBrushCursorRegion.height());
 
         invalViewBmpRegion(lastBrushCursorRegion);
 
@@ -207,9 +241,7 @@ public class WhiteBoardCanvas extends View implements FrameRetrieval, PageScroll
 
         if(isRectFValid(mBrushCursorRegion)) {
             backupCursorRegion(mBrushCursorRegion);
-            synchronized (viewBmp) {
-                mCanvas.drawOval(mBrushCursorRegion, mCursorPaint);
-            }
+            mCanvas.drawOval(mBrushCursorRegion, mCursorPaint);
             invalViewBmpRegionF(mBrushCursorRegion);
         }
     }
@@ -312,10 +344,8 @@ public class WhiteBoardCanvas extends View implements FrameRetrieval, PageScroll
                             mY = hy;
                         }
                     }
+                    mCanvas.drawPath(mPath, mPaint);
                     updateInvalRegion();
-                    synchronized (viewBmp) {
-                        mCanvas.drawPath(mPath, mPaint);
-                    }
                 }
                 // no tolerance
                 /*
@@ -350,9 +380,7 @@ public class WhiteBoardCanvas extends View implements FrameRetrieval, PageScroll
                 pushUndoCommand(region, undo, redo);
 
                 invalRegion.union(region);
-                synchronized (viewBmp) {
-                    mCanvas.drawPath(mPath, mPaint);
-                }
+                mCanvas.drawPath(mPath, mPaint);
                 mPath.reset();
                 if(getUndoList().canUndo() != canUndoBefore) {
                     overlay.changeUndoStatus();
@@ -411,10 +439,8 @@ public class WhiteBoardCanvas extends View implements FrameRetrieval, PageScroll
     }
 
     private void afterUndoRedo(Rect undoInval) {
-        synchronized (viewBmp) {
-            mCanvas.drawBitmap(getCommittedBmp(), undoInval, undoInval, mPaint);
-            invalRegion.union(undoInval);
-        }
+        mCanvas.drawBitmap(getCommittedBmp(), undoInval, undoInval, mPaint);
+        invalRegion.union(undoInval);
         invalidate(undoInval);
     }
 
@@ -435,7 +461,8 @@ public class WhiteBoardCanvas extends View implements FrameRetrieval, PageScroll
         boolean canUndoBefore = getUndoList().canUndo();
         Bitmap undo = Bitmap.createBitmap(getCommittedBmp(), 0, 0, viewBmp.getWidth(), viewBmp.getHeight() );
 
-        getCommittedBmp().eraseColor(Color.WHITE);
+        getCommittedBmp().eraseColor(Color.TRANSPARENT);
+        penCanvasBmp.eraseColor(Color.TRANSPARENT);
         viewBmp.eraseColor(Color.WHITE);
         invalWholeRegionForEncoder();
 
@@ -458,6 +485,7 @@ public class WhiteBoardCanvas extends View implements FrameRetrieval, PageScroll
     }
 
     public void setPenOrEraser(int penIndex) {
+        mPaint.setXfermode(null);
         setPenWidth(DEFAULT_PEN_WIDTH);
 
         switch(penIndex) {
@@ -474,7 +502,9 @@ public class WhiteBoardCanvas extends View implements FrameRetrieval, PageScroll
                 mPaint.setColor(Color.GREEN);
                 break;
             case FloatingOverlay.PEN_INDEX_ERASER:
-                mPaint.setColor(Color.WHITE);
+                mPaint.setXfermode(new PorterDuffXfermode(
+                        PorterDuff.Mode.CLEAR));
+                // mPaint.setColor(Color.WHITE);
                 setPenWidth(ERASER_WIDTH);
                 break;
         }
@@ -514,6 +544,10 @@ public class WhiteBoardCanvas extends View implements FrameRetrieval, PageScroll
         return getCurrentBoard().getBoardBmp();
     }
 
+    private Bitmap getCurrentBackground() {
+        return getCurrentBoard().getBackgroundBmp();
+    }
+
     private UndoList getUndoList() {
         return getCurrentBoard().getUndoList();
     }
@@ -524,14 +558,11 @@ public class WhiteBoardCanvas extends View implements FrameRetrieval, PageScroll
     }
 
     private void afterChangeBoard() {
-        Bitmap bmpForLock = viewBmp;
-        synchronized (bmpForLock) {
-            // TODO: slow.
-            viewBmp = getCommittedBmp().copy(Bitmap.Config.ARGB_8888, true);
+        // TODO: slow.
+        penCanvasBmp = getCommittedBmp().copy(Bitmap.Config.ARGB_8888, true);
 
-            mCanvas = new Canvas(viewBmp);
-            committedCanvas = new Canvas(getCommittedBmp());
-        }
+        mCanvas = new Canvas(penCanvasBmp);
+        committedCanvas = new Canvas(getCommittedBmp());
 
         overlay.changeUndoStatus();
         invalWholeRegionForEncoder();
@@ -603,5 +634,12 @@ public class WhiteBoardCanvas extends View implements FrameRetrieval, PageScroll
 
     public void beginPageNext(PageScrollAnimator animator) {
         animator.start(getCommittedBmp(), boardList.getNextBmp(),  viewBmp, PageScrollAnimator.Direction.Next);
+    }
+
+
+    public void insertNewBackground(Bitmap newBG) {
+        getCurrentBoard().setBackgroundBmp(newBG);
+        invalWholeRegionForEncoder();
+        invalidate();
     }
 }
