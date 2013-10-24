@@ -126,10 +126,7 @@ public class WhiteBoardCanvas extends View implements FrameRetrieval, PageScroll
             return;
         }
 
-        synchronized(viewBmp) {
-            viewCanvas.drawBitmap(getCurrentBackground(), 0, 0, mBitmapPaint);
-            viewCanvas.drawBitmap(penCanvasBmp, 0, 0, mBitmapPaint);
-        }
+        drawToViewBmp();
         canvas.drawBitmap(viewBmp, 0, 0, mBitmapPaint);
 
 
@@ -137,6 +134,13 @@ public class WhiteBoardCanvas extends View implements FrameRetrieval, PageScroll
 
         drawFps(canvas);
 
+    }
+
+    private void drawToViewBmp() {
+        synchronized(viewBmp) {
+            viewCanvas.drawBitmap(getCurrentBackground(), 0, 0, mBitmapPaint);
+            viewCanvas.drawBitmap(penCanvasBmp, 0, 0, mBitmapPaint);
+        }
     }
 
     Paint fpsPaint = new Paint();
@@ -473,8 +477,10 @@ public class WhiteBoardCanvas extends View implements FrameRetrieval, PageScroll
 
         getCommittedBmp().eraseColor(Color.TRANSPARENT);
         penCanvasBmp.eraseColor(Color.TRANSPARENT);
-        viewBmp.eraseColor(Color.WHITE);
+        drawToViewBmp();
+
         invalWholeRegionForEncoder();
+        invalidate();
 
         Bitmap redo = Bitmap.createBitmap(getCommittedBmp(), 0, 0, viewBmp.getWidth(), viewBmp.getHeight() );
         getUndoList().pushUndoCommand(0, 0, undo, redo);
@@ -568,14 +574,17 @@ public class WhiteBoardCanvas extends View implements FrameRetrieval, PageScroll
     }
 
     private void afterChangeBoard() {
+        synchronized (viewBmp) {
+            invalWholeRegionForEncoder();
+            viewCanvas.drawBitmap(getCurrentBackground(), 0, 0, mBitmapPaint);
+            viewCanvas.drawBitmap(getCommittedBmp(), 0, 0, mBitmapPaint);
+        }
         // TODO: slow.
         penCanvasBmp = getCommittedBmp().copy(Bitmap.Config.ARGB_8888, true);
-
         mCanvas = new Canvas(penCanvasBmp);
         committedCanvas = new Canvas(getCommittedBmp());
 
         overlay.changeUndoStatus();
-        invalWholeRegionForEncoder();
 
         invalidate();
     }
