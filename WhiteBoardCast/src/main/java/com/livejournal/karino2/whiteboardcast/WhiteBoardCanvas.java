@@ -291,6 +291,8 @@ public class WhiteBoardCanvas extends View implements FrameRetrieval, PageScroll
 
     @Override
     public boolean onHoverEvent(MotionEvent event) {
+        if(isAnimating)
+            return super.onHoverEvent(event);
         if(event.getAction() == MotionEvent.ACTION_HOVER_EXIT) {
             eraseBrushCursor();
         }else {
