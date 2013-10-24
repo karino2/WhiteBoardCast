@@ -1,7 +1,9 @@
 package com.livejournal.karino2.whiteboardcast;
 
 import android.graphics.Bitmap;
+import android.graphics.Canvas;
 import android.graphics.Color;
+import android.graphics.Paint;
 
 import java.util.ArrayList;
 
@@ -34,14 +36,14 @@ public class BoardList {
         return list.get(currentPos);
     }
 
-    public Bitmap getPrevBmp() {
-        return list.get(currentPos-1).getBoardBmp();
+    public Bitmap createPrevSynthesizedBmp() {
+        return list.get(currentPos-1).createSynthesizedTempBmp();
     }
 
-    public Bitmap getNextBmp() {
+    public Bitmap createNextSynthesizedBmp() {
         if(isLastPage())
             return emptyPage;
-        return list.get(currentPos+1).getBoardBmp();
+        return list.get(currentPos + 1).createSynthesizedTempBmp();
     }
 
     public int size() {

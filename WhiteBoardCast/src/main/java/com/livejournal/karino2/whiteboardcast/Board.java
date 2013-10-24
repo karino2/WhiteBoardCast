@@ -1,7 +1,9 @@
 package com.livejournal.karino2.whiteboardcast;
 
 import android.graphics.Bitmap;
+import android.graphics.Canvas;
 import android.graphics.Color;
+import android.graphics.Paint;
 
 /**
  * Created by karino on 7/27/13.
@@ -32,14 +34,23 @@ public class Board {
         boardBmp = null;
     }
 
-    private void createEmpyBmp() {
+    private void createEmptyBmp() {
         boardBmp = Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888);
-        boardBmp.eraseColor(Color.WHITE);
+        boardBmp.eraseColor(Color.TRANSPARENT);
+    }
+
+    public Bitmap createSynthesizedTempBmp() {
+        Bitmap fg = getBoardBmp();
+        Bitmap bg = getBackgroundBmp();
+        Bitmap res = bg.copy(Bitmap.Config.ARGB_8888, true);
+        Canvas cv = new Canvas(res);
+        cv.drawBitmap(fg, 0, 0, null);
+        return res;
     }
 
     public Bitmap getBoardBmp() {
         if(boardBmp == null) {
-            createEmpyBmp();
+            createEmptyBmp();
         }
         return boardBmp;
     }

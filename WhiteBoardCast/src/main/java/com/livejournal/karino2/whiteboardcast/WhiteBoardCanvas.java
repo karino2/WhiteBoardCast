@@ -13,7 +13,6 @@ import android.graphics.Rect;
 import android.graphics.RectF;
 import android.os.Handler;
 import android.util.AttributeSet;
-import android.util.Log;
 import android.view.MotionEvent;
 import android.view.View;
 
@@ -120,14 +119,18 @@ public class WhiteBoardCanvas extends View implements FrameRetrieval, PageScroll
     protected void onDraw(Canvas canvas) {
         canvas.drawColor(0xFFFFFFFF);
 
+        if(isAnimating) {
+            synchronized(viewBmp) {
+                canvas.drawBitmap(viewBmp, 0, 0, mBitmapPaint);
+            }
+            return;
+        }
+
         synchronized(viewBmp) {
             viewCanvas.drawBitmap(getCurrentBackground(), 0, 0, mBitmapPaint);
             viewCanvas.drawBitmap(penCanvasBmp, 0, 0, mBitmapPaint);
         }
         canvas.drawBitmap(viewBmp, 0, 0, mBitmapPaint);
-
-        if(isAnimating)
-            return;
 
 
         overlay.onDraw(canvas);
@@ -213,6 +216,11 @@ public class WhiteBoardCanvas extends View implements FrameRetrieval, PageScroll
         penCanvasBmp.setPixels(cursorBackupPixels, 0, penCursorWidth,
                 lastBrushCursorRegion.left, lastBrushCursorRegion.top,
                 lastBrushCursorRegion.width(), lastBrushCursorRegion.height());
+
+        synchronized(viewBmp) {
+            viewCanvas.drawBitmap(getCurrentBackground(), lastBrushCursorRegion, lastBrushCursorRegion, mBitmapPaint);
+            viewCanvas.drawBitmap(penCanvasBmp, lastBrushCursorRegion, lastBrushCursorRegion, mBitmapPaint);
+        }
 
         invalViewBmpRegion(lastBrushCursorRegion);
 
@@ -571,6 +579,7 @@ public class WhiteBoardCanvas extends View implements FrameRetrieval, PageScroll
     }
 
     boolean pageUp() {
+        isAnimating = false;
         if(boardList.pagePrev()) {
             afterChangeBoard();
             return true;
@@ -579,7 +588,8 @@ public class WhiteBoardCanvas extends View implements FrameRetrieval, PageScroll
     }
 
     void pageDown() {
-       boardList.pageNext();
+        isAnimating = false;
+        boardList.pageNext();
        afterChangeBoard();
     }
 
@@ -607,7 +617,6 @@ public class WhiteBoardCanvas extends View implements FrameRetrieval, PageScroll
 
     @Override
     public void done(PageScrollAnimator.Direction dir) {
-        isAnimating = false;
         if(dir == PageScrollAnimator.Direction.Next) {
             handler.post(new Runnable() {
                 @Override
@@ -628,12 +637,12 @@ public class WhiteBoardCanvas extends View implements FrameRetrieval, PageScroll
     public boolean beginPagePrev(PageScrollAnimator animator) {
         if(!boardList.hasPrevPage())
             return false;
-        animator.start(boardList.getPrevBmp(), getCommittedBmp(), viewBmp, PageScrollAnimator.Direction.Prev);
+        animator.start(boardList.createPrevSynthesizedBmp(), getCurrentBoard().createSynthesizedTempBmp(), viewBmp, PageScrollAnimator.Direction.Prev);
         return true;
     }
 
     public void beginPageNext(PageScrollAnimator animator) {
-        animator.start(getCommittedBmp(), boardList.getNextBmp(),  viewBmp, PageScrollAnimator.Direction.Next);
+        animator.start(getCurrentBoard().createSynthesizedTempBmp(), boardList.createNextSynthesizedBmp(),  viewBmp, PageScrollAnimator.Direction.Next);
     }
 
 
