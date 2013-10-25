@@ -38,7 +38,7 @@ public class SlideList {
         int insertBelowTo = indexes[indexes.length-1];
         List<File> moveCandidate = idsToFiles(indexes);
         listedFiles.removeAll(moveCandidate);
-        listedFiles.addAll(Math.min(listedFiles.size(), insertBelowTo + 1 - moveCandidate.size()), moveCandidate);
+        listedFiles.addAll(Math.min(listedFiles.size(), insertBelowTo + 2 - moveCandidate.size()), moveCandidate);
     }
 
     public void addFiles(List<File> adds) {
