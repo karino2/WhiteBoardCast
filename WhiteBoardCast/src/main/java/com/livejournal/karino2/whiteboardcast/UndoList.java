@@ -52,12 +52,19 @@ public class UndoList {
         int getByteSize() {
             return undoBuf.length+redoBuf.length;
         }
-        Rect undo(Canvas target, Paint paint) {
-            target.drawBitmap(decodeUndoBmp(), x, y, paint );
+        Rect undo(Bitmap target) {
+            overwriteByBmp(target, decodeUndoBmp());
             return new Rect(x, y, x+width, y+height);
         }
-        Rect redo(Canvas target, Paint paint) {
-            target.drawBitmap(decodeRedoBmp(), x, y, paint );
+
+        private void overwriteByBmp(Bitmap target, Bitmap bmp) {
+            int[] buf = new int[bmp.getWidth()*bmp.getHeight()];
+            bmp.getPixels(buf, 0, bmp.getWidth(), 0, 0, bmp.getWidth(), bmp.getHeight());
+            target.setPixels(buf, 0, bmp.getWidth(), x, y, bmp.getWidth(), bmp.getHeight());
+        }
+
+        Rect redo(Bitmap target) {
+            overwriteByBmp(target, decodeRedoBmp());
             return new Rect(x, y, x+width, y+height);
         }
 
@@ -79,19 +86,19 @@ public class UndoList {
         return currentPos < commandList.size()-1;
     }
 
-    public Rect undo(Canvas target, Paint paint) {
+    public Rect undo(Bitmap target) {
         if(!canUndo())
             return null;
-        Rect rect = commandList.get(currentPos).undo(target, paint);
+        Rect rect = commandList.get(currentPos).undo(target);
         currentPos--;
         return rect;
     }
 
-    public Rect redo(Canvas target, Paint paint) {
+    public Rect redo(Bitmap target) {
         if(!canRedo())
             return null;
         currentPos++;
-        return commandList.get(currentPos).redo(target, paint);
+        return commandList.get(currentPos).redo(target);
     }
 
 
