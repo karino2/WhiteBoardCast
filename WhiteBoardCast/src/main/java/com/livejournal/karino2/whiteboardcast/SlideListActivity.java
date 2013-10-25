@@ -135,6 +135,15 @@ public class SlideListActivity extends ListActivity {
                             showError("reload adapter fail on down: " + e.getMessage());
                         }
                         return true;
+                    case R.id.action_delete:
+                        try {
+                            slideList.deleteFiles(getSelectedIndexes());
+                            actionMode.finish();
+                            adapter.reload();
+                        } catch (IOException e) {
+                            e.printStackTrace();
+                        }
+                        return true;
                 }
                 return false;
             }
