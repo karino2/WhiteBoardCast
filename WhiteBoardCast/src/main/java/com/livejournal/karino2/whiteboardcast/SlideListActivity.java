@@ -34,6 +34,7 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.text.SimpleDateFormat;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.List;
 
 public class SlideListActivity extends ListActivity {
@@ -105,11 +106,12 @@ public class SlideListActivity extends ListActivity {
                 return buf.toString();
             }
 
-            int[] getSelectedIds() {
+            int[] getSelectedIndexes() throws IOException {
                 long[] idsLong = getListView().getCheckedItemIds();
                 int[] ids = new int[idsLong.length];
                 for(int i = 0; i < ids.length; i++) {
-                    ids[i] = (int)idsLong[i];
+                    File key = idGen.reverseLookUp(idsLong[i]);
+                    ids[i] = getSlideFiles().indexOf(key);
                 }
                 return ids;
             }
@@ -118,24 +120,20 @@ public class SlideListActivity extends ListActivity {
             public boolean onActionItemClicked(ActionMode actionMode, MenuItem menuItem) {
                 switch(menuItem.getItemId()) {
                     case R.id.action_up:
-                        showMessage( "up " + selectedIdDump());
-                        slideList.upFiles(getSelectedIds());
                         try {
+                            slideList.upFiles(getSelectedIndexes());
                             adapter.reload();
                         } catch (IOException e) {
                             showError("reload adapter fail on up: " + e.getMessage());
                         }
-                        actionMode.finish();
                         return true;
                     case R.id.action_down:
-                        showMessage( "down " + selectedIdDump());
-                        slideList.downFiles(getSelectedIds());
                         try {
+                            slideList.downFiles(getSelectedIndexes());
                             adapter.reload();
                         } catch (IOException e) {
                             showError("reload adapter fail on down: " + e.getMessage());
                         }
-                        actionMode.finish();
                         return true;
                 }
                 return false;
@@ -163,6 +161,29 @@ public class SlideListActivity extends ListActivity {
         Log.d("WhiteBoardCast", msg);
         showMessage(msg);
     }
+
+    class IdGenerator {
+        HashMap<File, Long> idStore = new HashMap<File, Long>();
+        long lastId = 1;
+        long getId(File key) {
+            if(idStore.containsKey(key)) {
+                return (long)idStore.get(key);
+            }
+            idStore.put(key, lastId++);
+            return (long)idStore.get(key);
+        }
+        File reverseLookUp(long id) {
+            if(idStore.containsValue(id)) {
+                for(java.util.Map.Entry<File,Long> entry :  idStore.entrySet()) {
+                    if(id == entry.getValue()) {
+                        return entry.getKey();
+                    }
+                }
+            }
+            return null;
+        }
+    }
+    IdGenerator idGen = new IdGenerator();
 
     public class FileImageAdapter extends BaseAdapter implements ListAdapter {
         List<File> files;
@@ -193,7 +214,7 @@ public class SlideListActivity extends ListActivity {
 
         @Override
         public long getItemId(int i) {
-            return (long)i;
+            return idGen.getId(files.get(i));
         }
 
         @Override
