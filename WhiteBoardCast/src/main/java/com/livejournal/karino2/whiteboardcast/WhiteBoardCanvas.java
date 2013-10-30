@@ -226,7 +226,7 @@ public class WhiteBoardCanvas extends View implements FrameRetrieval, PageScroll
     private void fitIntoBrushSize(Rect lastBrushCursorRegion) {
         fitInsideScreen(lastBrushCursorRegion);
         lastBrushCursorRegion.intersect(lastBrushCursorRegion.left, lastBrushCursorRegion.top,
-                lastBrushCursorRegion.left + penCursorWidth, lastBrushCursorRegion.top+penCursorHeight);
+                lastBrushCursorRegion.left + penCursorWidth, lastBrushCursorRegion.top + penCursorHeight);
 
         /*
         lastBrushCursorRegion.set(lastBrushCursorRegion.left, lastBrushCursorRegion.top,
@@ -264,9 +264,13 @@ public class WhiteBoardCanvas extends View implements FrameRetrieval, PageScroll
     }
 
     private void invalViewBmpRegion(Rect region) {
+        invalRegionForEncoder(region);
+        invalidate(region.left, region.top, region.right, region.bottom);
+    }
+
+    private void invalRegionForEncoder(Rect region) {
         invalRegion.union(region);
         fitInsideScreen(invalRegion);
-        invalidate(region.left, region.top, region.right, region.bottom);
     }
 
 
@@ -387,14 +391,14 @@ public class WhiteBoardCanvas extends View implements FrameRetrieval, PageScroll
                     }
                     penCanvas.drawPath(mPath, mPaint);
                     drawToViewBmp(pathBound());
-                    updateInvalRegion();
+                    updateInvalRegionForEncoder();
                 }
                 // no tolerance
                 /*
                 mPath.quadTo(mX, mY, (x + mX)/2, (y + mY)/2);
                 mX = x;
                 mY = y;
-                updateInvalRegion();
+                updateInvalRegionForEncoder();
                 penCanvas.drawPath(mPath, mPaint);
                 */
                 // no tolerance done.
@@ -421,7 +425,7 @@ public class WhiteBoardCanvas extends View implements FrameRetrieval, PageScroll
 
                 pushUndoCommand(region, undo, redo);
 
-                invalRegion.union(region);
+                invalRegionForEncoder(region);
                 penCanvas.drawPath(mPath, mPaint);
                 mPath.reset();
                 if(getUndoList().canUndo() != canUndoBefore) {
@@ -446,8 +450,8 @@ public class WhiteBoardCanvas extends View implements FrameRetrieval, PageScroll
     }
 
 
-    private void updateInvalRegion() {
-        invalRegion.union(pathBound());
+    private void updateInvalRegionForEncoder() {
+        invalRegionForEncoder(pathBound());
     }
 
     private void widenPenWidth(Rect tmpInval) {
@@ -489,7 +493,7 @@ public class WhiteBoardCanvas extends View implements FrameRetrieval, PageScroll
     private void afterUndoRedo(Rect undoInval) {
         drawToViewBmp(undoInval, getCommittedBmp());
         overwriteByBmp(penCanvasBmp, getCommittedBmp(), undoInval);
-        invalRegion.union(undoInval);
+        invalRegionForEncoder(undoInval);
         invalidate(undoInval);
     }
 
