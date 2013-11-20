@@ -23,5 +23,6 @@
     <string name="action_up">Up</string>
     <string name="action_down">Down</string>
     <string name="action_delete">Delete</string>
+    <string name="title_activity_multi_gallery">MultiGalleryActivity</string>
 
 </resources>

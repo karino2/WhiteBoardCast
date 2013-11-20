@@ -26,6 +26,8 @@ import android.widget.ListAdapter;
 import android.widget.ListView;
 import android.widget.Toast;
 
+import com.livejournal.karino2.multigallery.MultiGalleryActivity;
+
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
@@ -308,9 +310,13 @@ public class SlideListActivity extends ListActivity {
                 NavUtils.navigateUpFromSameTask(this);
                 return true;
             case R.id.action_add:
+                /*
                 Intent intent = new Intent(Intent.ACTION_PICK);
                 intent.setType("image/*");
                 intent.setAction(Intent.ACTION_GET_CONTENT);
+                startActivityForResult(intent, REQUEST_PICK_IMAGE);
+                */
+                Intent intent = new Intent(this, MultiGalleryActivity.class);
                 startActivityForResult(intent, REQUEST_PICK_IMAGE);
                 return true;
         }
