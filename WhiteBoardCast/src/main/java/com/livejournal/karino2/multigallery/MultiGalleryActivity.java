@@ -42,10 +42,6 @@ public class MultiGalleryActivity extends Activity {
         setContentView(R.layout.activity_multi_gallery);
 
         GridView grid = (GridView)findViewById(R.id.grid);
-        /*
-        LoadTask load = new LoadTask();
-        load.run();
-        */
         getExecutor().submit(new LoadTask());
 
     }
@@ -127,19 +123,12 @@ public class MultiGalleryActivity extends Activity {
     Handler handler = new Handler();
 
     private void notifyAlbumsComing(final ArrayList<MediaItem> albums) {
-        /*
-        GridView grid = (GridView)findViewById(R.id.grid);
-        ImageAdapter adapter = new ImageAdapter(albums);
-        grid.setAdapter(adapter);
-        */
         handler.post(new Runnable() {
             @Override
             public void run() {
                 GridView grid = (GridView)findViewById(R.id.grid);
                 ImageAdapter adapter = new ImageAdapter(albums);
                 grid.setAdapter(adapter);
-                // grid.invalidateViews();
-                // adapter.notifyDataSetChanged();
             }
         });
 
@@ -309,8 +298,10 @@ public class MultiGalleryActivity extends Activity {
             Bitmap result = BitmapFactory.decodeFileDescriptor(fd, null, options);
             if (result == null) return null;
 
+            /*
             float scale2 = (float) size / Math.min(result.getWidth(), result.getHeight());
             if (scale <= 0.5) result = resizeBitmapByScale(result, scale);
+            */
 
             return ThumbnailUtils.extractThumbnail(result, getThumbnailSize(), getThumbnailSize());
 
