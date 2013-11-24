@@ -19,6 +19,7 @@ import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.AdapterView;
 import android.widget.BaseAdapter;
 import android.widget.GridView;
 import android.widget.ImageView;
@@ -31,6 +32,8 @@ import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.Set;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
@@ -41,9 +44,38 @@ public class MultiGalleryActivity extends Activity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_multi_gallery);
 
-        GridView grid = (GridView)findViewById(R.id.grid);
-        getExecutor().submit(new LoadTask());
+        startAlbumSetLoad();
 
+    }
+
+    private void startAlbumSetLoad() {
+        GridView grid = getGridView();
+        grid.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+            @Override
+            public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
+                MediaHolder holder = (MediaHolder)view.getTag();
+                if(holder != null && holder.getItem() != null) {
+                    setAlbum((AlbumItem)holder.getItem());
+                }
+            }
+        });
+
+        getExecutor().submit(new AlbumSetLoadTask());
+    }
+
+    private GridView getGridView() {
+        return (GridView)findViewById(R.id.grid);
+    }
+
+    boolean isAlbum = false;
+
+    private void setAlbum(AlbumItem album) {
+        AlbumLoader loader = new AlbumLoader(getContentResolver(), album);
+        AlbumSlidingWindow slidingWindow = new AlbumSlidingWindow(loader);
+        AlbumAdapter adapter = new AlbumAdapter(slidingWindow);
+        discardAllPendingRequest();
+        getGridView().setAdapter(adapter);
+        isAlbum = true;
     }
 
     int getThumbnailSize() {
@@ -69,27 +101,51 @@ public class MultiGalleryActivity extends Activity {
         if (id == R.id.action_settings) {
             return true;
         }
+        if(id == android.R.id.home && isAlbum) {
+            finishAlbumAndStartAlbumSet();
+            return true;
+        }
         return super.onOptionsItemSelected(item);
     }
 
-    class MediaItem {
+    private void finishAlbumAndStartAlbumSet() {
+        // TODO: finish album pending load, etc.
+        isAlbum = false;
+        startAlbumSetLoad();
+    }
+
+
+    @Override
+    public void onBackPressed() {
+        if(isAlbum) {
+            finishAlbumAndStartAlbumSet();
+            return;
+        }
+        super.onBackPressed();
+    }
+
+    class AlbumItem implements MediaItem {
         int id;
         String name;
         String path;
-        MediaItem(int id, String name, String path) {
+        AlbumItem(int id, String name, String path) {
             this.id = id; this.name = name; this.path = path;
         }
-        String getPath() {
+        public String getPath() {
             return path;
+        }
+
+        public int getId() {
+            return id;
         }
     }
 
     static final String TOP_PATH = "/local/image";
 
-    class LoadTask implements Runnable{
+    class AlbumSetLoadTask implements Runnable{
 
         ContentResolver resolver;
-        LoadTask() {
+        AlbumSetLoadTask() {
             this.resolver = getContentResolver();
         }
 
@@ -107,7 +163,7 @@ public class MultiGalleryActivity extends Activity {
             try {
                 while (cursor.moveToNext()) {
                     if(((1 << MediaStore.Files.FileColumns.MEDIA_TYPE_IMAGE) & (1 << cursor.getInt(1))) != 0){
-                        albums.add(new MediaItem(cursor.getInt(0), cursor.getString(2), cursor.getString(3)));
+                        albums.add(new AlbumItem(cursor.getInt(0), cursor.getString(2), cursor.getString(3)));
                     }
                 }
 
@@ -120,14 +176,15 @@ public class MultiGalleryActivity extends Activity {
         }
     }
 
+
     Handler handler = new Handler();
 
     private void notifyAlbumsComing(final ArrayList<MediaItem> albums) {
         handler.post(new Runnable() {
             @Override
             public void run() {
-                GridView grid = (GridView)findViewById(R.id.grid);
-                ImageAdapter adapter = new ImageAdapter(albums);
+                GridView grid = getGridView();
+                AlbumSetAdapter adapter = new AlbumSetAdapter(albums);
                 grid.setAdapter(adapter);
             }
         });
@@ -156,18 +213,22 @@ public class MultiGalleryActivity extends Activity {
 
     CacheEngine cache = new CacheEngine();
 
+    interface MediaLoadListener {
+        void onThumbnailComing(Bitmap thumbnail);
+    }
+
     class MediaLoadRequest implements Runnable {
 
-        MediaHolder holder;
+        MediaLoadListener listener;
         MediaItem item;
-        MediaLoadRequest(MediaHolder mh) {
-            holder = mh;
-            item = mh.getItem();
+        MediaLoadRequest(MediaItem item, MediaLoadListener listener) {
+            this.listener = listener;
+            this.item = item;
         }
 
         void discard() {
-            synchronized(holder) {
-                holder = null;
+            synchronized(listener) {
+                listener = null;
             }
         }
 
@@ -179,12 +240,12 @@ public class MultiGalleryActivity extends Activity {
             Bitmap thumbnail  = decodeThumbnail(item.getPath(), getThumbnailSize());
 
 
-            MediaHolder hd = holder;
+            MediaLoadListener hd = listener;
             if(hd != null) {
                 synchronized (hd) {
-                    if(holder == null)
+                    if(listener == null)
                         return;
-                    holder.onThumbnailComing(thumbnail);
+                    listener.onThumbnailComing(thumbnail);
                 }
             }
         }
@@ -308,6 +369,107 @@ public class MultiGalleryActivity extends Activity {
         }
     }
 
+    class AlbumSlidingWindow {
+        final int CACHE_SIZE =  96;
+        ImageItem[] entries;
+        int contentStart;
+        int contentEnd;
+        AlbumLoader loader;
+        AlbumSlidingWindow(AlbumLoader loader) {
+            this.loader = loader;
+            entries = new ImageItem[CACHE_SIZE];
+            contentStart = contentEnd = 0;
+        }
+
+        private ImageItem get(int slotIndex) {
+            if(!isContentSlot(slotIndex)) {
+                throw new RuntimeException("invalid slot:" + slotIndex + ", (" + contentStart + ", " + contentEnd + ")");
+            }
+            return entries[slotIndex % entries.length];
+        }
+
+        boolean isContentSlot(int slotIndex) {
+            return slotIndex >= contentStart && slotIndex < contentEnd;
+        }
+
+        public /* static */ int clamp(int x, int min, int max) {
+            if (x > max) return max;
+            if (x < min) return min;
+            return x;
+        }
+
+        public ImageItem requestSlot(int slotIndex) {
+            if(isContentSlot(slotIndex))
+                return get(slotIndex);
+
+
+            ImageItem[] data = entries;
+            int contentStart = clamp(slotIndex - data.length / 2,
+                    0, Math.max(0, size() - data.length));
+            int contentEnd = Math.min(contentStart + data.length, size());
+            setContentWindow(contentStart, contentEnd);
+
+            return get(slotIndex);
+        }
+
+
+        void setContentWindow(int argContentStart, int argContentEnd) {
+            if(contentStart == argContentStart && contentEnd == argContentEnd) return;
+
+            if(argContentStart >= contentEnd || contentStart >= argContentEnd) {
+                for(int i = contentStart, n=contentEnd; i<n; ++i ) {
+                   freeSlotContent(i);
+                }
+
+                // block here. I think this is fast enough.
+                ArrayList<ImageItem> items = loader.getMediaItem(argContentStart, argContentEnd);
+
+                for(int i = argContentStart; i < argContentEnd; ++i) {
+                    putSlotContent(i, items.get(i - argContentStart));
+                }
+            } else if(argContentStart > contentStart){
+                for (int i = contentStart; i < argContentStart; ++i) {
+                    freeSlotContent(i);
+                }
+
+                // block here. I think this is fast enough.
+                ArrayList<ImageItem> items = loader.getMediaItem(contentEnd, argContentEnd);
+
+                for (int i = contentEnd; i < argContentEnd; ++i) {
+                    putSlotContent(i, items.get(i - contentEnd));
+                }
+            } else /* argContentStart < contentStart */ {
+                for (int i = argContentEnd, n = contentEnd; i < n; ++i) {
+                    freeSlotContent(i);
+                }
+
+                // block here. I think this is fast enough.
+                ArrayList<ImageItem> items = loader.getMediaItem(argContentStart, contentStart);
+
+                for (int i = argContentStart, n = contentStart; i < n; ++i) {
+                    putSlotContent(i, items.get(i - argContentStart));
+                }
+            }
+            contentStart = argContentStart;
+            contentEnd = argContentEnd;
+
+        }
+
+        private void putSlotContent(int slotIndex, ImageItem imageItem) {
+            entries[slotIndex%entries.length] = imageItem;
+
+        }
+
+        private void freeSlotContent(int slotIndex) {
+            entries[slotIndex%entries.length] = null;
+        }
+
+
+        public int size() {
+            return loader.getItemCount();
+        }
+    }
+
     static Bitmap loadingImage;
     public static Bitmap getLoadingBitmap(int thumbnailSize) {
         if(loadingImage == null) {
@@ -317,7 +479,23 @@ public class MultiGalleryActivity extends Activity {
         return loadingImage;
     }
 
-    class MediaHolder {
+    Set<MediaLoadRequest> pendingRequest = new HashSet<MediaLoadRequest>();
+    void addToPendingSet(MediaLoadRequest newReq) {
+        pendingRequest.add(newReq);
+    }
+
+    void removePendingSet(MediaLoadRequest req) {
+        pendingRequest.remove(req);
+    }
+
+    void discardAllPendingRequest() {
+        for(MediaLoadRequest req : pendingRequest) {
+            req.discard();
+        }
+        pendingRequest.clear();
+    }
+
+    class MediaHolder implements MediaLoadListener{
         ImageView target;
         MediaItem item;
         Bitmap thumbnail;
@@ -332,6 +510,7 @@ public class MultiGalleryActivity extends Activity {
         public void recycle(MediaItem item) {
             if(request != null) {
                 request.discard();
+                removePendingSet(request);
                 request = null;
             }
             this.item = item;
@@ -345,12 +524,14 @@ public class MultiGalleryActivity extends Activity {
                 return;
             }
             target.setImageBitmap(getLoadingBitmap(getThumbnailSize()));
-            request = new MediaLoadRequest(this);
+            request = new MediaLoadRequest(getItem(), this);
+            addToPendingSet(request);
             getExecutor().submit(request);
         }
 
 
         public void onThumbnailComing(Bitmap thumbnail) {
+            removePendingSet(request);
             request = null;
             this.thumbnail = thumbnail;
             handler.post(new Runnable() {
@@ -362,9 +543,9 @@ public class MultiGalleryActivity extends Activity {
         }
     }
 
-    public class ImageAdapter extends BaseAdapter implements ListAdapter {
+    public class AlbumSetAdapter extends BaseAdapter implements ListAdapter {
         ArrayList<MediaItem> albums;
-        public ImageAdapter(ArrayList<MediaItem> albums) {
+        public AlbumSetAdapter(ArrayList<MediaItem> albums) {
             this.albums = albums;
         }
 
@@ -402,5 +583,46 @@ public class MultiGalleryActivity extends Activity {
         }
     }
 
+    public class AlbumAdapter extends BaseAdapter implements ListAdapter {
+        AlbumSlidingWindow slidingWindow;
+        public AlbumAdapter(AlbumSlidingWindow albumWindow) {
+            this.slidingWindow = albumWindow;
+        }
+
+        @Override
+        public int getCount() {
+            return slidingWindow.size();
+        }
+
+        @Override
+        public Object getItem(int i) {
+            return slidingWindow.requestSlot(i);
+        }
+
+        @Override
+        public long getItemId(int i) {
+            return (long)i;
+        }
+
+        // TODO: almost the same as AlbumSetAdapter.
+        @Override
+        public View getView(int i, View view, ViewGroup viewGroup) {
+            ImageView iv;
+            MediaItem item = (MediaItem)getItem(i);
+            if(view == null) {
+                iv = new ImageView(MultiGalleryActivity.this);
+                MediaHolder holder = new MediaHolder(item, iv);
+                iv.setTag(holder);
+                holder.beginLoad();
+            } else {
+                MediaHolder holder = (MediaHolder)view.getTag();
+                // might need to recycle for SlidingWindow, but not yet.
+                holder.recycle(item);
+                holder.beginLoad();
+                iv = (ImageView)view;
+            }
+            return iv;
+        }
+    }
 
 }
