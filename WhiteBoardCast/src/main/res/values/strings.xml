@@ -19,10 +19,11 @@
     <string name="action_settings">Settings</string>
     <string name="hello_world">Hello world!</string>
     <string name="menu_slides">Slides</string>
-    <string name="action_add">Add</string>
     <string name="action_up">Up</string>
     <string name="action_down">Down</string>
     <string name="action_delete">Delete</string>
     <string name="title_activity_multi_gallery">MultiGalleryActivity</string>
+    <string name="label_done">Done</string>
+    <string name="action_import">Import</string>
 
 </resources>

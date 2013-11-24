@@ -2,8 +2,9 @@
     xmlns:tools="http://schemas.android.com/tools"
     tools:context=".MultiGalleryActivity" >
     
-    <item android:id="@+id/action_settings"
-        android:title="@string/action_settings"
+    <item android:id="@+id/action_done"
+        android:title="@string/label_done"
         android:orderInCategory="100"
-        android:showAsAction="never" />
+        android:icon="@android:drawable/ic_menu_slideshow"
+        android:showAsAction="always" />
 </menu>
