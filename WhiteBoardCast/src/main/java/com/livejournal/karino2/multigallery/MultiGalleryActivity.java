@@ -70,7 +70,10 @@ public class MultiGalleryActivity extends Activity {
     }
 
     int getThumbnailSize() {
+        return THUMBNAIL_SIZE;
+        /*
         return (int)TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, THUMBNAIL_SIZE, getResources().getDisplayMetrics());
+        */
     }
 
 
