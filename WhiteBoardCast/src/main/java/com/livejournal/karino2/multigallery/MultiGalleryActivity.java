@@ -4,16 +4,10 @@ import android.app.Activity;
 import android.content.ContentResolver;
 import android.database.Cursor;
 import android.graphics.Bitmap;
-import android.graphics.BitmapFactory;
-import android.graphics.Canvas;
 import android.graphics.Color;
-import android.graphics.Paint;
-import android.media.ThumbnailUtils;
 import android.os.Bundle;
 import android.os.Handler;
 import android.provider.MediaStore;
-import android.util.FloatMath;
-import android.util.Log;
 import android.util.TypedValue;
 import android.view.Menu;
 import android.view.MenuItem;
@@ -27,10 +21,6 @@ import android.widget.ListAdapter;
 
 import com.livejournal.karino2.whiteboardcast.*;
 
-import java.io.FileDescriptor;
-import java.io.FileInputStream;
-import java.io.FileNotFoundException;
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.Set;
@@ -109,7 +99,7 @@ public class MultiGalleryActivity extends Activity {
     }
 
     private void finishAlbumAndStartAlbumSet() {
-        // TODO: finish album pending load, etc.
+        discardAllPendingRequest();
         isAlbum = false;
         startAlbumSetLoad();
     }
@@ -213,262 +203,6 @@ public class MultiGalleryActivity extends Activity {
 
     CacheEngine cache = new CacheEngine();
 
-    interface MediaLoadListener {
-        void onThumbnailComing(Bitmap thumbnail);
-    }
-
-    class MediaLoadRequest implements Runnable {
-
-        MediaLoadListener listener;
-        MediaItem item;
-        MediaLoadRequest(MediaItem item, MediaLoadListener listener) {
-            this.listener = listener;
-            this.item = item;
-        }
-
-        void discard() {
-            synchronized(listener) {
-                listener = null;
-            }
-        }
-
-
-
-        @Override
-        public void run() {
-
-            Bitmap thumbnail  = decodeThumbnail(item.getPath(), getThumbnailSize());
-
-
-            MediaLoadListener hd = listener;
-            if(hd != null) {
-                synchronized (hd) {
-                    if(listener == null)
-                        return;
-                    listener.onThumbnailComing(thumbnail);
-                }
-            }
-        }
-
-        static final String TAG = "WhiteBoardCast";
-
-        private /* static */ Bitmap decodeThumbnail(String path, int size) {
-            FileInputStream fis = null;
-            try {
-                fis = new FileInputStream(path);
-                FileDescriptor fd = fis.getFD();
-                return decodeThumbnailFromFD(fd, size);
-            } catch (FileNotFoundException e) {
-                Log.d(TAG, "FileNotFound on decodeThumbnail: " + e.getMessage());
-                return null;
-            } catch (IOException e) {
-                Log.d(TAG, "IOException on decodeThumbnail: " + e.getMessage());
-                return null;
-            } finally {
-                if(fis != null){
-                    try {
-                        fis.close();
-                    } catch (IOException e) {
-                        Log.d(TAG, "Close fail on decodeThumbnail: " + e.getMessage());
-                    }
-                }
-            }
-
-        }
-
-
-        public /* static */ int prevPowerOf2(int n) {
-            if (n <= 0) throw new IllegalArgumentException();
-            return Integer.highestOneBit(n);
-        }
-
-        public  /* static */ int computeSampleSizeLarger(float scale) {
-            int initialSize = (int) FloatMath.floor(1f / scale);
-            if (initialSize <= 1) return 1;
-
-            return initialSize <= 8
-                    ? prevPowerOf2(initialSize)
-                    : initialSize / 8 * 8;
-        }
-
-        public /* static */ int nextPowerOf2(int n) {
-            if (n <= 0 || n > (1 << 30)) throw new IllegalArgumentException("n is invalid: " + n);
-            n -= 1;
-            n |= n >> 16;
-            n |= n >> 8;
-            n |= n >> 4;
-            n |= n >> 2;
-            n |= n >> 1;
-            return n + 1;
-        }
-
-
-        public /* static */ int computeSampleSize(float scale) {
-            int initialSize = Math.max(1, (int) FloatMath.ceil(1 / scale));
-            return initialSize <= 8
-                    ? nextPowerOf2(initialSize)
-                    : (initialSize + 7) / 8 * 8;
-        }
-
-        private /* static */ Bitmap.Config getConfig(Bitmap bitmap) {
-            Bitmap.Config config = bitmap.getConfig();
-            if (config == null) {
-                config = Bitmap.Config.ARGB_8888;
-            }
-            return config;
-        }
-
-
-        public /* static */ Bitmap resizeBitmapByScale(
-                Bitmap bitmap, float scale) {
-            int width = Math.round(bitmap.getWidth() * scale);
-            int height = Math.round(bitmap.getHeight() * scale);
-            if (width == bitmap.getWidth()
-                    && height == bitmap.getHeight()) return bitmap;
-            Bitmap target = Bitmap.createBitmap(width, height, getConfig(bitmap));
-            Canvas canvas = new Canvas(target);
-            canvas.scale(scale, scale);
-            Paint paint = new Paint(Paint.FILTER_BITMAP_FLAG | Paint.DITHER_FLAG);
-            canvas.drawBitmap(bitmap, 0, 0, paint);
-            bitmap.recycle();
-            return target;
-        }
-
-
-        private /* static */ Bitmap decodeThumbnailFromFD(FileDescriptor fd, int size) {
-            BitmapFactory.Options options = new BitmapFactory.Options();
-            options.inPreferredConfig = Bitmap.Config.ARGB_8888;
-
-            options.inJustDecodeBounds = true;
-            BitmapFactory.decodeFileDescriptor(fd, null, options);
-
-            int w = options.outWidth;
-            int h = options.outHeight;
-
-            float scale = (float) size / Math.min(w, h);
-            options.inSampleSize = computeSampleSizeLarger(scale);
-
-            final int MAX_PIXEL_COUNT = 640000; // 400 x 1600
-            if ((w / options.inSampleSize) * (h / options.inSampleSize) > MAX_PIXEL_COUNT) {
-                options.inSampleSize = computeSampleSize(
-                        FloatMath.sqrt((float) MAX_PIXEL_COUNT / (w * h)));
-            }
-
-            options.inJustDecodeBounds = false;
-
-            Bitmap result = BitmapFactory.decodeFileDescriptor(fd, null, options);
-            if (result == null) return null;
-
-            /*
-            float scale2 = (float) size / Math.min(result.getWidth(), result.getHeight());
-            if (scale <= 0.5) result = resizeBitmapByScale(result, scale);
-            */
-
-            return ThumbnailUtils.extractThumbnail(result, getThumbnailSize(), getThumbnailSize());
-
-        }
-    }
-
-    class AlbumSlidingWindow {
-        final int CACHE_SIZE =  96;
-        ImageItem[] entries;
-        int contentStart;
-        int contentEnd;
-        AlbumLoader loader;
-        AlbumSlidingWindow(AlbumLoader loader) {
-            this.loader = loader;
-            entries = new ImageItem[CACHE_SIZE];
-            contentStart = contentEnd = 0;
-        }
-
-        private ImageItem get(int slotIndex) {
-            if(!isContentSlot(slotIndex)) {
-                throw new RuntimeException("invalid slot:" + slotIndex + ", (" + contentStart + ", " + contentEnd + ")");
-            }
-            return entries[slotIndex % entries.length];
-        }
-
-        boolean isContentSlot(int slotIndex) {
-            return slotIndex >= contentStart && slotIndex < contentEnd;
-        }
-
-        public /* static */ int clamp(int x, int min, int max) {
-            if (x > max) return max;
-            if (x < min) return min;
-            return x;
-        }
-
-        public ImageItem requestSlot(int slotIndex) {
-            if(isContentSlot(slotIndex))
-                return get(slotIndex);
-
-
-            ImageItem[] data = entries;
-            int contentStart = clamp(slotIndex - data.length / 2,
-                    0, Math.max(0, size() - data.length));
-            int contentEnd = Math.min(contentStart + data.length, size());
-            setContentWindow(contentStart, contentEnd);
-
-            return get(slotIndex);
-        }
-
-
-        void setContentWindow(int argContentStart, int argContentEnd) {
-            if(contentStart == argContentStart && contentEnd == argContentEnd) return;
-
-            if(argContentStart >= contentEnd || contentStart >= argContentEnd) {
-                for(int i = contentStart, n=contentEnd; i<n; ++i ) {
-                   freeSlotContent(i);
-                }
-
-                // block here. I think this is fast enough.
-                ArrayList<ImageItem> items = loader.getMediaItem(argContentStart, argContentEnd);
-
-                for(int i = argContentStart; i < argContentEnd; ++i) {
-                    putSlotContent(i, items.get(i - argContentStart));
-                }
-            } else if(argContentStart > contentStart){
-                for (int i = contentStart; i < argContentStart; ++i) {
-                    freeSlotContent(i);
-                }
-
-                // block here. I think this is fast enough.
-                ArrayList<ImageItem> items = loader.getMediaItem(contentEnd, argContentEnd);
-
-                for (int i = contentEnd; i < argContentEnd; ++i) {
-                    putSlotContent(i, items.get(i - contentEnd));
-                }
-            } else /* argContentStart < contentStart */ {
-                for (int i = argContentEnd, n = contentEnd; i < n; ++i) {
-                    freeSlotContent(i);
-                }
-
-                // block here. I think this is fast enough.
-                ArrayList<ImageItem> items = loader.getMediaItem(argContentStart, contentStart);
-
-                for (int i = argContentStart, n = contentStart; i < n; ++i) {
-                    putSlotContent(i, items.get(i - argContentStart));
-                }
-            }
-            contentStart = argContentStart;
-            contentEnd = argContentEnd;
-
-        }
-
-        private void putSlotContent(int slotIndex, ImageItem imageItem) {
-            entries[slotIndex%entries.length] = imageItem;
-
-        }
-
-        private void freeSlotContent(int slotIndex) {
-            entries[slotIndex%entries.length] = null;
-        }
-
-
-        public int size() {
-            return loader.getItemCount();
-        }
-    }
 
     static Bitmap loadingImage;
     public static Bitmap getLoadingBitmap(int thumbnailSize) {
@@ -495,7 +229,7 @@ public class MultiGalleryActivity extends Activity {
         pendingRequest.clear();
     }
 
-    class MediaHolder implements MediaLoadListener{
+    class MediaHolder implements MediaLoadRequest.MediaLoadListener{
         ImageView target;
         MediaItem item;
         Bitmap thumbnail;
@@ -524,7 +258,7 @@ public class MultiGalleryActivity extends Activity {
                 return;
             }
             target.setImageBitmap(getLoadingBitmap(getThumbnailSize()));
-            request = new MediaLoadRequest(getItem(), this);
+            request = new MediaLoadRequest(getItem(), this, getThumbnailSize());
             addToPendingSet(request);
             getExecutor().submit(request);
         }
