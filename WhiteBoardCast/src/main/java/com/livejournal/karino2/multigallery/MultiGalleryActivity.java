@@ -2,6 +2,7 @@ package com.livejournal.karino2.multigallery;
 
 import android.app.Activity;
 import android.content.ContentResolver;
+import android.content.Intent;
 import android.database.Cursor;
 import android.graphics.Bitmap;
 import android.graphics.Color;
@@ -13,6 +14,8 @@ import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
+import android.view.animation.Animation;
+import android.view.animation.AnimationUtils;
 import android.widget.AdapterView;
 import android.widget.BaseAdapter;
 import android.widget.GridView;
@@ -29,6 +32,11 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
 public class MultiGalleryActivity extends Activity {
+
+    static ArrayList<String> resultPaths = new ArrayList<String>();
+    public static ArrayList<String> getResultPaths() {
+        return resultPaths;
+    }
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -61,12 +69,33 @@ public class MultiGalleryActivity extends Activity {
     boolean isAlbum = false;
 
     private void setAlbum(AlbumItem album) {
+
         AlbumLoader loader = new AlbumLoader(getContentResolver(), album);
         AlbumSlidingWindow slidingWindow = new AlbumSlidingWindow(loader);
         AlbumAdapter adapter = new AlbumAdapter(slidingWindow);
         discardAllPendingRequest();
         getGridView().setAdapter(adapter);
         isAlbum = true;
+
+        getGridView().setOnItemClickListener(new AdapterView.OnItemClickListener() {
+            @Override
+            public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
+                MediaHolder mh = (MediaHolder)view.getTag();
+                if(mh != null && mh.getItem() != null) {
+                    Animation pushOut = AnimationUtils.loadAnimation(MultiGalleryActivity.this, R.anim.push_up_out);
+                    view.startAnimation(pushOut);
+                    resultPaths.add(mh.getItem().getPath());
+                    setResultToResultPaths();
+                }
+            }
+        });
+
+    }
+
+    void setResultToResultPaths() {
+        Intent intent = new Intent();
+        intent.putExtra("all_path", resultPaths);
+        setResult(Activity.RESULT_OK, intent);
     }
 
     int getThumbnailSize() {

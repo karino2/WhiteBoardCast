@@ -36,6 +36,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
@@ -141,6 +142,7 @@ public class SlideListActivity extends ListActivity {
                         return true;
                     case R.id.action_delete:
                         try {
+                            showMessage("deleting...");
                             slideList.deleteFiles(getSelectedIndexes());
                             actionMode.finish();
                             adapter.reload();
@@ -289,7 +291,9 @@ public class SlideListActivity extends ListActivity {
     }
 
     public List<File> reloadSlideFiles() throws IOException {
-        return getSlideFiles();
+        SlideList slides = getSlideList();
+        slides.invalidateActualAndSync(SlideListSerializer.getActualFiles());
+        return slides.getFiles();
     }
 
 
@@ -361,7 +365,9 @@ public class SlideListActivity extends ListActivity {
         switch(requestCode) {
             case REQUEST_PICK_IMAGE:
                 if(resultCode == RESULT_OK){
-                    copyImage(data);
+                    showMessage("copying...");
+                    ArrayList<String> results = data.getStringArrayListExtra("all_path");
+                    copyImageList(results);
                     try {
                         adapter.reload();
                     } catch (IOException e) {
@@ -386,8 +392,8 @@ public class SlideListActivity extends ListActivity {
         return timeStampFormat.format(new Date()) + "_" + sequenceId++ +".png";
     }
 
-    private void copyImage(Intent data) {
-        Uri imageUri = data.getData();
+    private void copyImage(String path) {
+        Uri imageUri = Uri.fromFile(new File(path));
         try {
             File result = new File(getSlideListDirectory(), getNewSequentialFile());
 
@@ -416,6 +422,13 @@ public class SlideListActivity extends ListActivity {
             e.printStackTrace();
         } catch (IOException e) {
             e.printStackTrace();
+        }
+
+    }
+
+    private void copyImageList(ArrayList<String> paths) {
+        for(String path : paths) {
+            copyImage(path);
         }
     }
 

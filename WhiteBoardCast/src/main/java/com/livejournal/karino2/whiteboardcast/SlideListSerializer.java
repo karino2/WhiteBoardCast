@@ -104,6 +104,11 @@ public class SlideListSerializer {
         return new SlideListSerializer(getSlideListDirectory());
     }
 
+    public static File[] getActualFiles() throws IOException {
+        SlideListSerializer parser = SlideListSerializer.createSlideSelializer();
+        return parser.getActualSlideFiles();
+    }
+
     public static SlideList createSlideListWithDefaultFolder() throws IOException {
         SlideListSerializer parser = SlideListSerializer.createSlideSelializer();
         SlideList slideList = new SlideList(parser.parseFileList(), parser.getActualSlideFiles());

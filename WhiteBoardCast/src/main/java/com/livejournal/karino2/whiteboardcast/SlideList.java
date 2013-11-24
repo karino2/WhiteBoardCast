@@ -23,6 +23,11 @@ public class SlideList {
         addNonRegistedFileToList();
     }
 
+    public void invalidateActualAndSync(File[] actualFiles) {
+        this.actualFiles = actualFiles;
+        syncListedActual();
+    }
+
     public List<File> getFiles() {
         return listedFiles;
     }
