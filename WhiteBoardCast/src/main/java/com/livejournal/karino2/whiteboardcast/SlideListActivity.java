@@ -8,6 +8,7 @@ import android.graphics.BitmapFactory;
 import android.graphics.Point;
 import android.net.Uri;
 import android.os.Bundle;
+import android.os.Handler;
 import android.util.Log;
 import android.view.ActionMode;
 import android.view.Display;
@@ -38,6 +39,7 @@ import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
+import java.util.concurrent.Executors;
 
 public class SlideListActivity extends ListActivity {
     final int REQUEST_PICK_IMAGE = 1;
@@ -156,16 +158,35 @@ public class SlideListActivity extends ListActivity {
             }
         });
 
-        try {
-            adapter = new FileImageAdapter(this, getSlideFiles(), windowSize.x, windowSize.y/6);
-            setListAdapter(adapter);
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-
+        Executors.newSingleThreadExecutor().submit(new FileListLoader(windowSize));
 
         // Show the Up button in the action bar.
         setupActionBar();
+    }
+
+    Handler handler = new Handler();
+
+    class FileListLoader implements Runnable {
+        Point windowSize;
+        FileListLoader(Point size) {
+            windowSize = size;
+        }
+
+        @Override
+        public void run() {
+            try {
+                adapter = new FileImageAdapter(SlideListActivity.this, getSlideFiles(), windowSize.x, windowSize.y/6);
+                handler.post(new Runnable() {
+                    @Override
+                    public void run() {
+                        setListAdapter(adapter);
+                    }
+                });
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+
+        }
     }
 
     private void showError(String msg) {
