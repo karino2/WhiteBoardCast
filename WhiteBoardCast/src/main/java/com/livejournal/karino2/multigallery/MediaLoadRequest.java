@@ -4,6 +4,7 @@ import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.Canvas;
 import android.graphics.Paint;
+import android.media.ExifInterface;
 import android.media.ThumbnailUtils;
 import android.util.FloatMath;
 import android.util.Log;
@@ -57,6 +58,21 @@ class MediaLoadRequest implements Runnable {
     static final String TAG = "WhiteBoardCast";
 
     private /* static */ Bitmap decodeThumbnail(String path, int size) {
+        try {
+            ExifInterface exif = new ExifInterface(path);
+            if(exif.hasThumbnail()) {
+                byte[] data =exif.getThumbnail();
+                if(data != null) {
+                    Bitmap thumbnail = BitmapFactory.decodeByteArray(data, 0, data.length);
+                    return ThumbnailUtils.extractThumbnail(thumbnail, size, size);
+
+                }
+            }
+        } catch (IOException e) {
+            // fail to load exif.
+        }
+
+
         FileInputStream fis = null;
         try {
             fis = new FileInputStream(path);
