@@ -71,6 +71,8 @@ public class MultiGalleryActivity extends Activity {
 
     private void setAlbum(AlbumItem album) {
 
+        setTitle(album.getName());
+
         AlbumLoader loader = new AlbumLoader(getContentResolver(), album);
         AlbumSlidingWindow slidingWindow = new AlbumSlidingWindow(loader);
         AlbumAdapter adapter = new AlbumAdapter(slidingWindow);
@@ -135,6 +137,7 @@ public class MultiGalleryActivity extends Activity {
     }
 
     private void finishAlbumAndStartAlbumSet() {
+        setTitle(R.string.title_activity_multi_gallery);
         discardAllPendingRequest();
         isAlbum = false;
         startAlbumSetLoad();
