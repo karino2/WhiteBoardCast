@@ -9,7 +9,6 @@ import android.graphics.Color;
 import android.os.Bundle;
 import android.os.Handler;
 import android.provider.MediaStore;
-import android.util.TypedValue;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
@@ -20,7 +19,9 @@ import android.widget.AdapterView;
 import android.widget.BaseAdapter;
 import android.widget.GridView;
 import android.widget.ImageView;
+import android.widget.LinearLayout;
 import android.widget.ListAdapter;
+import android.widget.TextView;
 
 import com.livejournal.karino2.whiteboardcast.*;
 
@@ -163,6 +164,10 @@ public class MultiGalleryActivity extends Activity {
         public int getId() {
             return id;
         }
+
+        public String getName() {
+            return name;
+        }
     }
 
     static final String TOP_PATH = "/local/image";
@@ -283,14 +288,36 @@ public class MultiGalleryActivity extends Activity {
         pendingRequest.clear();
     }
 
+    interface ImageSetter {
+        void setImage(View view, Bitmap bmp);
+    }
+
+    ImageSetter imageViewSetter = new ImageSetter() {
+        @Override
+        public void setImage(View view, Bitmap bmp) {
+            ImageView iv = (ImageView)view;
+            iv.setImageBitmap(bmp);
+        }
+    };
+
+    ImageSetter linearLayoutSetter = new ImageSetter() {
+        @Override
+        public void setImage(View view, Bitmap bmp) {
+            ImageView iv = (ImageView)view.findViewById(R.id.imageView);
+            iv.setImageBitmap(bmp);
+        }
+    };
+
     class MediaHolder implements MediaLoadRequest.MediaLoadListener{
-        ImageView target;
+        View target;
         MediaItem item;
         Bitmap thumbnail;
         MediaLoadRequest request;
-        public MediaHolder(MediaItem item, ImageView iv) {
+        ImageSetter imageSetter;
+        public MediaHolder(MediaItem item, View iv, ImageSetter setter) {
             this.item = item;
             target = iv;
+            imageSetter = setter;
         }
 
         public MediaItem getItem() { return item; }
@@ -311,7 +338,7 @@ public class MultiGalleryActivity extends Activity {
                 onThumbnailComing(thumbnail);
                 return;
             }
-            target.setImageBitmap(getLoadingBitmap(getThumbnailSize()));
+            imageSetter.setImage(target, getLoadingBitmap(getThumbnailSize()));
             request = new MediaLoadRequest(getItem(), this, getThumbnailSize());
             addToPendingSet(request);
             getExecutor().submit(request);
@@ -326,7 +353,8 @@ public class MultiGalleryActivity extends Activity {
             handler.post(new Runnable() {
                 @Override
                 public void run() {
-                    target.setImageBitmap(MediaHolder.this.thumbnail);
+                    imageSetter.setImage(target, MediaHolder.this.thumbnail);
+
                 }
             });
         }
@@ -355,20 +383,22 @@ public class MultiGalleryActivity extends Activity {
 
         @Override
         public View getView(int i, View view, ViewGroup viewGroup) {
-            ImageView iv;
-            MediaItem item = (MediaItem)getItem(i);
+            LinearLayout linearLayout;
+            AlbumItem item = (AlbumItem)getItem(i);
             if(view == null) {
-                iv = new ImageView(MultiGalleryActivity.this);
-                MediaHolder holder = new MediaHolder(item, iv);
-                iv.setTag(holder);
+                linearLayout = (LinearLayout)getLayoutInflater().inflate(R.layout.album_item, null);
+                MediaHolder holder = new MediaHolder(item, linearLayout, linearLayoutSetter);
+                linearLayout.setTag(holder);
                 holder.beginLoad();
             } else {
                 MediaHolder holder = (MediaHolder)view.getTag();
                 holder.recycle(item);
                 holder.beginLoad();
-                iv = (ImageView)view;
+                linearLayout = (LinearLayout)view;
             }
-            return iv;
+            TextView tv = (TextView) linearLayout.findViewById(R.id.tvLabel);
+            tv.setText(item.getName());
+            return linearLayout;
         }
     }
 
@@ -393,14 +423,13 @@ public class MultiGalleryActivity extends Activity {
             return (long)i;
         }
 
-        // TODO: almost the same as AlbumSetAdapter.
         @Override
         public View getView(int i, View view, ViewGroup viewGroup) {
             ImageView iv;
             MediaItem item = (MediaItem)getItem(i);
             if(view == null) {
                 iv = new ImageView(MultiGalleryActivity.this);
-                MediaHolder holder = new MediaHolder(item, iv);
+                MediaHolder holder = new MediaHolder(item, iv, imageViewSetter);
                 iv.setTag(holder);
                 holder.beginLoad();
             } else {
