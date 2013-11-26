@@ -145,6 +145,18 @@ public class WhiteBoardCastActivity extends Activity implements EncoderTask.Erro
         }
     }
 
+    public boolean canPop() {
+        WhiteBoardCanvas wb = getWhiteBoardCanvas();
+        if(wb == null) {
+            try {
+                return getSlideFiles().size() >= 1;
+            } catch (IOException e) {
+                showError("check popable fail with IO Exception: " + e.getMessage());
+                return false;
+            }
+        }
+        return wb.canPopSlide();
+    }
 
     public boolean canUndo() {
         WhiteBoardCanvas wb = getWhiteBoardCanvas();

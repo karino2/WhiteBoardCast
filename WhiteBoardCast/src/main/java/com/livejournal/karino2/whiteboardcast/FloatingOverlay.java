@@ -171,7 +171,9 @@ public class FloatingOverlay {
         Paint doenPaint = activity.canStop()? null: disablePaint;
         canvas.drawBitmap(doneButton, toolHeight * 5, 0, doenPaint);
         canvas.drawBitmap(clearButton, toolHeight * 6, 0, null);
-        canvas.drawBitmap(popButton, toolHeight * 7, 0, null);
+
+        Paint popPaint = activity.canPop()? null: disablePaint;
+        canvas.drawBitmap(popButton, toolHeight * 7, 0, popPaint);
         canvas.drawBitmap(menuButton, toolHeight * 8, 0, null);
 
         updateToolPenImage(paint);
@@ -340,7 +342,10 @@ public class FloatingOverlay {
         } else if (idx == TOOLBAR_MENU) {
             activity.openOptionsMenu();
         } else if (idx == TOOLBAR_POP) {
-            activity.popSlide();
+            if(activity.canPop()) {
+                activity.popSlide();
+                updateToolbarImage();
+            }
         } else if (idx == TOOLBAR_CLEAR) {
             activity.clearCanvas();
         } else if (idx == TOOLBAR_PEN) {
