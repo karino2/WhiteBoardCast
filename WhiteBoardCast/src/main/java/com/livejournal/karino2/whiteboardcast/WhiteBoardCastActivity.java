@@ -107,6 +107,11 @@ public class WhiteBoardCastActivity extends Activity implements EncoderTask.Erro
         setContentView(R.layout.activity_whiteboardcast);
         readDebuggableSetting();
         getWhiteBoardCanvas().enableDebug(debuggable);
+        try {
+            getWhiteBoardCanvas().setSlides(getSlideFiles());
+        } catch (IOException e) {
+            showMessage("Slide setup fail: " + e.getMessage());
+        }
         animator = new PageScrollAnimator(getScheduleExecutor(), getWhiteBoardCanvas());
 
         if(workingFileExists()) {
@@ -226,24 +231,15 @@ public class WhiteBoardCastActivity extends Activity implements EncoderTask.Erro
         return getSlideList().getFiles();
     }
 
-    int slideIndex = 0;
-
     public void popSlide() {
         try {
-            if(slideIndex == getSlideFiles().size())  {
+            if(!getWhiteBoardCanvas().canPopSlide())  {
                 showMessage("can't pop anymore.");
                 return;
             }
-            File newBGFile = getSlideFiles().get(slideIndex++);
-            InputStream is = new FileInputStream(newBGFile);
-            try{
-                Bitmap newBG = BitmapFactory.decodeStream(is);
-                getWhiteBoardCanvas().insertNewBackground(newBG);
-            }finally {
-                is.close();
-            }
+            getWhiteBoardCanvas().popSlide();
         } catch (IOException e) {
-            e.printStackTrace();
+            showMessage("Pop slide fail. " + e.getMessage());
         }
 
     }

@@ -2,6 +2,7 @@ package com.livejournal.karino2.whiteboardcast;
 
 import android.content.Context;
 import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.DashPathEffect;
@@ -15,6 +16,14 @@ import android.os.Handler;
 import android.util.AttributeSet;
 import android.view.MotionEvent;
 import android.view.View;
+
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.IOException;
+import java.io.InputStream;
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * Created by karino on 6/26/13.
@@ -50,6 +59,9 @@ public class WhiteBoardCanvas extends View implements FrameRetrieval, PageScroll
     private boolean isAnimating = false;
 
     int penCursorWidth, penCursorHeight;
+
+    private List<File> slides = new ArrayList<File>(); // null object.
+
 
     public WhiteBoardCanvas(Context context, AttributeSet attrs) {
         super(context, attrs);
@@ -710,4 +722,24 @@ public class WhiteBoardCanvas extends View implements FrameRetrieval, PageScroll
         invalidate();
     }
 
+    public void setSlides(List<File> slides) {
+        this.slides = slides;
+    }
+
+    int slideIndex = 0;
+    public boolean canPopSlide() {
+        return slideIndex < slides.size();
+    }
+
+    public void popSlide() throws IOException {
+        File newBGFile = slides.get(slideIndex++);
+        InputStream is = new FileInputStream(newBGFile);
+        try{
+            Bitmap newBG = BitmapFactory.decodeStream(is);
+            insertNewBackground(newBG);
+        }finally {
+            is.close();
+        }
+
+    }
 }
