@@ -2,22 +2,22 @@ package com.livejournal.karino2.whiteboardcast;
 
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
-import android.graphics.Canvas;
-import android.graphics.Paint;
 import android.graphics.Rect;
-import android.graphics.RectF;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.util.ArrayList;
-import java.util.List;
 
 /**
  * Created by karino on 7/4/13.
  */
 public class UndoList {
-
-    class UndoCommand {
+    interface UndoCommand {
+        void undo(Undoable undoTarget);
+        void redo(Undoable undoTarget);
+        int getByteSize();
+    }
+    class BitmapUndoCommand implements UndoCommand {
         byte[] undoBuf;
         byte[] redoBuf;
         int x, y, width, height;
@@ -28,7 +28,7 @@ public class UndoList {
             return os.toByteArray();
         }
 
-        UndoCommand(int x, int y, Bitmap undo, Bitmap redo) {
+        BitmapUndoCommand(int x, int y, Bitmap undo, Bitmap redo) {
             this.x = x;
             this.y = y;
             width = undo.getWidth();
@@ -49,12 +49,12 @@ public class UndoList {
             return BitmapFactory.decodeStream(is);
         }
 
-        int getByteSize() {
+        public int getByteSize() {
             return undoBuf.length+redoBuf.length;
         }
-        Rect undo(Bitmap target) {
-            overwriteByBmp(target, decodeUndoBmp());
-            return new Rect(x, y, x+width, y+height);
+        public void undo(Undoable undoTarget) {
+            overwriteByBmp(undoTarget.getCommittedBitmap(), decodeUndoBmp());
+            undoTarget.invalCommitedBitmap(new Rect(x, y, x+width, y+height));
         }
 
         private void overwriteByBmp(Bitmap target, Bitmap bmp) {
@@ -63,9 +63,9 @@ public class UndoList {
             target.setPixels(buf, 0, bmp.getWidth(), x, y, bmp.getWidth(), bmp.getHeight());
         }
 
-        Rect redo(Bitmap target) {
-            overwriteByBmp(target, decodeRedoBmp());
-            return new Rect(x, y, x+width, y+height);
+        public void redo(Undoable redoTarget) {
+            overwriteByBmp(redoTarget.getCommittedBitmap(), decodeRedoBmp());
+            redoTarget.invalCommitedBitmap(new Rect(x, y, x+width, y+height));
         }
 
     }
@@ -77,9 +77,14 @@ public class UndoList {
         undoTarget = target;
     }
 
-    public void pushUndoCommand(int x, int y, Bitmap undo, Bitmap redo) {
+    public void pushBitmapUndoCommand(int x, int y, Bitmap undo, Bitmap redo) {
+        UndoCommand command = new BitmapUndoCommand(x, y, undo, redo);
+        pushUndoCommand(command);
+    }
+
+    private void pushUndoCommand(UndoCommand command) {
         discardLaterCommand();
-        commandList.add(new UndoCommand(x, y, undo, redo));
+        commandList.add(command);
         currentPos++;
         discardUntilSizeFit();
     }
@@ -94,9 +99,8 @@ public class UndoList {
     public void undo() {
         if(!canUndo())
             return;
-        Rect rect = commandList.get(currentPos).undo(undoTarget.getCommittedBitmap());
+        commandList.get(currentPos).undo(undoTarget);
         currentPos--;
-        undoTarget.invalCommitedBitmap(rect);
     }
 
     interface Undoable {
@@ -108,8 +112,7 @@ public class UndoList {
         if(!canRedo())
             return;
         currentPos++;
-        Rect undoInval = commandList.get(currentPos).redo(undoTarget.getCommittedBitmap());
-        undoTarget.invalCommitedBitmap(undoInval);
+        commandList.get(currentPos).redo(undoTarget);
     }
 
 

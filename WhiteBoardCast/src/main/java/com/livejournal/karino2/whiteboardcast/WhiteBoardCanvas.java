@@ -437,7 +437,7 @@ public class WhiteBoardCanvas extends View implements FrameRetrieval, PageScroll
     }
 
     private void pushUndoCommand(Rect region, Bitmap undo, Bitmap redo) {
-        getUndoList().pushUndoCommand(region.left, region.top, undo, redo);
+        getUndoList().pushBitmapUndoCommand(region.left, region.top, undo, redo);
     }
 
 
@@ -521,7 +521,7 @@ public class WhiteBoardCanvas extends View implements FrameRetrieval, PageScroll
         invalidate();
 
         Bitmap redo = Bitmap.createBitmap(getCommittedBitmap(), 0, 0, viewBmp.getWidth(), viewBmp.getHeight() );
-        getUndoList().pushUndoCommand(0, 0, undo, redo);
+        getUndoList().pushBitmapUndoCommand(0, 0, undo, redo);
         if(getUndoList().canUndo() != canUndoBefore) {
             overlay.changeUndoStatus();
         }
