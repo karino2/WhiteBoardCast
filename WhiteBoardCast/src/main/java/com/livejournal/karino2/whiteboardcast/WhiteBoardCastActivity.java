@@ -229,7 +229,20 @@ public class WhiteBoardCastActivity extends Activity implements EncoderTask.Erro
         getWhiteBoardCanvas().redo();
     }
 
-    // TODO: move to Canvas.
+    @Override
+    protected void onRestart() {
+        super.onRestart();
+        if(slideList != null) {
+            try {
+                SlideListSerializer.updateActualFiles(slideList);
+                getWhiteBoardCanvas().changeSlidesStatus();
+            } catch (IOException e) {
+                showMessage("onStart, fail update slides: " + e.getMessage());
+                return;
+            }
+        }
+    }
+
     SlideList slideList;
     SlideList getSlideList() throws IOException {
         if(slideList == null) {

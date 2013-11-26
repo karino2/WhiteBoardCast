@@ -582,6 +582,11 @@ public class WhiteBoardCanvas extends View implements FrameRetrieval, PageScroll
         invalidate();
     }
 
+    public void changeSlidesStatus() {
+        overlay.changeSlidesStatus();
+        invalidate();
+    }
+
     public boolean canRedo() {
         return getUndoList().canRedo();
     }

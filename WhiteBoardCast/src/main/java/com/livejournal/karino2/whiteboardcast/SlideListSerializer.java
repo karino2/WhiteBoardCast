@@ -115,4 +115,8 @@ public class SlideListSerializer {
         return slideList;
     }
 
+    public static void updateActualFiles(SlideList slideList) throws IOException {
+        slideList.invalidateActualAndSync(SlideListSerializer.getActualFiles());
+    }
+
 }

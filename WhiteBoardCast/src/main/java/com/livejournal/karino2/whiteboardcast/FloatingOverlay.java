@@ -458,4 +458,8 @@ public class FloatingOverlay {
                 return recIcon.get(REC_NORMAL);
         }
     }
+
+    public void changeSlidesStatus() {
+        updateToolbarImage();
+    }
 }

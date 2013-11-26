@@ -292,7 +292,7 @@ public class SlideListActivity extends ListActivity {
 
     public List<File> reloadSlideFiles() throws IOException {
         SlideList slides = getSlideList();
-        slides.invalidateActualAndSync(SlideListSerializer.getActualFiles());
+        SlideListSerializer.updateActualFiles(slides);
         return slides.getFiles();
     }
 
