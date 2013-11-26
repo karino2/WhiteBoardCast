@@ -19,7 +19,7 @@ import android.view.View;
 /**
  * Created by karino on 6/26/13.
  */
-public class WhiteBoardCanvas extends View implements FrameRetrieval, PageScrollAnimator.Animatee  {
+public class WhiteBoardCanvas extends View implements FrameRetrieval, PageScrollAnimator.Animatee , UndoList.Undoable {
 
     // penCanvasBmp + BGBmp = viewBmp.
     Bitmap viewBmp;
@@ -75,7 +75,7 @@ public class WhiteBoardCanvas extends View implements FrameRetrieval, PageScroll
         mCursorPaint.setStyle(Paint.Style.STROKE);
         mCursorPaint.setPathEffect(new DashPathEffect(new float[]{5, 2}, 0));
 
-        boardList = new BoardList();
+        boardList = new BoardList(this);
         penCursorWidth = (ERASER_WIDTH+2*CURSOR_MARGIN);
         penCursorHeight = (ERASER_WIDTH+2*CURSOR_MARGIN);
         cursorBackupPixels = new int[penCursorWidth*penCursorHeight];
@@ -114,9 +114,9 @@ public class WhiteBoardCanvas extends View implements FrameRetrieval, PageScroll
         viewCanvas = new Canvas(viewBmp);
 
         boardList.setSize(w, h);
-        getCommittedBmp().eraseColor(Color.TRANSPARENT);
+        getCommittedBitmap().eraseColor(Color.TRANSPARENT);
         penCanvas = new Canvas(penCanvasBmp);
-        committedCanvas = new Canvas(getCommittedBmp());
+        committedCanvas = new Canvas(getCommittedBitmap());
     }
 
 
@@ -419,9 +419,9 @@ public class WhiteBoardCanvas extends View implements FrameRetrieval, PageScroll
                 boolean canUndoBefore = getUndoList().canUndo();
 
                 Rect region = pathBound();
-                Bitmap undo = Bitmap.createBitmap(getCommittedBmp(), region.left, region.top, region.width(), region.height() );
+                Bitmap undo = Bitmap.createBitmap(getCommittedBitmap(), region.left, region.top, region.width(), region.height() );
                 committedCanvas.drawPath(mPath, mPaint);
-                Bitmap redo = Bitmap.createBitmap(getCommittedBmp(), region.left, region.top, region.width(), region.height());
+                Bitmap redo = Bitmap.createBitmap(getCommittedBitmap(), region.left, region.top, region.width(), region.height());
 
                 pushUndoCommand(region, undo, redo);
 
@@ -475,13 +475,11 @@ public class WhiteBoardCanvas extends View implements FrameRetrieval, PageScroll
     }
 
     public void undo() {
-        Rect undoInval = getUndoList().undo(getCommittedBmp());
-        afterUndoRedo(undoInval);
+        getUndoList().undo();
     }
 
     public void redo() {
-        Rect undoInval = getUndoList().redo(getCommittedBmp());
-        afterUndoRedo(undoInval);
+        getUndoList().redo();
     }
 
     private void overwriteByBmp(Bitmap target, Bitmap bmp, Rect region) {
@@ -490,9 +488,10 @@ public class WhiteBoardCanvas extends View implements FrameRetrieval, PageScroll
         target.setPixels(buf, 0, region.width(), region.left, region.top, region.width(), region.height());
     }
 
-    private void afterUndoRedo(Rect undoInval) {
-        drawToViewBmp(undoInval, getCommittedBmp());
-        overwriteByBmp(penCanvasBmp, getCommittedBmp(), undoInval);
+    @Override
+    public void invalCommitedBitmap(Rect undoInval) {
+        drawToViewBmp(undoInval, getCommittedBitmap());
+        overwriteByBmp(penCanvasBmp, getCommittedBitmap(), undoInval);
         invalRegionForEncoder(undoInval);
         invalidate(undoInval);
     }
@@ -512,16 +511,16 @@ public class WhiteBoardCanvas extends View implements FrameRetrieval, PageScroll
 
     public void clearCanvas() {
         boolean canUndoBefore = getUndoList().canUndo();
-        Bitmap undo = Bitmap.createBitmap(getCommittedBmp(), 0, 0, viewBmp.getWidth(), viewBmp.getHeight() );
+        Bitmap undo = Bitmap.createBitmap(getCommittedBitmap(), 0, 0, viewBmp.getWidth(), viewBmp.getHeight() );
 
-        getCommittedBmp().eraseColor(Color.TRANSPARENT);
+        getCommittedBitmap().eraseColor(Color.TRANSPARENT);
         penCanvasBmp.eraseColor(Color.TRANSPARENT);
         drawToViewBmp();
 
         invalWholeRegionForEncoder();
         invalidate();
 
-        Bitmap redo = Bitmap.createBitmap(getCommittedBmp(), 0, 0, viewBmp.getWidth(), viewBmp.getHeight() );
+        Bitmap redo = Bitmap.createBitmap(getCommittedBitmap(), 0, 0, viewBmp.getWidth(), viewBmp.getHeight() );
         getUndoList().pushUndoCommand(0, 0, undo, redo);
         if(getUndoList().canUndo() != canUndoBefore) {
             overlay.changeUndoStatus();
@@ -595,9 +594,17 @@ public class WhiteBoardCanvas extends View implements FrameRetrieval, PageScroll
         return boardList.getCurrent();
     }
 
-    private Bitmap getCommittedBmp() {
+    @Override
+    public Bitmap getCommittedBitmap() {
         return getCurrentBoard().getBoardBmp();
     }
+    /*
+    @Override
+    public void invalCommitedBitmap(Rect undoInval) {
+
+    }
+    */
+
 
     private Bitmap getCurrentBackground() {
         return getCurrentBoard().getBackgroundBmp();
@@ -616,12 +623,12 @@ public class WhiteBoardCanvas extends View implements FrameRetrieval, PageScroll
         synchronized (viewBmp) {
             invalWholeRegionForEncoder();
             viewCanvas.drawBitmap(getCurrentBackground(), 0, 0, mBitmapPaint);
-            viewCanvas.drawBitmap(getCommittedBmp(), 0, 0, mBitmapPaint);
+            viewCanvas.drawBitmap(getCommittedBitmap(), 0, 0, mBitmapPaint);
         }
         // TODO: slow.
-        penCanvasBmp = getCommittedBmp().copy(Bitmap.Config.ARGB_8888, true);
+        penCanvasBmp = getCommittedBitmap().copy(Bitmap.Config.ARGB_8888, true);
         penCanvas = new Canvas(penCanvasBmp);
-        committedCanvas = new Canvas(getCommittedBmp());
+        committedCanvas = new Canvas(getCommittedBitmap());
 
         overlay.changeUndoStatus();
 
@@ -702,4 +709,5 @@ public class WhiteBoardCanvas extends View implements FrameRetrieval, PageScroll
         invalWholeRegionForEncoder();
         invalidate();
     }
+
 }

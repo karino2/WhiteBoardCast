@@ -28,8 +28,11 @@ public class BoardList {
         }
     }
 
-    public BoardList() {
-        list.add(new Board());
+    UndoList.Undoable undoTarget;
+
+    public BoardList(UndoList.Undoable undoTarget) {
+        this.undoTarget = undoTarget;
+        list.add(new Board(undoTarget));
     }
 
     public Board getCurrent() {
@@ -51,7 +54,7 @@ public class BoardList {
     }
 
     public void addNewBoard() {
-        list.add(new Board(width, height));
+        list.add(new Board(undoTarget, width, height));
     }
 
     public boolean hasPrevPage() {

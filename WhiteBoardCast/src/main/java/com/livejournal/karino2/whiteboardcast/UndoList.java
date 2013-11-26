@@ -72,6 +72,11 @@ public class UndoList {
     ArrayList<UndoCommand> commandList = new ArrayList<UndoCommand>();
     int currentPos = -1;
 
+    Undoable undoTarget;
+    public UndoList(Undoable target) {
+        undoTarget = target;
+    }
+
     public void pushUndoCommand(int x, int y, Bitmap undo, Bitmap redo) {
         discardLaterCommand();
         commandList.add(new UndoCommand(x, y, undo, redo));
@@ -86,19 +91,25 @@ public class UndoList {
         return currentPos < commandList.size()-1;
     }
 
-    public Rect undo(Bitmap target) {
+    public void undo() {
         if(!canUndo())
-            return null;
-        Rect rect = commandList.get(currentPos).undo(target);
+            return;
+        Rect rect = commandList.get(currentPos).undo(undoTarget.getCommittedBitmap());
         currentPos--;
-        return rect;
+        undoTarget.invalCommitedBitmap(rect);
     }
 
-    public Rect redo(Bitmap target) {
+    interface Undoable {
+        Bitmap getCommittedBitmap();
+        void invalCommitedBitmap(Rect undoInval);
+    }
+
+    public void redo() {
         if(!canRedo())
-            return null;
+            return;
         currentPos++;
-        return commandList.get(currentPos).redo(target);
+        Rect undoInval = commandList.get(currentPos).redo(undoTarget.getCommittedBitmap());
+        undoTarget.invalCommitedBitmap(undoInval);
     }
 
 

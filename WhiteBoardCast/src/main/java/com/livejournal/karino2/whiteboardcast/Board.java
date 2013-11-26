@@ -16,16 +16,16 @@ public class Board {
     int width;
     int height;
 
-    public Board(int w, int h) {
+    public Board(UndoList.Undoable target, int w, int h) {
         boardBmp = null;
-        undoList = new UndoList();
+        undoList = new UndoList(target);
         resetCanvas(w, h);
     }
 
-    public Board() {
+    public Board(UndoList.Undoable target) {
         boardBmp = null;
         width = height = 0;
-        undoList = new UndoList();
+        undoList = new UndoList(target);
     }
 
     public void resetCanvas(int w, int h) {
