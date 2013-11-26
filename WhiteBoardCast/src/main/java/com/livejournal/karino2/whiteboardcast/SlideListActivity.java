@@ -86,7 +86,7 @@ public class SlideListActivity extends ListActivity {
 
                 }
                 */
-                showMessage("check state changed: " + selectedIdDump());
+                // showMessage("check state changed: " + selectedIdDump());
             }
 
             @Override
@@ -101,6 +101,7 @@ public class SlideListActivity extends ListActivity {
                 return false;
             }
 
+            /*
             String selectedIdDump() {
                 long[] ids = getListView().getCheckedItemIds();
                 StringBuffer buf = new StringBuffer();
@@ -110,6 +111,7 @@ public class SlideListActivity extends ListActivity {
                 }
                 return buf.toString();
             }
+            */
 
             int[] getSelectedIndexes() throws IOException {
                 long[] idsLong = getListView().getCheckedItemIds();
@@ -142,7 +144,7 @@ public class SlideListActivity extends ListActivity {
                         return true;
                     case R.id.action_delete:
                         try {
-                            showMessage("deleting...");
+                            // TODO: make this dialog. showMessage("deleting...");
                             slideList.deleteFiles(getSelectedIndexes());
                             actionMode.finish();
                             adapter.reload();
@@ -365,7 +367,7 @@ public class SlideListActivity extends ListActivity {
         switch(requestCode) {
             case REQUEST_PICK_IMAGE:
                 if(resultCode == RESULT_OK){
-                    showMessage("copying...");
+                    // TODO: make this dialog. showMessage("copying...");
                     ArrayList<String> results = data.getStringArrayListExtra("all_path");
                     copyImageList(results);
                     try {
