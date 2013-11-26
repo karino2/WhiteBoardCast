@@ -82,7 +82,7 @@ public class UndoList {
         pushUndoCommand(command);
     }
 
-    private void pushUndoCommand(UndoCommand command) {
+    public void pushUndoCommand(UndoCommand command) {
         discardLaterCommand();
         commandList.add(command);
         currentPos++;

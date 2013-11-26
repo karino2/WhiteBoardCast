@@ -14,6 +14,7 @@ import android.graphics.Rect;
 import android.graphics.RectF;
 import android.os.Handler;
 import android.util.AttributeSet;
+import android.util.Log;
 import android.view.MotionEvent;
 import android.view.View;
 
@@ -610,12 +611,6 @@ public class WhiteBoardCanvas extends View implements FrameRetrieval, PageScroll
     public Bitmap getCommittedBitmap() {
         return getCurrentBoard().getBoardBmp();
     }
-    /*
-    @Override
-    public void invalCommitedBitmap(Rect undoInval) {
-
-    }
-    */
 
 
     private Bitmap getCurrentBackground() {
@@ -732,7 +727,36 @@ public class WhiteBoardCanvas extends View implements FrameRetrieval, PageScroll
     }
 
     public void popSlide() throws IOException {
+        popSlideWithoutUndoPush();
+        getUndoList().pushUndoCommand(new UndoList.UndoCommand() {
+            @Override
+            public void undo(UndoList.Undoable undoTarget) {
+                unpopSlide();
+            }
+
+            @Override
+            public void redo(UndoList.Undoable undoTarget) {
+                try {
+                    popSlideWithoutUndoPush();
+                } catch (IOException e) {
+                    Log.d("WhiteBoardCanvas", "redo popSlide fail with IO Exception. " + e.getMessage());
+                }
+            }
+
+            @Override
+            public int getByteSize() {
+                return 0;
+            }
+        });
+
+    }
+
+    private void popSlideWithoutUndoPush() throws IOException {
         File newBGFile = slides.get(slideIndex++);
+        insertNewBGFile(newBGFile);
+    }
+
+    private void insertNewBGFile(File newBGFile) throws IOException {
         InputStream is = new FileInputStream(newBGFile);
         try{
             Bitmap newBG = BitmapFactory.decodeStream(is);
@@ -740,6 +764,23 @@ public class WhiteBoardCanvas extends View implements FrameRetrieval, PageScroll
         }finally {
             is.close();
         }
+    }
 
+    // for undo command only.
+    private void unpopSlide() {
+        if(slideIndex == 0) {
+            throw new IllegalArgumentException("slide index 0 and unpop. never happen.");
+        }
+        slideIndex--;
+        if(slideIndex == 0) {
+            insertNewBackground(null);
+            return;
+        }
+        File newBGFile = slides.get(slideIndex-1);
+        try {
+            insertNewBGFile(newBGFile);
+        } catch (IOException e) {
+            Log.d("WhiteBoardCanvas", "undo popSlide fail with IO Exception. " + e.getMessage());
+        }
     }
 }
