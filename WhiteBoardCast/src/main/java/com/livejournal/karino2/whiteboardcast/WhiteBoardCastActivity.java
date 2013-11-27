@@ -516,6 +516,14 @@ public class WhiteBoardCastActivity extends Activity implements EncoderTask.Erro
         return true;
     }
 
+    @Override
+    public boolean onPrepareOptionsMenu(Menu menu) {
+        boolean canManageSlides = !canStop();
+        menu.findItem(R.id.menu_id_slides).setEnabled(canManageSlides);
+
+        return super.onPrepareOptionsMenu(menu);
+    }
+
     public void clearCanvas() {
         getWhiteBoardCanvas().clearCanvas();
     }
