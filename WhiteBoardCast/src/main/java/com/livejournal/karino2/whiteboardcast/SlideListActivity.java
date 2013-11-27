@@ -1,12 +1,15 @@
 package com.livejournal.karino2.whiteboardcast;
 
+import android.app.Dialog;
 import android.app.ListActivity;
+import android.app.ProgressDialog;
 import android.content.Context;
 import android.content.Intent;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.Point;
 import android.net.Uri;
+import android.os.AsyncTask;
 import android.os.Bundle;
 import android.os.Handler;
 import android.util.Log;
@@ -47,6 +50,11 @@ public class SlideListActivity extends ListActivity {
 
     int screenWidth, screenHeight;
     FileImageAdapter adapter;
+
+    final int DIALOG_ID_COPYING = 1;
+    final int DIALOG_ID_DELETING = 2;
+    final int DIALOG_ID_DELETE_ALL = 3;
+
 
     void showMessage(String msg) {
         Toast.makeText(this, msg, Toast.LENGTH_LONG).show();
@@ -144,12 +152,13 @@ public class SlideListActivity extends ListActivity {
                         return true;
                     case R.id.action_delete:
                         try {
-                            // TODO: make this dialog. showMessage("deleting...");
-                            slideList.deleteFiles(getSelectedIndexes());
+                            int[] indices = getSelectedIndexes();
+                            Bundle bundle = new Bundle();
+                            bundle.putIntArray("file_ids", indices);
+                            showDialog(DIALOG_ID_DELETING, bundle);
                             actionMode.finish();
-                            adapter.reload();
                         } catch (IOException e) {
-                            e.printStackTrace();
+                            showError("Fail on getting ids for delete: " + e.getMessage());
                         }
                         return true;
                 }
@@ -167,6 +176,107 @@ public class SlideListActivity extends ListActivity {
         // Show the Up button in the action bar.
         setupActionBar();
     }
+
+
+
+    @Override
+    protected Dialog onCreateDialog(int id) {
+        switch(id) {
+            case DIALOG_ID_DELETE_ALL:
+                return newProgressDialog("Clearing...");
+            case DIALOG_ID_COPYING:
+                return newProgressDialog("Importing...");
+            case DIALOG_ID_DELETING:
+                showMessage("Deleting...");
+                return newProgressDialog("Deleting...");
+        }
+        return super.onCreateDialog(id);
+    }
+
+    private void prepare(Dialog dialog, Runnable longTask) {
+        (new RunLongTaskAndPostReload((ProgressDialog)dialog, longTask)).execute();
+    }
+
+    @Override
+    protected void onPrepareDialog(int id, Dialog dialog, Bundle args) {
+        super.onPrepareDialog(id, dialog, args);
+        switch(id) {
+            case DIALOG_ID_COPYING:
+                prepareCopyingDialog(dialog, args.getStringArrayList("all_path"));
+                return;
+            case DIALOG_ID_DELETING:
+                showMessage("Deleting...");
+                prepareDeletingDialog(dialog, args.getIntArray("file_ids"));
+                return;
+        }
+    }
+
+    private void prepareDeletingDialog(Dialog dialog, final int[] fileIds) {
+        prepare(dialog, new Runnable(){
+            @Override
+            public void run() {
+                slideList.deleteFilesByIndices(fileIds);
+            }
+        });
+    }
+
+    private void prepareCopyingDialog(Dialog dialog, final ArrayList<String> all_path) {
+        final ProgressDialog progress = (ProgressDialog)dialog;
+        (new AsyncTask<Void, Integer, Void>(){
+            @Override
+            protected Void doInBackground(Void... params) {
+                int count = 1;
+                for(String path : all_path) {
+                    publishProgress(count++);
+                    copyImage(path);
+                }
+                copying = false;
+                return null;
+            }
+
+            @Override
+            protected void onProgressUpdate(Integer... values) {
+                super.onProgressUpdate(values);
+                progress.setMessage("Import file " + values[0]);
+            }
+
+            @Override
+            protected void onPostExecute(Void aVoid) {
+                super.onPostExecute(aVoid);
+                progress.dismiss();
+                try {
+                    adapter.reload();
+                } catch (IOException e) {
+                    showError("Reload fail after copying: " + e.getMessage());
+                }
+            }
+        }).execute();
+    }
+
+
+    @Override
+    protected void onPrepareDialog(int id, Dialog dialog) {
+        super.onPrepareDialog(id, dialog);
+        switch(id) {
+            case DIALOG_ID_DELETE_ALL:
+                showMessage("Clearing...");
+                prepare(dialog, new Runnable() {
+                    @Override
+                    public void run() {
+                        slideList.deleteAll();
+                    }
+                });
+                return;
+        }
+    }
+
+
+    private Dialog newProgressDialog(String title) {
+        ProgressDialog progress = new ProgressDialog(this);
+        progress.setTitle(title);
+        return progress;
+    }
+
 
     Handler handler = new Handler();
 
@@ -339,6 +449,9 @@ public class SlideListActivity extends ListActivity {
             case R.id.action_add:
                 startPickImageActivity();
                 return true;
+            case R.id.action_delete_all:
+                showDialog(DIALOG_ID_DELETE_ALL);
+                return true;
         }
         return super.onOptionsItemSelected(item);
     }
@@ -373,33 +486,60 @@ public class SlideListActivity extends ListActivity {
         }
     }
 
+    class RunLongTaskAndPostReload extends AsyncTask<Void, Void, Void> {
+        Runnable longTask;
+        ProgressDialog progress;
+        RunLongTaskAndPostReload(ProgressDialog progress, Runnable task) {
+            longTask = task;
+            this.progress = progress;
+        }
+
+        @Override
+        protected Void doInBackground(Void... params) {
+            longTask.run();
+            return null;
+        }
+
+        @Override
+        protected void onPostExecute(Void aVoid) {
+            super.onPostExecute(aVoid);
+            progress.dismiss();
+            try {
+                adapter.reload();
+            } catch (IOException e) {
+                showError("Reload fail after long task: " + e.getMessage());
+            }
+        }
+    }
+
+    boolean copying = false;
+
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
         switch(requestCode) {
             case REQUEST_PICK_IMAGE:
-                if(resultCode == RESULT_OK){
-                    // TODO: make this dialog. showMessage("copying...");
-                    ArrayList<String> results = data.getStringArrayListExtra("all_path");
-                    copyImageList(results);
-                    try {
-                        adapter.reload();
-                    } catch (IOException e) {
-                        e.printStackTrace();
-                    }
-                }
                 try {
                     // Special handling for no slide case. go back to WhiteBoardCastActivity.
-                    if(isSlideEmpty())
+                    if(data.getStringArrayListExtra("all_path").size() == 0 &&
+                            isSlideEmpty()) {
                         finish();
+                        return;
+                    }
                 } catch (IOException e) {
                     e.printStackTrace();
+                }
+                if(resultCode == RESULT_OK){
+                    copying = true;
+                    Bundle bundle = new Bundle();
+                    bundle.putStringArrayList("all_path", data.getStringArrayListExtra("all_path"));
+                    showDialog(DIALOG_ID_COPYING, bundle);
                 }
         }
     }
 
     private boolean isSlideEmpty() throws IOException {
-        return getSlideFiles().size() == 0;
+        return !copying && getSlideFiles().size() == 0;
     }
 
     int calculateResizeFactor(int orgWidth, int orgHeight,

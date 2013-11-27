@@ -81,12 +81,23 @@ public class SlideList {
         listedFiles.add(file);
     }
 
-    public void deleteFiles(int[] indexes) {
+    public void deleteFilesByIndices(int[] indexes) {
         List<File> deleteCandidate = idsToFiles(indexes);
+        deleteFiles(deleteCandidate);
+    }
+
+    private void deleteFiles(List<File> deleteCandidate) {
         listedFiles.removeAll(deleteCandidate);
 
         for(File file : deleteCandidate) {
             file.delete();
         }
+    }
+
+    public void deleteAll() {
+        for(File file : listedFiles) {
+            file.delete();
+        }
+        listedFiles.clear();
     }
 }
