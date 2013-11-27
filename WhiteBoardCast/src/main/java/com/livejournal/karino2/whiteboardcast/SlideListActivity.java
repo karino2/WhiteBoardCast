@@ -337,17 +337,29 @@ public class SlideListActivity extends ListActivity {
                 NavUtils.navigateUpFromSameTask(this);
                 return true;
             case R.id.action_add:
-                /*
-                Intent intent = new Intent(Intent.ACTION_PICK);
-                intent.setType("image/*");
-                intent.setAction(Intent.ACTION_GET_CONTENT);
-                startActivityForResult(intent, REQUEST_PICK_IMAGE);
-                */
-                Intent intent = new Intent(this, MultiGalleryActivity.class);
-                startActivityForResult(intent, REQUEST_PICK_IMAGE);
+                startPickImageActivity();
                 return true;
         }
         return super.onOptionsItemSelected(item);
+    }
+
+    private void startPickImageActivity() {
+        Intent intent = new Intent(this, MultiGalleryActivity.class);
+        startActivityForResult(intent, REQUEST_PICK_IMAGE);
+    }
+
+    @Override
+    protected void onStart() {
+        super.onStart();
+        try {
+            if(isSlideEmpty())
+            {
+                // Special handling for no slide case. go to image pick because there are nothing you can do other than pick.
+                startPickImageActivity();
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
     }
 
     @Override
@@ -376,7 +388,18 @@ public class SlideListActivity extends ListActivity {
                         e.printStackTrace();
                     }
                 }
+                try {
+                    // Special handling for no slide case. go back to WhiteBoardCastActivity.
+                    if(isSlideEmpty())
+                        finish();
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
         }
+    }
+
+    private boolean isSlideEmpty() throws IOException {
+        return getSlideFiles().size() == 0;
     }
 
     int calculateResizeFactor(int orgWidth, int orgHeight,
