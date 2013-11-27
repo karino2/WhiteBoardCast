@@ -521,7 +521,7 @@ public class SlideListActivity extends ListActivity {
             case REQUEST_PICK_IMAGE:
                 try {
                     // Special handling for no slide case. go back to WhiteBoardCastActivity.
-                    if(data.getStringArrayListExtra("all_path").size() == 0 &&
+                    if((data == null || (data.getStringArrayListExtra("all_path").size() == 0)) &&
                             isSlideEmpty()) {
                         finish();
                         return;
