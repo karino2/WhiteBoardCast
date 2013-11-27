@@ -34,15 +34,13 @@ import java.util.concurrent.Executors;
 
 public class MultiGalleryActivity extends Activity {
 
-    static ArrayList<String> resultPaths = new ArrayList<String>();
-    public static ArrayList<String> getResultPaths() {
-        return resultPaths;
-    }
+    ArrayList<String> resultPaths = new ArrayList<String>();
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_multi_gallery);
+        resultPaths.clear();
 
         startAlbumSetLoad();
 
