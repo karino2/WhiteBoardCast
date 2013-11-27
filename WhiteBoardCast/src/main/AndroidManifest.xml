@@ -49,10 +49,7 @@
         <activity
             android:name="com.livejournal.karino2.multigallery.MultiGalleryActivity"
             android:label="@string/title_activity_multi_gallery"
-            android:parentActivityName="SlideListActivity" >
-            <meta-data
-                android:name="android.support.PARENT_ACTIVITY"
-                android:value="SlideListActivity" />
+            >
         </activity>
     </application>
 

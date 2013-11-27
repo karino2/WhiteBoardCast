@@ -68,7 +68,7 @@ public class MultiGalleryActivity extends Activity {
     boolean isAlbum = false;
 
     private void setAlbum(AlbumItem album) {
-
+        getActionBar().setDisplayHomeAsUpEnabled(true);
         setTitle(album.getName());
 
         AlbumLoader loader = new AlbumLoader(getContentResolver(), album);
@@ -135,6 +135,7 @@ public class MultiGalleryActivity extends Activity {
     }
 
     private void finishAlbumAndStartAlbumSet() {
+        getActionBar().setDisplayHomeAsUpEnabled(false);
         setTitle(R.string.title_activity_multi_gallery);
         discardAllPendingRequest();
         isAlbum = false;
