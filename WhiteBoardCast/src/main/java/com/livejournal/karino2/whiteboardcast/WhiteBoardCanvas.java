@@ -741,6 +741,10 @@ public class WhiteBoardCanvas extends View implements FrameRetrieval, PageScroll
 
             @Override
             public void redo(UndoList.Undoable undoTarget) {
+                if(!canPopSlide()) {
+                    // slide list is edited. In this case, undo is not work well, but anyway not crash.
+                    return;
+                }
                 try {
                     popSlideWithoutUndoPush();
                 } catch (IOException e) {
@@ -774,7 +778,8 @@ public class WhiteBoardCanvas extends View implements FrameRetrieval, PageScroll
     // for undo command only.
     private void unpopSlide() {
         if(slideIndex == 0) {
-            throw new IllegalArgumentException("slide index 0 and unpop. never happen.");
+            // slide list is edited. In this case, undo is not work well, but anyway not crash.
+            return ;
         }
         slideIndex--;
         if(slideIndex == 0) {
