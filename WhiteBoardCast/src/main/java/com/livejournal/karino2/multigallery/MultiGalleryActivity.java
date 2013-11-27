@@ -268,7 +268,7 @@ public class MultiGalleryActivity extends Activity {
     public static Bitmap getLoadingBitmap(int thumbnailSize) {
         if(loadingImage == null) {
             loadingImage = Bitmap.createBitmap(thumbnailSize, thumbnailSize, Bitmap.Config.ARGB_8888);
-            loadingImage.eraseColor(Color.CYAN); // for debug.
+            loadingImage.eraseColor(Color.BLACK);
         }
         return loadingImage;
     }
