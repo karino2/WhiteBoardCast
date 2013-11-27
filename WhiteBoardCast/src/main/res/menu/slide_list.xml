@@ -6,5 +6,7 @@
         android:showAsAction="ifRoom"></item>
     <item android:id="@+id/action_delete_all"
         android:title="@string/action_delete_all"
+        android:icon="@drawable/ic_menu_delete_all"
+        android:orderInCategory="2"
         android:showAsAction="ifRoom"></item>
 </menu>
