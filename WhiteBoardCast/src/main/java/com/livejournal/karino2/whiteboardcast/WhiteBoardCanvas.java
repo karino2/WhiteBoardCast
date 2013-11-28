@@ -533,10 +533,7 @@ public class WhiteBoardCanvas extends View implements FrameRetrieval, PageScroll
 
         getCommittedBitmap().eraseColor(Color.TRANSPARENT);
         penCanvasBmp.eraseColor(Color.TRANSPARENT);
-        drawToViewBmp();
-
-        invalWholeRegionForEncoder();
-        invalidate();
+        afterChangeBGImage();
 
         Bitmap redo = Bitmap.createBitmap(getCommittedBitmap(), 0, 0, viewBmp.getWidth(), viewBmp.getHeight() );
         getUndoList().pushBitmapUndoCommand(0, 0, undo, redo);
@@ -714,9 +711,44 @@ public class WhiteBoardCanvas extends View implements FrameRetrieval, PageScroll
         animator.start(getCurrentBoard().createSynthesizedTempBmp(), boardList.createNextSynthesizedBmp(),  viewBmp, PageScrollAnimator.Direction.Next);
     }
 
+    class InsertBGUndoRedoCommand implements UndoList.UndoCommand {
+        Board.BackgroundImage prev;
+        Board.BackgroundImage cur;
+        InsertBGUndoRedoCommand(Board.BackgroundImage cur, Board.BackgroundImage prev) {
+            this.prev = prev;
+            this.cur = cur;
+        }
 
-    public void insertNewBackground(Bitmap newBG) {
-        getCurrentBoard().setBackgroundBmp(newBG);
+        @Override
+        public void undo(UndoList.Undoable undoTarget) {
+            getCurrentBoard().setBackground(prev);
+            afterChangeBGImage();
+        }
+
+        @Override
+        public void redo(UndoList.Undoable undoTarget) {
+            getCurrentBoard().setBackground(cur);
+            afterChangeBGImage();
+        }
+
+        @Override
+        public int getByteSize() {
+            return 0;
+        }
+    }
+
+
+    public void insertNewBGFile(File file) {
+        Board.BackgroundImage newBackground = new Board.BackgroundImage(file);
+        Board.BackgroundImage prev = getCurrentBoard().setBackground(newBackground);
+        prev.discardBitmap();
+        newBackground.discardBitmap();
+        getUndoList().pushUndoCommand(new InsertBGUndoRedoCommand(newBackground, prev));
+        overlay.changeUndoStatus();
+        afterChangeBGImage();
+    }
+
+    private void afterChangeBGImage() {
         drawToViewBmp();
         invalWholeRegionForEncoder();
         invalidate();
@@ -724,11 +756,6 @@ public class WhiteBoardCanvas extends View implements FrameRetrieval, PageScroll
 
     public void setSlides(List<File> slides) {
         this.slides = slides;
-    }
-
-    int slideIndex = 0;
-    public boolean canPopSlide() {
-        return slideIndex < slides.size();
     }
 
 
@@ -747,13 +774,8 @@ public class WhiteBoardCanvas extends View implements FrameRetrieval, PageScroll
                 @Override
                 public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
                     File slide = slideAdapter.reverseLookUp(id);
-                    // TODO: undo.
-                    try {
-                        insertNewBGFile(slide);
-                        hideSlideWindow();
-                    } catch (IOException e) {
-                        e.printStackTrace();
-                    }
+                    insertNewBGFile(slide);
+                    hideSlideWindow();
                 }
             });
         }
@@ -770,34 +792,6 @@ public class WhiteBoardCanvas extends View implements FrameRetrieval, PageScroll
         else {
             showSlideWindow();
         }
-        /*
-        popSlideWithoutUndoPush();
-        getUndoList().pushUndoCommand(new UndoList.UndoCommand() {
-            @Override
-            public void undo(UndoList.Undoable undoTarget) {
-                unpopSlide();
-            }
-
-            @Override
-            public void redo(UndoList.Undoable undoTarget) {
-                if(!canPopSlide()) {
-                    // slide list is edited. In this case, undo is not work well, but anyway not crash.
-                    return;
-                }
-                try {
-                    popSlideWithoutUndoPush();
-                } catch (IOException e) {
-                    Log.d("WhiteBoardCanvas", "redo toggleShowSlides fail with IO Exception. " + e.getMessage());
-                }
-            }
-
-            @Override
-            public int getByteSize() {
-                return 0;
-            }
-        });
-        */
-
     }
 
     private void showSlideWindow() {
@@ -810,37 +804,6 @@ public class WhiteBoardCanvas extends View implements FrameRetrieval, PageScroll
         getSlideWindow().dismiss();
     }
 
-    private void popSlideWithoutUndoPush() throws IOException {
-        File newBGFile = slides.get(slideIndex++);
-        insertNewBGFile(newBGFile);
-    }
 
-    private void insertNewBGFile(File newBGFile) throws IOException {
-        InputStream is = new FileInputStream(newBGFile);
-        try{
-            Bitmap newBG = BitmapFactory.decodeStream(is);
-            insertNewBackground(newBG);
-        }finally {
-            is.close();
-        }
-    }
 
-    // for undo command only.
-    private void unpopSlide() {
-        if(slideIndex == 0) {
-            // slide list is edited. In this case, undo is not work well, but anyway not crash.
-            return ;
-        }
-        slideIndex--;
-        if(slideIndex == 0) {
-            insertNewBackground(null);
-            return;
-        }
-        File newBGFile = slides.get(slideIndex-1);
-        try {
-            insertNewBGFile(newBGFile);
-        } catch (IOException e) {
-            Log.d("WhiteBoardCanvas", "undo toggleShowSlides fail with IO Exception. " + e.getMessage());
-        }
-    }
 }

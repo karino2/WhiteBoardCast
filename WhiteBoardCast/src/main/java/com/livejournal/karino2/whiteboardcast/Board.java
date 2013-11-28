@@ -1,9 +1,17 @@
 package com.livejournal.karino2.whiteboardcast;
 
 import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.Paint;
+import android.util.Log;
+
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.IOException;
+import java.io.InputStream;
 
 /**
  * Created by karino on 7/27/13.
@@ -60,15 +68,66 @@ public class Board {
     }
 
     public Bitmap getBackgroundBmp() {
-        if(backgroundBmp == null) {
-            backgroundBmp = getWhiteBackGround(width, height);
-        }
-        return backgroundBmp;
+        return background.getBackground(width, height);
     }
 
-    public void setBackgroundBmp(Bitmap newBG) {
-        backgroundBmp = newBG;
+
+    static class BackgroundImage {
+        Bitmap background;
+        File backgroundFile;
+        BackgroundImage() {
+            background = null;
+            backgroundFile = null;
+        }
+        BackgroundImage(File file) {
+            backgroundFile = file;
+            background = null;
+        }
+
+        void discardBitmap() {
+            background = null;
+        }
+
+        BackgroundImage duplicate() {
+            return new BackgroundImage(backgroundFile);
+        }
+
+        Bitmap getBackground(int w, int h) {
+            if(background != null)
+                return background;
+            if(backgroundFile != null) {
+                InputStream is = null;
+                try {
+                    is = new FileInputStream(backgroundFile);
+                    background = BitmapFactory.decodeStream(is);
+                    return background;
+                } catch (FileNotFoundException e) {
+                    // What can I do?
+                    Log.d("WhiteBoardCast", "getBackground, FileNotFoundException: " + e.getMessage());
+                } finally {
+                    try {
+                    is.close();
+                    } catch (IOException e) {
+                        // What can I do?
+                        Log.d("WhiteBoardCast", "getBackground, IOException on Close: " + e.getMessage());
+                    }
+                }
+
+            }
+
+            return getWhiteBackGround(w, h);
+        }
     }
+
+    BackgroundImage background = new BackgroundImage();
+
+    // The backgroundBitmap of argument will be discard after this method call. Need to dup.
+    public BackgroundImage setBackground(BackgroundImage newBG) {
+        BackgroundImage prev = background;
+        background = newBG.duplicate();
+        return prev;
+    }
+
 
 
     static Bitmap s_whiteBackGround;
