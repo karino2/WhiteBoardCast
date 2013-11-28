@@ -12,6 +12,7 @@ import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.pm.ApplicationInfo;
 import android.content.pm.PackageManager;
+import android.content.res.Configuration;
 import android.net.Uri;
 import android.os.Bundle;
 import android.os.Environment;
@@ -437,6 +438,23 @@ public class WhiteBoardCastActivity extends Activity implements EncoderTask.Erro
         return super.dispatchKeyEvent(event);
     }
 
+    @Override
+    public void openOptionsMenu() {
+        // for large device, android ignore openOptionsMenu (why!?).
+        // See http://stackoverflow.com/questions/9996333/openoptionsmenu-function-not-working-in-ics
+        Configuration config = getResources().getConfiguration();
+
+        if((config.screenLayout & Configuration.SCREENLAYOUT_SIZE_MASK)
+                > Configuration.SCREENLAYOUT_SIZE_LARGE) {
+
+            int originalScreenLayout = config.screenLayout;
+            config.screenLayout = Configuration.SCREENLAYOUT_SIZE_LARGE;
+            super.openOptionsMenu();
+            config.screenLayout = originalScreenLayout;
+        } else {
+            super.openOptionsMenu();
+        }
+    }
 
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
