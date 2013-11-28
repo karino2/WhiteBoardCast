@@ -3,29 +3,25 @@ package com.livejournal.karino2.whiteboardcast;
 import android.app.Dialog;
 import android.app.ListActivity;
 import android.app.ProgressDialog;
-import android.content.Context;
 import android.content.Intent;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.Point;
 import android.net.Uri;
 import android.os.AsyncTask;
-import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
 import android.util.Log;
 import android.view.ActionMode;
-import android.view.Display;
 import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
-import android.support.v4.app.NavUtils;
 import android.view.View;
-import android.view.WindowManager;
 import android.widget.AbsListView;
 import android.widget.ListView;
 import android.widget.Toast;
 
+import com.livejournal.karino2.multigallery.CacheEngine;
 import com.livejournal.karino2.multigallery.MultiGalleryActivity;
 
 import java.io.File;
@@ -34,11 +30,9 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
-import java.lang.reflect.InvocationTargetException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
-import java.util.HashMap;
 import java.util.List;
 import java.util.concurrent.Executors;
 
@@ -268,6 +262,21 @@ public class SlideListActivity extends ListActivity {
 
     Handler handler = new Handler();
 
+    public static Bitmap getThumbnailBitmap(File parent, CacheEngine cacheEngine) throws IOException {
+        File thumbnail = getThumbnailFile(parent);
+        Bitmap bmp = cacheEngine.lookup(thumbnail.getAbsolutePath());
+        if(bmp == null) {
+            if(thumbnail.exists()) {
+                bmp = BitmapFactory.decodeFile(thumbnail.getAbsolutePath());
+            } else {
+                Bitmap parentBmp = BitmapFactory.decodeFile(parent.getAbsolutePath());
+                bmp = saveWithResized(thumbnail, parentBmp, parentBmp.getWidth()/6, parentBmp.getHeight()/6);
+            }
+        }
+        cacheEngine.put(thumbnail.getAbsolutePath(), bmp);
+        return bmp;
+    }
+
     class FileListLoader implements Runnable {
         Point windowSize;
         FileListLoader(Point size) {
@@ -469,12 +478,9 @@ public class SlideListActivity extends ListActivity {
             try {
                 Bitmap bitmap = BitmapFactory.decodeStream(is, null, options);
                 // currently, always resize even though it sometime not necessary.
-                Bitmap resizedbitmap = Bitmap.createScaledBitmap(bitmap, screenWidth, screenHeight, true);
-
-
-                OutputStream stream = new FileOutputStream(result);
-                resizedbitmap.compress(Bitmap.CompressFormat.PNG, 80, stream);
-                stream.close();
+                saveWithResized(result, bitmap, screenWidth, screenHeight);
+                File thumbnail = getThumbnailFile(result);
+                saveWithResized(thumbnail, bitmap, screenWidth/6, screenHeight/6);
                 slideList.add(result);
             }finally {
                 is.close();
@@ -488,10 +494,20 @@ public class SlideListActivity extends ListActivity {
 
     }
 
-    private void copyImageList(ArrayList<String> paths) {
-        for(String path : paths) {
-            copyImage(path);
-        }
+    public static File getThumbnailFile(File parent) throws IOException {
+        File thumbnailDir = new File(getSlideListDirectory(), "thumbnail");
+        WhiteBoardCastActivity.ensureDirExist(thumbnailDir);
+        return new File(thumbnailDir, parent.getName());
+    }
+
+    public static Bitmap saveWithResized(File result, Bitmap bitmap, int scaleWidth, int scaleHeight) throws IOException {
+        Bitmap resizedbitmap = Bitmap.createScaledBitmap(bitmap, scaleWidth, scaleHeight, true);
+
+
+        OutputStream stream = new FileOutputStream(result);
+        resizedbitmap.compress(Bitmap.CompressFormat.PNG, 80, stream);
+        stream.close();
+        return resizedbitmap;
     }
 
     private int getResizeFactor(Uri imageUri) throws IOException {

@@ -2,6 +2,7 @@ package com.livejournal.karino2.whiteboardcast;
 
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -9,6 +10,8 @@ import android.widget.BaseAdapter;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.ListAdapter;
+
+import com.livejournal.karino2.multigallery.CacheEngine;
 
 import java.io.File;
 import java.io.IOException;
@@ -78,6 +81,8 @@ public class FileImageAdapter extends BaseAdapter implements ListAdapter {
         return idGen.getId(files.get(i));
     }
 
+    CacheEngine cacheEngine = new CacheEngine(10);
+
     @Override
     public View getView(int i, View convertView, ViewGroup viewGroup) {
         ImageView iv;
@@ -91,10 +96,13 @@ public class FileImageAdapter extends BaseAdapter implements ListAdapter {
             iv = (ImageView)convertView.findViewById(R.id.imageView);
         }
         File f = files.get(i);
-        BitmapFactory.Options options = new BitmapFactory.Options();
-        options.inSampleSize = 4;
-        Bitmap bmp = BitmapFactory.decodeFile(f.getAbsolutePath(), options);
-        iv.setImageBitmap(bmp);
+        try {
+            // a little slow.
+            Bitmap bmp = SlideListActivity.getThumbnailBitmap(f, cacheEngine);
+            iv.setImageBitmap(bmp);
+        } catch (IOException e) {
+            Log.d("WhiteBoardCast", "cant create thumbnail on FileImageAdapter: " + e.getMessage());
+        }
         return view;
     }
 

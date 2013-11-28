@@ -26,7 +26,6 @@ import android.widget.TextView;
 import com.livejournal.karino2.whiteboardcast.*;
 
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Set;
 import java.util.concurrent.ExecutorService;
@@ -232,34 +231,6 @@ public class MultiGalleryActivity extends Activity {
 
     }
 
-    class CacheEngine {
-        ArrayList<String> keys = new ArrayList<String>();
-        HashMap<String, Bitmap> entries = new HashMap<String, Bitmap>();
-        final int CASH_SIZE = 100;
-        Bitmap lookup(MediaItem item) {
-            if(entries.containsKey(item.getPath()))
-                return entries.get(item.getPath());
-            return null;
-        }
-        void put(MediaItem item, Bitmap thumbnail) {
-            String path = item.getPath();
-            if(keys.contains(path)) {
-                keys.remove(path);
-                keys.add(path);
-                return;
-            }
-
-            keys.add(path);
-            entries.put(path, thumbnail);
-
-            if(keys.size() > CASH_SIZE) {
-                String first = keys.get(0);
-                entries.remove(first);
-                keys.remove(0);
-            }
-        }
-    }
-
     static final int THUMBNAIL_SIZE = 254; //  200;
 
     CacheEngine cache = new CacheEngine();
@@ -335,7 +306,7 @@ public class MultiGalleryActivity extends Activity {
 
 
         public void beginLoad() {
-            Bitmap thumbnail = cache.lookup(item);
+            Bitmap thumbnail = cache.lookupByMediaItem(item);
             if(thumbnail != null) {
                 onThumbnailComing(thumbnail);
                 return;
