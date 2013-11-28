@@ -68,31 +68,9 @@ public class SlideListActivity extends ListActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_slide_list);
-        WindowManager wm = (WindowManager)getSystemService(Context.WINDOW_SERVICE);
-        Display disp = wm.getDefaultDisplay();
-        Point windowSize = new Point();
-        disp.getSize(windowSize);
-        try {
-            if(Build.VERSION.SDK_INT >= 14 && Build.VERSION.SDK_INT < 17) {
-                windowSize.x = (Integer) Display.class.getMethod("getRawWidth").invoke(disp);
-                windowSize.y = (Integer) Display.class.getMethod("getRawHeight").invoke(disp);
-            }else if(Build.VERSION.SDK_INT >= 17) {
-                Display.class.getMethod("getRealSize", Point.class).invoke(disp, windowSize);
-            }
-        } catch (IllegalAccessException e) {
-            e.printStackTrace();
-        } catch (InvocationTargetException e) {
-            e.printStackTrace();
-        } catch (NoSuchMethodException e) {
-            e.printStackTrace();
-        }
-        screenWidth = windowSize.x;
-        screenHeight = windowSize.y;
-        // use this for image copying. so always treat as landscape.
-        if(screenWidth<screenHeight) {
-            screenWidth = windowSize.y;
-            screenHeight = windowSize.x;
-        }
+
+        screenWidth = getIntent().getIntExtra("canvas_width", -1);
+        screenHeight = getIntent().getIntExtra("canvas_height", -1);
 
         getListView().setChoiceMode(ListView.CHOICE_MODE_MULTIPLE_MODAL);
         getListView().setMultiChoiceModeListener(new AbsListView.MultiChoiceModeListener() {
@@ -182,10 +160,9 @@ public class SlideListActivity extends ListActivity {
             }
         });
 
-        Executors.newSingleThreadExecutor().submit(new FileListLoader(windowSize));
+        // I think this point is bug. but anyway stay the same behaviour for a while.
+        Executors.newSingleThreadExecutor().submit(new FileListLoader(new Point(screenHeight, screenWidth)));
 
-        // Show the Up button in the action bar.
-        setupActionBar();
     }
 
 
@@ -348,14 +325,6 @@ public class SlideListActivity extends ListActivity {
         return dir;
     }
 
-    /**
-     * Set up the {@link android.app.ActionBar}.
-     */
-    private void setupActionBar() {
-        
-        getActionBar().setDisplayHomeAsUpEnabled(true);
-        
-    }
 
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
@@ -368,15 +337,11 @@ public class SlideListActivity extends ListActivity {
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
         switch (item.getItemId()) {
-            case android.R.id.home:
-                // This ID represents the Home or Up button. In the case of this
-                // activity, the Up button is shown. Use NavUtils to allow users
-                // to navigate up one level in the application structure. For
-                // more details, see the Navigation pattern on Android Design:
-                //
-                // http://developer.android.com/design/patterns/navigation.html#up-vs-back
-                //
-                NavUtils.navigateUpFromSameTask(this);
+            case R.id.action_start:
+                Intent intent = new Intent(this, WhiteBoardCastActivity.class);
+                intent.putExtra("slides_enabled", true);
+                startActivity(intent);
+                finish();
                 return true;
             case R.id.action_add:
                 startPickImageActivity();

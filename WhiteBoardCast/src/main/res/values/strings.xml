@@ -26,5 +26,11 @@
     <string name="label_done">Done</string>
     <string name="action_import">Import</string>
     <string name="action_delete_all">Delete All</string>
+    <string name="label_plane">Plane</string>
+    <string name="new_plane_description">Plane presentation. No slides.</string>
+    <string name="label_slides">Slides</string>
+    <string name="new_slides_description">Slide base presentation.</string>
+    <string name="menu_new">New</string>
+    <string name="action_start">Start</string>
 
 </resources>

@@ -40,6 +40,7 @@ public class WhiteBoardCastActivity extends Activity implements EncoderTask.Erro
     static final int DIALOG_ID_QUERY_VIEW_SHARE = 2;
     static final int DIALOG_ID_QUERY_MERGE_AGAIN = 3;
     static final int DIALOG_ID_FILE_RENAME = 4;
+    static final int DIALOG_ID_NEW = 5;
 
     private static final String AUDIO_FNAME = "temp.mkv";
 
@@ -84,11 +85,18 @@ public class WhiteBoardCastActivity extends Activity implements EncoderTask.Erro
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+
+
+
         setContentView(R.layout.activity_whiteboardcast);
         readDebuggableSetting();
         getWhiteBoardCanvas().enableDebug(debuggable);
         try {
-            getWhiteBoardCanvas().setSlides(presen.getSlideFiles());
+            boolean slidesEnabled = getIntent().getBooleanExtra("slides_enabled", false);
+            if(slidesEnabled) {
+                presen.enableSlide();
+                getWhiteBoardCanvas().setSlides(presen.getSlideFiles());
+            }
         } catch (IOException e) {
             showMessage("Slide setup fail: " + e.getMessage());
         }
@@ -201,16 +209,6 @@ public class WhiteBoardCastActivity extends Activity implements EncoderTask.Erro
         getWhiteBoardCanvas().redo();
     }
 
-    @Override
-    protected void onRestart() {
-        super.onRestart();
-        try {
-            presen.onRestart(getWhiteBoardCanvas());
-        } catch (IOException e) {
-            showError("onStart, fail update slides: " + e.getMessage());
-            return;
-        }
-    }
 
     public void toggleShowSlides() {
         try {
@@ -450,7 +448,7 @@ public class WhiteBoardCastActivity extends Activity implements EncoderTask.Erro
     @Override
     public boolean onPrepareOptionsMenu(Menu menu) {
         boolean canManageSlides = !canStop();
-        menu.findItem(R.id.menu_id_slides).setEnabled(canManageSlides);
+        menu.findItem(R.id.menu_id_new).setEnabled(canManageSlides);
 
         return super.onPrepareOptionsMenu(menu);
     }
@@ -468,9 +466,8 @@ public class WhiteBoardCastActivity extends Activity implements EncoderTask.Erro
             case R.id.menu_id_quit:
                 finish();
                 return true;
-            case R.id.menu_id_slides:
-                Intent intent = new Intent(this, SlideListActivity.class);
-                startActivity(intent);
+            case R.id.menu_id_new:
+                showDialog(DIALOG_ID_NEW);
                 return true;
         }
         return super.onMenuItemSelected(featureId, item);
@@ -487,8 +484,46 @@ public class WhiteBoardCastActivity extends Activity implements EncoderTask.Erro
                 return createQueryMergeWorkingFileDialog();
             case DIALOG_ID_FILE_RENAME:
                 return createFileRenameDialog();
+            case DIALOG_ID_NEW:
+                return createNewDialog();
         }
         return super.onCreateDialog(id);
+    }
+
+    private void startNewPresentation(){
+        presen = new Presentation();
+        getWhiteBoardCanvas().newPresentation();
+        newDialog.dismiss();
+    }
+
+    private void startNewSlidesPresentation() {
+        Intent intent = new Intent(this, SlideListActivity.class);
+        intent.putExtra("canvas_width", getWhiteBoardCanvas().getStoredWidth());
+        intent.putExtra("canvas_height", getWhiteBoardCanvas().getStoredHeight());
+        startActivity(intent);
+        finish();
+    }
+
+    Dialog newDialog;
+
+    private Dialog createNewDialog() {
+        View view = getLayoutInflater().inflate(R.layout.new_dialog, null);
+        ((Button)view.findViewById(R.id.buttonPlane)).setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                startNewPresentation();
+            }
+        });
+        ((Button)view.findViewById(R.id.buttonSlides)).setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                startNewSlidesPresentation();
+            }
+        });
+        newDialog = new AlertDialog.Builder(this)
+                .setView(view)
+                .create();
+        return newDialog;
     }
 
 
@@ -498,6 +533,9 @@ public class WhiteBoardCastActivity extends Activity implements EncoderTask.Erro
             case DIALOG_ID_FILE_RENAME:
                 EditText et = (EditText)dialog.findViewById(R.id.edit_filename);
                 et.setText(presen.getResultFile().getName());
+                break;
+            case DIALOG_ID_NEW:
+                newDialog = dialog;
                 break;
         }
         super.onPrepareDialog(id, dialog);

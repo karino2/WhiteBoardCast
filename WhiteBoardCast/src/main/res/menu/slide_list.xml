@@ -1,4 +1,9 @@
 <menu xmlns:android="http://schemas.android.com/apk/res/android">
+    <item android:id="@+id/action_start"
+        android:title="@string/action_start"
+        android:icon="@drawable/ic_menu_start"
+        android:orderInCategory="0"
+        android:showAsAction="always"></item>
     <item android:id="@+id/action_add"
         android:title="@string/action_import"
         android:icon="@android:drawable/ic_menu_gallery"

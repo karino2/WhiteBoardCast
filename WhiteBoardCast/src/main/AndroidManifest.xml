@@ -41,10 +41,7 @@
         <activity
             android:name="com.livejournal.karino2.whiteboardcast.SlideListActivity"
             android:label="@string/title_activity_slide_list"
-            android:parentActivityName="WhiteBoardCastActivity" >
-            <meta-data
-                android:name="android.support.PARENT_ACTIVITY"
-                android:value="WhiteBoardCastActivity" />
+             >
         </activity>
         <activity
             android:name="com.livejournal.karino2.multigallery.MultiGalleryActivity"

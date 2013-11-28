@@ -711,6 +711,20 @@ public class WhiteBoardCanvas extends View implements FrameRetrieval, PageScroll
         animator.start(getCurrentBoard().createSynthesizedTempBmp(), boardList.createNextSynthesizedBmp(),  viewBmp, PageScrollAnimator.Direction.Next);
     }
 
+    public void newPresentation() {
+        boardList = new BoardList(this);
+        resetCanvas(mWidth, mHeight);
+        afterChangeBoard();
+    }
+
+    public int getStoredWidth() {
+        return mWidth;
+    }
+
+    public int getStoredHeight() {
+        return mHeight;
+    }
+
     class InsertBGUndoRedoCommand implements UndoList.UndoCommand {
         Board.BackgroundImage prev;
         Board.BackgroundImage cur;
@@ -756,6 +770,7 @@ public class WhiteBoardCanvas extends View implements FrameRetrieval, PageScroll
 
     public void setSlides(List<File> slides) {
         this.slides = slides;
+        overlay.changeSlidesStatus();
     }
 
 

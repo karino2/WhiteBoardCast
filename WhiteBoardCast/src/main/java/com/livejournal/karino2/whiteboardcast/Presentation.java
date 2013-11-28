@@ -128,8 +128,13 @@ public class Presentation {
         return slideList;
     }
 
+    boolean slideEnabled = false;
+    public void enableSlide() {
+        slideEnabled = true;
+    }
+
     public boolean slideAvailable() throws IOException {
-        return getSlideFiles().size() >= 1;
+        return slideEnabled && getSlideFiles().size() >= 1;
 
     }
 
@@ -137,13 +142,6 @@ public class Presentation {
         return getSlideList().getFiles();
     }
 
-
-    void onRestart(WhiteBoardCanvas wb) throws IOException {
-        if(slideList != null) {
-            SlideListSerializer.updateActualFiles(slideList);
-            wb.changeSlidesStatus();
-        }
-    }
 
     public File getResultFile() {
         return lastResult;
