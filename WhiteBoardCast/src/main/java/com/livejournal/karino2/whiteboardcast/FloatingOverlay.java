@@ -4,7 +4,6 @@ import android.graphics.Bitmap;
 import android.graphics.Bitmap.Config;
 import android.graphics.BitmapFactory;
 import android.graphics.Canvas;
-import android.graphics.Color;
 import android.graphics.Matrix;
 import android.graphics.Paint;
 import android.graphics.Rect;
@@ -172,7 +171,7 @@ public class FloatingOverlay {
         canvas.drawBitmap(doneButton, toolHeight * 5, 0, doenPaint);
         canvas.drawBitmap(clearButton, toolHeight * 6, 0, null);
 
-        Paint popPaint = activity.canPop()? null: disablePaint;
+        Paint popPaint = activity.slideAvailable()? null: disablePaint;
         canvas.drawBitmap(popButton, toolHeight * 7, 0, popPaint);
         canvas.drawBitmap(menuButton, toolHeight * 8, 0, null);
 
@@ -188,10 +187,6 @@ public class FloatingOverlay {
             canvas.drawBitmap(toolPenIcon.get(i), 0, toolHeight*i, paint);
             if(i == subIndex) canvas.drawBitmap(pullDownHiglight, 0, toolHeight*i, paint);
         }
-    }
-
-    BoardList getBoardList() {
-        return activity.getWhiteBoardCanvas().getBoardList();
     }
 
     WhiteBoardCastActivity activity;
@@ -342,8 +337,8 @@ public class FloatingOverlay {
         } else if (idx == TOOLBAR_MENU) {
             activity.openOptionsMenu();
         } else if (idx == TOOLBAR_POP) {
-            if(activity.canPop()) {
-                activity.popSlide();
+            if(activity.slideAvailable()) {
+                activity.toggleShowSlides();
                 updateToolbarImage();
             }
         } else if (idx == TOOLBAR_CLEAR) {

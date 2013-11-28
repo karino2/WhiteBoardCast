@@ -15,8 +15,13 @@ import android.graphics.RectF;
 import android.os.Handler;
 import android.util.AttributeSet;
 import android.util.Log;
+import android.view.LayoutInflater;
 import android.view.MotionEvent;
 import android.view.View;
+import android.widget.AdapterView;
+import android.widget.ListPopupWindow;
+import android.widget.PopupMenu;
+import android.widget.PopupWindow;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -626,11 +631,6 @@ public class WhiteBoardCanvas extends View implements FrameRetrieval, PageScroll
         return getCurrentBoard().getUndoList();
     }
 
-
-    public BoardList getBoardList() {
-        return boardList;
-    }
-
     private void afterChangeBoard() {
         synchronized (viewBmp) {
             invalWholeRegionForEncoder();
@@ -731,7 +731,46 @@ public class WhiteBoardCanvas extends View implements FrameRetrieval, PageScroll
         return slideIndex < slides.size();
     }
 
-    public void popSlide() throws IOException {
+
+    FileImageAdapter slideAdapter;
+    ListPopupWindow popup;
+    ListPopupWindow getSlideWindow() {
+        if(popup == null) {
+            popup = new ListPopupWindow(getContext());
+            popup.setAnchorView(this);
+            popup.setHorizontalOffset(mWidth - mWidth / 6);
+            popup.setVerticalOffset(-mHeight);
+            slideAdapter = new FileImageAdapter(LayoutInflater.from(getContext()), slides, mWidth / 6, mHeight / 6);
+            popup.setAdapter(slideAdapter);
+            popup.setWidth(mWidth/6);
+            popup.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+                @Override
+                public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
+                    File slide = slideAdapter.reverseLookUp(id);
+                    // TODO: undo.
+                    try {
+                        insertNewBGFile(slide);
+                        hideSlideWindow();
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                    }
+                }
+            });
+        }
+        return popup;
+    }
+ 
+    
+    boolean popupShown = false;
+
+    public void toggleShowSlides() throws IOException {
+        if(popupShown) {
+            hideSlideWindow();
+        }
+        else {
+            showSlideWindow();
+        }
+        /*
         popSlideWithoutUndoPush();
         getUndoList().pushUndoCommand(new UndoList.UndoCommand() {
             @Override
@@ -748,7 +787,7 @@ public class WhiteBoardCanvas extends View implements FrameRetrieval, PageScroll
                 try {
                     popSlideWithoutUndoPush();
                 } catch (IOException e) {
-                    Log.d("WhiteBoardCanvas", "redo popSlide fail with IO Exception. " + e.getMessage());
+                    Log.d("WhiteBoardCanvas", "redo toggleShowSlides fail with IO Exception. " + e.getMessage());
                 }
             }
 
@@ -757,7 +796,18 @@ public class WhiteBoardCanvas extends View implements FrameRetrieval, PageScroll
                 return 0;
             }
         });
+        */
 
+    }
+
+    private void showSlideWindow() {
+        popupShown = true;
+        getSlideWindow().show();
+    }
+
+    private void hideSlideWindow() {
+        popupShown = false;
+        getSlideWindow().dismiss();
     }
 
     private void popSlideWithoutUndoPush() throws IOException {
@@ -790,7 +840,7 @@ public class WhiteBoardCanvas extends View implements FrameRetrieval, PageScroll
         try {
             insertNewBGFile(newBGFile);
         } catch (IOException e) {
-            Log.d("WhiteBoardCanvas", "undo popSlide fail with IO Exception. " + e.getMessage());
+            Log.d("WhiteBoardCanvas", "undo toggleShowSlides fail with IO Exception. " + e.getMessage());
         }
     }
 }

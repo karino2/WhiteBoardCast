@@ -20,13 +20,8 @@ import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.support.v4.app.NavUtils;
 import android.view.View;
-import android.view.ViewGroup;
 import android.view.WindowManager;
 import android.widget.AbsListView;
-import android.widget.BaseAdapter;
-import android.widget.ImageView;
-import android.widget.LinearLayout;
-import android.widget.ListAdapter;
 import android.widget.ListView;
 import android.widget.Toast;
 
@@ -125,7 +120,7 @@ public class SlideListActivity extends ListActivity {
                 long[] idsLong = getListView().getCheckedItemIds();
                 int[] ids = new int[idsLong.length];
                 for(int i = 0; i < ids.length; i++) {
-                    File key = idGen.reverseLookUp(idsLong[i]);
+                    File key = adapter.reverseLookUp(idsLong[i]);
                     ids[i] = getSlideFiles().indexOf(key);
                 }
                 return ids;
@@ -137,7 +132,7 @@ public class SlideListActivity extends ListActivity {
                     case R.id.action_up:
                         try {
                             slideList.upFiles(getSelectedIndexes());
-                            adapter.reload();
+                            adapter.reload(reloadSlideFiles());
                         } catch (IOException e) {
                             showError("reload adapter fail on up: " + e.getMessage());
                         }
@@ -145,7 +140,7 @@ public class SlideListActivity extends ListActivity {
                     case R.id.action_down:
                         try {
                             slideList.downFiles(getSelectedIndexes());
-                            adapter.reload();
+                            adapter.reload(reloadSlideFiles());
                         } catch (IOException e) {
                             showError("reload adapter fail on down: " + e.getMessage());
                         }
@@ -245,7 +240,7 @@ public class SlideListActivity extends ListActivity {
                 super.onPostExecute(aVoid);
                 progress.dismiss();
                 try {
-                    adapter.reload();
+                    adapter.reload(reloadSlideFiles());
                 } catch (IOException e) {
                     showError("Reload fail after copying: " + e.getMessage());
                 }
@@ -289,7 +284,7 @@ public class SlideListActivity extends ListActivity {
         @Override
         public void run() {
             try {
-                adapter = new FileImageAdapter(SlideListActivity.this, getSlideFiles(), windowSize.x, windowSize.y/6);
+                adapter = new FileImageAdapter(SlideListActivity.this.getLayoutInflater(), getSlideFiles(), windowSize.x, windowSize.y/6);
                 handler.post(new Runnable() {
                     @Override
                     public void run() {
@@ -308,86 +303,7 @@ public class SlideListActivity extends ListActivity {
         showMessage(msg);
     }
 
-    class IdGenerator {
-        HashMap<File, Long> idStore = new HashMap<File, Long>();
-        long lastId = 1;
-        long getId(File key) {
-            if(idStore.containsKey(key)) {
-                return (long)idStore.get(key);
-            }
-            idStore.put(key, lastId++);
-            return (long)idStore.get(key);
-        }
-        File reverseLookUp(long id) {
-            if(idStore.containsValue(id)) {
-                for(java.util.Map.Entry<File,Long> entry :  idStore.entrySet()) {
-                    if(id == entry.getValue()) {
-                        return entry.getKey();
-                    }
-                }
-            }
-            return null;
-        }
-    }
-    IdGenerator idGen = new IdGenerator();
 
-    public class FileImageAdapter extends BaseAdapter implements ListAdapter {
-        List<File> files;
-        ListActivity context;
-        int width, height;
-        public FileImageAdapter(ListActivity ctx, List<File> fs, int itemWidth, int itemHeight) {
-            context = ctx;
-            files = fs;
-            width = itemWidth;
-            height = itemHeight;
-        }
-
-        public void reload() throws IOException {
-            files = reloadSlideFiles();
-            notifyDataSetChanged();
-        }
-
-
-        @Override
-        public int getCount() {
-            return files.size();
-        }
-
-        @Override
-        public Object getItem(int i) {
-            return files.get(i);
-        }
-
-        @Override
-        public long getItemId(int i) {
-            return idGen.getId(files.get(i));
-        }
-
-        @Override
-        public View getView(int i, View convertView, ViewGroup viewGroup) {
-            ImageView iv;
-            View view;
-            if(convertView == null) {
-                view = context.getLayoutInflater().inflate(R.layout.slide_item, null);
-                iv = (ImageView)view.findViewById(R.id.imageView);
-                iv.setLayoutParams(new LinearLayout.LayoutParams(width, height));
-            } else {
-                view = convertView;
-                iv = (ImageView)convertView.findViewById(R.id.imageView);
-            }
-            File f = files.get(i);
-            BitmapFactory.Options options = new BitmapFactory.Options();
-            options.inSampleSize = 4;
-            Bitmap bmp = BitmapFactory.decodeFile(f.getAbsolutePath(), options);
-            iv.setImageBitmap(bmp);
-            return view;
-        }
-
-        @Override
-        public boolean hasStableIds() {
-            return true;
-        }
-    }
 
     SlideList slideList;
 
@@ -505,7 +421,7 @@ public class SlideListActivity extends ListActivity {
             super.onPostExecute(aVoid);
             progress.dismiss();
             try {
-                adapter.reload();
+                adapter.reload(reloadSlideFiles());
             } catch (IOException e) {
                 showError("Reload fail after long task: " + e.getMessage());
             }

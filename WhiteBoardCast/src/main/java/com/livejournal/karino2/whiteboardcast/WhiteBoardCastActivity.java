@@ -125,17 +125,13 @@ public class WhiteBoardCastActivity extends Activity implements EncoderTask.Erro
         }
     }
 
-    public boolean canPop() {
-        WhiteBoardCanvas wb = getWhiteBoardCanvas();
-        if(wb == null) {
-            try {
-                return presen.getSlideFiles().size() >= 1;
-            } catch (IOException e) {
-                showError("check popable fail with IO Exception: " + e.getMessage());
-                return false;
-            }
+    public boolean slideAvailable() {
+        try {
+            return presen.slideAvailable();
+        } catch (IOException e) {
+            showError("Check slideAvailable fail with IO Exception: " + e.getMessage());
+            return false;
         }
-        return wb.canPopSlide();
     }
 
     public boolean canUndo() {
@@ -216,15 +212,11 @@ public class WhiteBoardCastActivity extends Activity implements EncoderTask.Erro
         }
     }
 
-    public void popSlide() {
+    public void toggleShowSlides() {
         try {
-            if(!getWhiteBoardCanvas().canPopSlide())  {
-                showMessage("can't pop anymore.");
-                return;
-            }
-            getWhiteBoardCanvas().popSlide();
+            getWhiteBoardCanvas().toggleShowSlides();
         } catch (IOException e) {
-            showMessage("Pop slide fail. " + e.getMessage());
+            showMessage("Toggle slides fail. " + e.getMessage());
         }
 
     }

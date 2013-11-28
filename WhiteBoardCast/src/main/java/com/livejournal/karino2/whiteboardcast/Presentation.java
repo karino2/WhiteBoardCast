@@ -128,6 +128,11 @@ public class Presentation {
         return slideList;
     }
 
+    public boolean slideAvailable() throws IOException {
+        return getSlideFiles().size() >= 1;
+
+    }
+
     List<File> getSlideFiles() throws IOException {
         return getSlideList().getFiles();
     }
