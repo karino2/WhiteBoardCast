@@ -367,7 +367,7 @@ public class FloatingOverlay {
     }
 
     private void handleRecordButtonPressed() {
-        WhiteBoardCastActivity.RecordStatus stats = activity.getRecStats();
+        Presentation.RecordStatus stats = activity.getRecStats();
 
         switch(stats) {
             case DORMANT:
@@ -443,7 +443,7 @@ public class FloatingOverlay {
     }
 
     public Bitmap getRecIcon() {
-        WhiteBoardCastActivity.RecordStatus stats = activity.getRecStats();
+        Presentation.RecordStatus stats = activity.getRecStats();
 
         switch(stats) {
             case SETUP:

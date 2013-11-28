@@ -12,9 +12,6 @@ import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.pm.ApplicationInfo;
 import android.content.pm.PackageManager;
-import android.database.Cursor;
-import android.graphics.Bitmap;
-import android.graphics.BitmapFactory;
 import android.net.Uri;
 import android.os.Bundle;
 import android.os.Environment;
@@ -33,16 +30,9 @@ import android.widget.EditText;
 import android.widget.Toast;
 
 import java.io.File;
-import java.io.FileInputStream;
 import java.io.IOException;
-import java.io.InputStream;
 import java.text.SimpleDateFormat;
 import java.util.Date;
-import java.util.List;
-import java.util.concurrent.Executors;
-import java.util.concurrent.Future;
-import java.util.concurrent.ScheduledExecutorService;
-import java.util.concurrent.TimeUnit;
 
 public class WhiteBoardCastActivity extends Activity implements EncoderTask.ErrorListener {
 
@@ -53,8 +43,7 @@ public class WhiteBoardCastActivity extends Activity implements EncoderTask.Erro
 
     private static final String AUDIO_FNAME = "temp.mkv";
 
-    private ScheduledExecutorService scheduleExecuter = null;
-    private EncoderTask encoderTask = null;
+    private Presentation presen = new Presentation();
 
     public void postErrorMessage(final String msg) {
         handler.postDelayed(new Runnable(){
@@ -86,17 +75,8 @@ public class WhiteBoardCastActivity extends Activity implements EncoderTask.Erro
 
     }
 
-    ScheduledExecutorService getScheduleExecutor() {
-        if(scheduleExecuter == null) {
-            scheduleExecuter = Executors.newScheduledThreadPool(2);
-        }
-        return scheduleExecuter;
-    }
-
 
     Handler handler = new Handler();
-    VorbisMediaRecorder recorder;
-    Future<?> future = null;
 
     PageScrollAnimator animator;
 
@@ -108,11 +88,11 @@ public class WhiteBoardCastActivity extends Activity implements EncoderTask.Erro
         readDebuggableSetting();
         getWhiteBoardCanvas().enableDebug(debuggable);
         try {
-            getWhiteBoardCanvas().setSlides(getSlideFiles());
+            getWhiteBoardCanvas().setSlides(presen.getSlideFiles());
         } catch (IOException e) {
             showMessage("Slide setup fail: " + e.getMessage());
         }
-        animator = new PageScrollAnimator(getScheduleExecutor(), getWhiteBoardCanvas());
+        animator = new PageScrollAnimator(presen.getScheduleExecutor(), getWhiteBoardCanvas());
 
         if(workingFileExists()) {
             showDialog(DIALOG_ID_QUERY_MERGE_AGAIN);
@@ -149,7 +129,7 @@ public class WhiteBoardCastActivity extends Activity implements EncoderTask.Erro
         WhiteBoardCanvas wb = getWhiteBoardCanvas();
         if(wb == null) {
             try {
-                return getSlideFiles().size() >= 1;
+                return presen.getSlideFiles().size() >= 1;
             } catch (IOException e) {
                 showError("check popable fail with IO Exception: " + e.getMessage());
                 return false;
@@ -177,26 +157,23 @@ public class WhiteBoardCastActivity extends Activity implements EncoderTask.Erro
 
     public void stopRecord() {
         if(!canStop()) {
-            Log.d("WhiteBoardCast", "stop record called but not recording. " + recStats);
+            Log.d("WhiteBoardCast", "stop record called but not recording. " + presen.recordStatus());
             return;
         }
         // under processing.
-        changeRecStatus(RecordStatus.DONE_PROCESS);
+        presen.stopRecordBegin();
+        getWhiteBoardCanvas().changeRecStatus();
         showMessage("record end, start post process...");
 
-        recorder.stop();
-        recorder.release();
-
-        changeRecStatus(RecordStatus.DONE);
+        presen.stopRecord();
 
         new Thread(new Runnable() {
             @Override
             public void run() {
-                future.cancel(false);
-                future = null;
-                if(!encoderTask.doneEncoder()) {
-                    postErrorMessage("fail finalize encode: " + encoderTask.getErrorBuf().toString());
+                if(!presen.afterStop()) {
+                    postErrorMessage("fail finalize encode: " + presen.getEncoderTask().getErrorBuf().toString());
                     return;
+
                 }
 
                 postShowMessage("post process done.");
@@ -214,8 +191,7 @@ public class WhiteBoardCastActivity extends Activity implements EncoderTask.Erro
 
 
     public boolean canStop() {
-        return recStats == RecordStatus.RECORDING ||
-                recStats == RecordStatus.PAUSE;
+        return presen.canStopRecord();
     }
 
     public boolean canRedo() {
@@ -232,28 +208,12 @@ public class WhiteBoardCastActivity extends Activity implements EncoderTask.Erro
     @Override
     protected void onRestart() {
         super.onRestart();
-        if(slideList != null) {
-            try {
-                SlideListSerializer.updateActualFiles(slideList);
-                getWhiteBoardCanvas().changeSlidesStatus();
-            } catch (IOException e) {
-                showMessage("onStart, fail update slides: " + e.getMessage());
-                return;
-            }
+        try {
+            presen.onRestart(getWhiteBoardCanvas());
+        } catch (IOException e) {
+            showError("onStart, fail update slides: " + e.getMessage());
+            return;
         }
-    }
-
-    SlideList slideList;
-    SlideList getSlideList() throws IOException {
-        if(slideList == null) {
-            slideList = SlideListSerializer.createSlideListWithDefaultFolder();
-            slideList.syncListedActual();
-        }
-        return slideList;
-    }
-
-    List<File> getSlideFiles() throws IOException {
-        return getSlideList().getFiles();
     }
 
     public void popSlide() {
@@ -269,48 +229,35 @@ public class WhiteBoardCastActivity extends Activity implements EncoderTask.Erro
 
     }
 
-    public enum RecordStatus {
-        DORMANT, SETUP, RECORDING, PAUSE, DONE_PROCESS, DONE
-    }
-    RecordStatus recStats = RecordStatus.DORMANT;
-
-    public RecordStatus getRecStats() {
-        return recStats;
+    public Presentation.RecordStatus getRecStats() {
+        return presen.recordStatus();
     }
 
-    void changeRecStatus(RecordStatus stats) {
-        recStats = stats;
-        getWhiteBoardCanvas().changeRecStatus(stats);
-    }
 
     public void pauseRecord() {
-        changeRecStatus(RecordStatus.PAUSE);
-        future.cancel(false);
-        future = null;
-        recorder.stop();
-        encoderTask.stop();
+        presen.pauseRecord();
+        getWhiteBoardCanvas().changeRecStatus();
+
         showMessage("pause");
     }
 
     public void resumeRecord() {
-        long suspendedBegin = recorder.lastBlockEndMil();
-        long suspendedDur = System.currentTimeMillis() - suspendedBegin;
-        recorder.resume(suspendedDur);
-        encoderTask.resume(suspendedDur);
-        scheduleEncodeTask();
-        changeRecStatus(RecordStatus.RECORDING);
+        presen.resumeRecord();
+
+        presen.scheduleEncodeTask();
+        getWhiteBoardCanvas().changeRecStatus();
         showMessage("resume");
     }
 
 
 
     public void startRecord() {
-        if(recStats != RecordStatus.DORMANT &&
-                recStats != RecordStatus.DONE) {
-            Log.d("WhiteBoardCast", "record start but status is not dormant: " + recStats);
+        if(!presen.canStartRecord()) {
+            Log.d("WhiteBoardCast", "record start but status is not dormant: " + presen.recordStatus());
             return;
         }
-        changeRecStatus(RecordStatus.SETUP);
+        presen.startRecordFirstPhase();
+        getWhiteBoardCanvas().changeRecStatus();
         handler.post(new Runnable() {
             @Override
             public void run() {
@@ -330,34 +277,35 @@ public class WhiteBoardCastActivity extends Activity implements EncoderTask.Erro
         getWhiteBoardCanvas().beginPageNext(animator);
     }
 
+    // TODO: move to Presentation as far as possible.
     private void startRecordSecondPhase() {
         WhiteBoardCanvas wb = getWhiteBoardCanvas();
         wb.invalWholeRegionForEncoder(); // for restart. make it a little heavy.
         try {
-            encoderTask = new EncoderTask(wb, wb.getBitmap(), getWorkVideoPath(), this);
+            presen.newEncoderTask(wb, wb.getBitmap(), getWorkVideoPath(), this);
 
             if(debuggable)
-                encoderTask.setFpsListener(getWhiteBoardCanvas().getEncoderFpsCounter());
+                presen.getEncoderTask().setFpsListener(getWhiteBoardCanvas().getEncoderFpsCounter());
         } catch (IOException e) {
             showError("Fail to get workVideoPath: " + e.getMessage());
             return;
         }
         long currentMill = System.currentTimeMillis();
 
-        if(!encoderTask.initEncoder(currentMill)) {
+        if(!presen.getEncoderTask().initEncoder(currentMill)) {
             showError("init encode fail");
             return;
         }
-        recorder = new VorbisMediaRecorder();
-        recorder.setBeginMill(currentMill);
+
+        presen.newRecorder(currentMill);
         try {
-            recorder.setOutputFile(getWorkAudioPath());
+            presen.getRecorder().setOutputFile(getWorkAudioPath());
         } catch (IOException e) {
             showError("IOException: Create WhiteBoardCast folder fail: " + e.getMessage());
             return;
         }
         try {
-            recorder.prepare();
+            presen.getRecorder().prepare();
         } catch (IOException e) {
             showError("IOException: MediaRecoder prepare fail: " + e.getMessage());
             return;
@@ -365,15 +313,10 @@ public class WhiteBoardCastActivity extends Activity implements EncoderTask.Erro
             showError("VorbisException: MediaRecoder prepare fail: " + e.getMessage());
             return;
         }
-        recorder.start();
 
-        scheduleEncodeTask();
-        changeRecStatus(RecordStatus.RECORDING);
+        presen.startRecord();
+        wb.changeRecStatus();
         showMessage("record start");
-    }
-
-    private void scheduleEncodeTask() {
-        future = getScheduleExecutor().scheduleAtFixedRate(encoderTask, 0, 1000 / FPS, TimeUnit.MILLISECONDS);
     }
 
     public WhiteBoardCanvas getWhiteBoardCanvas() {
@@ -409,7 +352,7 @@ public class WhiteBoardCastActivity extends Activity implements EncoderTask.Erro
 
     private void viewVideoIntent() {
         Intent i = new Intent(Intent.ACTION_VIEW);
-        i.setDataAndType(Uri.fromFile(lastResult), "video/*");
+        i.setDataAndType(Uri.fromFile(presen.getResultFile()), "video/*");
         i.putExtra(MediaStore.EXTRA_FINISH_ON_COMPLETION, false);
         startActivity(i);
     }
@@ -418,7 +361,7 @@ public class WhiteBoardCastActivity extends Activity implements EncoderTask.Erro
         Intent i = new Intent(Intent.ACTION_SEND);
         i.setType("video/webm");
 
-        i.putExtra(Intent.EXTRA_STREAM, lastResultUri);
+        i.putExtra(Intent.EXTRA_STREAM, presen.getResultUri());
         startActivity(Intent.createChooser(i, "Share video"));
 
     }
@@ -434,7 +377,7 @@ public class WhiteBoardCastActivity extends Activity implements EncoderTask.Erro
         content.put(MediaStore.Video.VideoColumns.DATE_ADDED,
                 System.currentTimeMillis() / 1000);
         content.put(MediaStore.Video.Media.MIME_TYPE, "video/webm");
-        content.put(MediaStore.Video.Media.DATA, lastResult.getAbsolutePath());
+        content.put(MediaStore.Video.Media.DATA, presen.getResultFile().getAbsolutePath());
         ContentResolver resolver = getBaseContext().getContentResolver();
         return resolver.insert(MediaStore.Video.Media.EXTERNAL_CONTENT_URI, content);
     }
@@ -462,8 +405,6 @@ public class WhiteBoardCastActivity extends Activity implements EncoderTask.Erro
         }
     }
 
-    File lastResult = null;
-
     private void renameAndDeleteWorkFiles() throws IOException {
         File result = new File(getResultPath());
         File workVideo = new File(getWorkVideoPath());
@@ -473,17 +414,15 @@ public class WhiteBoardCastActivity extends Activity implements EncoderTask.Erro
         SimpleDateFormat timeStampFormat = new SimpleDateFormat("yyyyMMddHHmmssSS");
         String filename = timeStampFormat.format(new Date()) + ".webm";
 
-        lastResult = new File(getFileStoreDirectory(), filename);
-        result.renameTo(lastResult);
+        presen.setResult(new File(getFileStoreDirectory(), filename));
+        result.renameTo(presen.getResultFile());
         workVideo.delete();
         workAudio.delete();
 
-        lastResultUri = insertLastResultToContentResolver();
+        presen.setResultUri(insertLastResultToContentResolver());
 
 
     }
-
-    Uri lastResultUri = null;
 
 
     @Override
@@ -566,7 +505,7 @@ public class WhiteBoardCastActivity extends Activity implements EncoderTask.Erro
         switch(id) {
             case DIALOG_ID_FILE_RENAME:
                 EditText et = (EditText)dialog.findViewById(R.id.edit_filename);
-                et.setText(lastResult.getName());
+                et.setText(presen.getResultFile().getName());
                 break;
         }
         super.onPrepareDialog(id, dialog);
@@ -606,21 +545,21 @@ public class WhiteBoardCastActivity extends Activity implements EncoderTask.Erro
             return false;
         }
 
-        File newNameFile = new File(lastResult.getParentFile(), newName);
+        File newNameFile = new File(presen.getResultFile().getParentFile(), newName);
         if(newNameFile.exists()) {
             showMessage("This file is already exists");
             return false;
         }
-        lastResult.renameTo(newNameFile);
-        lastResult = newNameFile;
-        updateNewFIleNameToContentDB(lastResult);
+
+        presen.renameResult(newNameFile);
+        updateNewFIleNameToContentDB(presen.getResultFile());
         return true;
     }
 
     private void updateNewFIleNameToContentDB(File newFile) {
         ContentValues content = new ContentValues(2);
 
-        long id = ContentUris.parseId(lastResultUri);
+        long id = ContentUris.parseId(presen.getResultUri());
 
 
         content.put(MediaStore.Video.Media.DATA, newFile.getAbsolutePath());
@@ -696,9 +635,6 @@ public class WhiteBoardCastActivity extends Activity implements EncoderTask.Erro
 
     }
 
-    private final int FPS = 12;
-//    private final int FPS = 6;
-//    private final int FPS = 30;
 
 
     private Button findButton(int id) {

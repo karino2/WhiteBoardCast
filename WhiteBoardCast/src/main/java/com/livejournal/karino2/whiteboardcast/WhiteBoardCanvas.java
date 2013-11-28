@@ -577,7 +577,7 @@ public class WhiteBoardCanvas extends View implements FrameRetrieval, PageScroll
         }
     }
 
-    public void changeRecStatus(WhiteBoardCastActivity.RecordStatus recStats) {
+    public void changeRecStatus() {
         overlay.changeRecStatus();
         invalidate();
     }
