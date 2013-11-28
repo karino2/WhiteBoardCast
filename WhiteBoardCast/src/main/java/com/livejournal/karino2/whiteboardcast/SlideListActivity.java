@@ -10,6 +10,7 @@ import android.graphics.BitmapFactory;
 import android.graphics.Point;
 import android.net.Uri;
 import android.os.AsyncTask;
+import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
 import android.util.Log;
@@ -33,6 +34,7 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.lang.reflect.InvocationTargetException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
@@ -70,6 +72,20 @@ public class SlideListActivity extends ListActivity {
         Display disp = wm.getDefaultDisplay();
         Point windowSize = new Point();
         disp.getSize(windowSize);
+        try {
+            if(Build.VERSION.SDK_INT >= 14 && Build.VERSION.SDK_INT < 17) {
+                windowSize.x = (Integer) Display.class.getMethod("getRawWidth").invoke(disp);
+                windowSize.y = (Integer) Display.class.getMethod("getRawHeight").invoke(disp);
+            }else if(Build.VERSION.SDK_INT >= 17) {
+                Display.class.getMethod("getRealSize", Point.class).invoke(disp, windowSize);
+            }
+        } catch (IllegalAccessException e) {
+            e.printStackTrace();
+        } catch (InvocationTargetException e) {
+            e.printStackTrace();
+        } catch (NoSuchMethodException e) {
+            e.printStackTrace();
+        }
         screenWidth = windowSize.x;
         screenHeight = windowSize.y;
         // use this for image copying. so always treat as landscape.
