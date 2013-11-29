@@ -512,6 +512,7 @@ public class WhiteBoardCastActivity extends Activity implements EncoderTask.Erro
         presen = new Presentation();
         getWhiteBoardCanvas().newPresentation();
         newDialog.dismiss();
+        showMessage("New");
     }
 
     private void startNewSlidesPresentation() {

@@ -103,7 +103,7 @@ public class FloatingOverlay {
         redoButton = floatResource(R.drawable.redo_button, toolHeight, toolHeight);
         doneButton = floatResource(R.drawable.done_button, toolHeight, toolHeight);
         clearButton = floatResource(R.drawable.clear_button, toolHeight, toolHeight);
-        popButton = floatResource(R.drawable.pop_button, toolHeight, toolHeight);
+        popButton = floatResource(R.drawable.slides_button, toolHeight, toolHeight);
         menuButton = floatResource(R.drawable.menu_button, toolHeight, toolHeight);
 
         pullDownBG = floatResource(R.drawable.pd_bg, toolHeight, toolHeight);

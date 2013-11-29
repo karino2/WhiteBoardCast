@@ -10,7 +10,7 @@
         android:id="@+id/buttonPlane"
         android:layout_alignParentTop="true"
         android:layout_alignParentLeft="true"
-        android:drawableLeft="@drawable/ic_button_plane"
+        android:drawableLeft="@drawable/new_button_plane"
         android:drawablePadding="5dp"
         android:gravity="center_vertical|left" />
 
@@ -28,7 +28,7 @@
         android:layout_height="wrap_content"
         android:text="@string/label_slides"
         android:id="@+id/buttonSlides"
-        android:drawableLeft="@drawable/ic_button_slides"
+        android:drawableLeft="@drawable/new_button_slides"
         android:drawablePadding="5dp"
         android:layout_below="@+id/buttonPlane"
         android:layout_alignParentLeft="true"
