@@ -551,6 +551,11 @@ public class WhiteBoardCastActivity extends Activity implements EncoderTask.Erro
         switch(id) {
             case DIALOG_ID_FILE_RENAME:
                 EditText et = (EditText)dialog.findViewById(R.id.edit_filename);
+                // back from another app but this app is already killed. just dismiss.
+                if(presen.getResultFile() == null) {
+                    dialog.dismiss();
+                    return;
+                }
                 et.setText(presen.getResultFile().getName());
                 break;
             case DIALOG_ID_NEW:
