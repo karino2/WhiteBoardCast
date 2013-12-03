@@ -525,7 +525,7 @@ public class WhiteBoardCastActivity extends Activity implements EncoderTask.Erro
             case REQUEST_PICK_IMAGE:
                 if(resultCode == RESULT_OK &&
                         data != null &&
-                        data.getStringArrayExtra("all_path").length != 0){
+                        data.getStringArrayListExtra("all_path").size() != 0){
                     try {
                         presen.clearSlides();
                         Bundle bundle = new Bundle();
