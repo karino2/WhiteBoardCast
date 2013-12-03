@@ -51,6 +51,10 @@ public class Presentation {
         recStats = RecordStatus.SETUP;
     }
 
+    public void clearSlides() throws IOException {
+        getSlideList().deleteAll();
+    }
+
     public enum RecordStatus {
         DORMANT, SETUP, RECORDING, PAUSE, DONE_PROCESS, DONE
     }
@@ -122,8 +126,7 @@ public class Presentation {
     SlideList slideList;
     SlideList getSlideList() throws IOException {
         if(slideList == null) {
-            slideList = SlideListSerializer.createSlideListWithDefaultFolder();
-            slideList.syncListedActual();
+            slideList = SlideList.createSlideListWithDefaultFolder();
         }
         return slideList;
     }
@@ -133,8 +136,8 @@ public class Presentation {
         slideEnabled = true;
     }
 
-    public boolean slideAvailable() throws IOException {
-        return slideEnabled && getSlideFiles().size() >= 1;
+    public boolean slideAvailable() {
+        return slideEnabled;
 
     }
 

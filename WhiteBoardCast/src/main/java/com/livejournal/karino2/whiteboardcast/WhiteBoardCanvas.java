@@ -713,6 +713,11 @@ public class WhiteBoardCanvas extends View implements FrameRetrieval, PageScroll
 
     public void newPresentation() {
         boardList = new BoardList(this);
+        if(popup != null) {
+            popup.dismiss();
+        }
+        popup = null;
+        popupShown = false;
         resetCanvas(mWidth, mHeight);
         afterChangeBoard();
     }
@@ -796,8 +801,8 @@ public class WhiteBoardCanvas extends View implements FrameRetrieval, PageScroll
         }
         return popup;
     }
- 
-    
+
+
     boolean popupShown = false;
 
     public void toggleShowSlides() throws IOException {

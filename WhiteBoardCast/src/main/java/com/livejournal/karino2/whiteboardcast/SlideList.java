@@ -1,8 +1,12 @@
 package com.livejournal.karino2.whiteboardcast;
 
 import java.io.File;
+import java.io.FileFilter;
+import java.io.FilenameFilter;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Comparator;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -11,93 +15,73 @@ import java.util.Set;
  * Created by karino on 10/23/13.
  */
 public class SlideList {
-    List<File> listedFiles;
-    File[] actualFiles;
-    public SlideList(List<File> listed, File[] actuals) {
-        listedFiles = listed;
-        actualFiles = actuals;
+    File slideFolder;
+    public SlideList(File slideFolder) throws IOException {
+        this.slideFolder = slideFolder;
     }
 
-    public void syncListedActual() {
-        removeNonExistingFileFromList();
-        addNonRegistedFileToList();
+    public static SlideList createSlideListWithDefaultFolder() throws IOException {
+        File folder = getSlideListDirectory();
+        return new SlideList(folder);
     }
 
-    public void invalidateActualAndSync(File[] actualFiles) {
-        this.actualFiles = actualFiles;
-        syncListedActual();
+    public static File[] getActualSlideFiles(File folder) throws IOException {
+        File[] slideFiles = folder.listFiles(new FilenameFilter() {
+            @Override
+            public boolean accept(File dir, String filename) {
+                if (filename.endsWith(".png") || filename.endsWith(".PNG") ||
+                        filename.endsWith(".jpg") || filename.endsWith(".JPG"))
+                    return true;
+                return false;
+            }
+        });
+        Arrays.sort(slideFiles, new Comparator<File>() {
+            public int compare(File f1, File f2) {
+                return Long.valueOf(f2.lastModified()).compareTo(f1.lastModified());
+            }
+
+        });
+
+        return slideFiles;
     }
 
-    public List<File> getFiles() {
-        return listedFiles;
+    public static File getSlideListDirectory() throws IOException {
+        File parent = WhiteBoardCastActivity.getFileStoreDirectory();
+        File dir = new File(parent, "slides");
+        WhiteBoardCastActivity.ensureDirExist(dir);
+        return dir;
     }
 
-    public void upFiles(int[] indexes) {
-        int insertAboveTo = indexes[0];
-        List<File> moveCandidate = idsToFiles(indexes);
-        listedFiles.removeAll(moveCandidate);
-        listedFiles.addAll(Math.max(0, insertAboveTo - 1), moveCandidate);
+    public List<File> getFiles() throws IOException {
+        return Arrays.asList(getActualSlideFiles(slideFolder));
     }
 
-    public void downFiles(int[] indexes) {
-        int insertBelowTo = indexes[indexes.length-1];
-        List<File> moveCandidate = idsToFiles(indexes);
-        listedFiles.removeAll(moveCandidate);
-        listedFiles.addAll(Math.min(listedFiles.size(), insertBelowTo + 2 - moveCandidate.size()), moveCandidate);
-    }
 
-    public void addFiles(List<File> adds) {
-        listedFiles.addAll(adds);
-    }
 
-    private List<File> idsToFiles(int[] indexes) {
-        List<File> moveCandidate = new ArrayList<File>();
-        for(int i : indexes) {
-            moveCandidate.add(listedFiles.get(i));
-        }
-        return moveCandidate;
-    }
-
-    private void removeNonExistingFileFromList() {
-        Set<File> actuals = new HashSet(Arrays.asList(actualFiles));
-
-        ArrayList<File> removeCandidate = new ArrayList<File>();
-        for(File file: listedFiles) {
-            if(!actuals.contains(file))
-                removeCandidate.add(file);
-        }
-        listedFiles.removeAll(removeCandidate);
-    }
-
-    private void addNonRegistedFileToList() {
-        Set<File> listed = new HashSet(listedFiles);
-        for(File file : actualFiles) {
-            if(!listed.contains(file))
-                listedFiles.add(file);
-        }
-    }
-
-    public void add(File file) {
-        listedFiles.add(file);
-    }
-
-    public void deleteFilesByIndices(int[] indexes) {
-        List<File> deleteCandidate = idsToFiles(indexes);
-        deleteFiles(deleteCandidate);
-    }
-
-    private void deleteFiles(List<File> deleteCandidate) {
-        listedFiles.removeAll(deleteCandidate);
-
-        for(File file : deleteCandidate) {
+    private void deleteAllFiles(File folder) {
+        for(File file : folder.listFiles(new FileFilter() {
+            @Override
+            public boolean accept(File pathname) {
+                if(pathname.isDirectory())
+                    return false;
+                return true;
+            }
+        })) {
             file.delete();
         }
+
+    }
+
+    public static File getThumbnailDirectory() throws IOException {
+        return ImportDialog.getThumbnailDirectory();
     }
 
     public void deleteAll() {
-        for(File file : listedFiles) {
-            file.delete();
+        deleteAllFiles(slideFolder);
+        try {
+            deleteAllFiles(getThumbnailDirectory());
+        } catch (IOException e) {
+            // fail to get thumbnail directory, so can't delete itself is not a problem.
         }
-        listedFiles.clear();
     }
 }

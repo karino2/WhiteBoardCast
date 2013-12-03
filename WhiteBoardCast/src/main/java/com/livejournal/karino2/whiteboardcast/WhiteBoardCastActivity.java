@@ -1,6 +1,7 @@
 package com.livejournal.karino2.whiteboardcast;
 
 import com.google.libvorbis.VorbisException;
+import com.livejournal.karino2.multigallery.MultiGalleryActivity;
 
 import android.app.Activity;
 import android.app.AlertDialog;
@@ -42,6 +43,9 @@ public class WhiteBoardCastActivity extends Activity implements EncoderTask.Erro
     static final int DIALOG_ID_QUERY_MERGE_AGAIN = 3;
     static final int DIALOG_ID_FILE_RENAME = 4;
     static final int DIALOG_ID_NEW = 5;
+    static final int DIALOG_ID_COPYING = 6;
+
+    static final int REQUEST_PICK_IMAGE = 10;
 
     private static final String AUDIO_FNAME = "temp.mkv";
 
@@ -92,15 +96,6 @@ public class WhiteBoardCastActivity extends Activity implements EncoderTask.Erro
         setContentView(R.layout.activity_whiteboardcast);
         readDebuggableSetting();
         getWhiteBoardCanvas().enableDebug(debuggable);
-        try {
-            boolean slidesEnabled = getIntent().getBooleanExtra("slides_enabled", false);
-            if(slidesEnabled) {
-                presen.enableSlide();
-                getWhiteBoardCanvas().setSlides(presen.getSlideFiles());
-            }
-        } catch (IOException e) {
-            showMessage("Slide setup fail: " + e.getMessage());
-        }
         animator = new PageScrollAnimator(presen.getScheduleExecutor(), getWhiteBoardCanvas());
 
         if(workingFileExists()) {
@@ -135,12 +130,7 @@ public class WhiteBoardCastActivity extends Activity implements EncoderTask.Erro
     }
 
     public boolean slideAvailable() {
-        try {
-            return presen.slideAvailable();
-        } catch (IOException e) {
-            showError("Check slideAvailable fail with IO Exception: " + e.getMessage());
-            return false;
-        }
+         return presen.slideAvailable();
     }
 
     public boolean canUndo() {
@@ -504,24 +494,48 @@ public class WhiteBoardCastActivity extends Activity implements EncoderTask.Erro
                 return createFileRenameDialog();
             case DIALOG_ID_NEW:
                 return createNewDialog();
+            case DIALOG_ID_COPYING:
+                return new ImportDialog(this);
         }
         return super.onCreateDialog(id);
     }
 
     private void startNewPresentation(){
-        presen = new Presentation();
-        getWhiteBoardCanvas().newPresentation();
+        newPresentation();
         newDialog.dismiss();
         showMessage("New");
     }
 
-    private void startNewSlidesPresentation() {
-        Intent intent = new Intent(this, SlideListActivity.class);
-        intent.putExtra("canvas_width", getWhiteBoardCanvas().getStoredWidth());
-        intent.putExtra("canvas_height", getWhiteBoardCanvas().getStoredHeight());
-        startActivity(intent);
-        finish();
+    private void newPresentation() {
+        presen = new Presentation();
+        getWhiteBoardCanvas().newPresentation();
     }
+
+    private void startNewSlidesPresentation() {
+        Intent intent = new Intent(this, MultiGalleryActivity.class);
+        startActivityForResult(intent, REQUEST_PICK_IMAGE);
+        newDialog.dismiss();
+    }
+
+
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+        switch(requestCode) {
+            case REQUEST_PICK_IMAGE:
+                if(resultCode == RESULT_OK){
+                    try {
+                        presen.clearSlides();
+                        Bundle bundle = new Bundle();
+                        bundle.putStringArrayList("all_path", data.getStringArrayListExtra("all_path"));
+                        showDialog(DIALOG_ID_COPYING, bundle);
+                    } catch (IOException e) {
+                        showMessage("Fail to clear slides: " + e.getMessage());
+                    }
+                }
+        }
+    }
+
 
     Dialog newDialog;
 
@@ -545,6 +559,33 @@ public class WhiteBoardCastActivity extends Activity implements EncoderTask.Erro
         return newDialog;
     }
 
+    @Override
+    protected void onPrepareDialog(int id, Dialog dialog, Bundle args) {
+        switch(id) {
+            case DIALOG_ID_COPYING:
+                ImportDialog imp = (ImportDialog) dialog;
+                imp.prepareCopy(getContentResolver(), getWhiteBoardCanvas().getStoredWidth(),
+                        getWhiteBoardCanvas().getStoredHeight(), args.getStringArrayList("all_path"), new ImportDialog.FinishListener() {
+                    @Override
+                    public void onFinish() {
+                        try {
+                            setupSlidePresentation();
+                        } catch (IOException e) {
+                            showError("Fail to setup presentation: " + e.getMessage());
+                        }
+                    }
+                });
+                break;
+        }
+        super.onPrepareDialog(id, dialog, args);
+    }
+
+    private void setupSlidePresentation() throws IOException {
+        newPresentation();
+
+        presen.enableSlide();
+        getWhiteBoardCanvas().setSlides(presen.getSlideFiles());
+    }
 
     @Override
     protected void onPrepareDialog(int id, Dialog dialog) {

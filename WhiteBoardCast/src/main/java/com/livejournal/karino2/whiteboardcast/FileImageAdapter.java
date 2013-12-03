@@ -98,7 +98,7 @@ public class FileImageAdapter extends BaseAdapter implements ListAdapter {
         File f = files.get(i);
         try {
             // a little slow.
-            Bitmap bmp = SlideListActivity.getThumbnailBitmap(f, cacheEngine);
+            Bitmap bmp = ImportDialog.getThumbnailBitmap(f, cacheEngine);
             iv.setImageBitmap(bmp);
         } catch (IOException e) {
             Log.d("WhiteBoardCast", "cant create thumbnail on FileImageAdapter: " + e.getMessage());

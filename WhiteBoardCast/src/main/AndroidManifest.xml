@@ -39,11 +39,6 @@
             </intent-filter>
         </activity>
         <activity
-            android:name="com.livejournal.karino2.whiteboardcast.SlideListActivity"
-            android:label="@string/title_activity_slide_list"
-             >
-        </activity>
-        <activity
             android:name="com.livejournal.karino2.multigallery.MultiGalleryActivity"
             android:label="@string/title_activity_multi_gallery"
             >
