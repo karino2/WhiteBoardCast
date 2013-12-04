@@ -34,13 +34,17 @@ class MediaLoadRequest implements Runnable {
     void discard() {
         synchronized(listener) {
             listener = null;
+            canceling = true;
         }
     }
 
+    boolean canceling = false;
 
 
     @Override
     public void run() {
+        if(canceling)
+            return;
 
         Bitmap thumbnail  = decodeThumbnail(item.getPath(), thumbnailSize);
 
