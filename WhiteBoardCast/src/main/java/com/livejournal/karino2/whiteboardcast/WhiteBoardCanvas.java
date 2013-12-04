@@ -421,7 +421,7 @@ public class WhiteBoardCanvas extends View implements FrameRetrieval, PageScroll
                 */
                 // no tolerance done.
 
-                invalidate();
+                invalidate(pathBound());
                 break;
             case MotionEvent.ACTION_UP:
                 eraseBrushCursor();
