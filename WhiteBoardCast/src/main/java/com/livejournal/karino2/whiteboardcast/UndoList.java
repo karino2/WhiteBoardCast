@@ -3,10 +3,13 @@ package com.livejournal.karino2.whiteboardcast;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.Rect;
+import android.os.Handler;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.util.ArrayList;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 /**
  * Created by karino on 7/4/13.
@@ -17,10 +20,15 @@ public class UndoList {
         void redo(Undoable undoTarget);
         int getByteSize();
     }
+
+
     class BitmapUndoCommand implements UndoCommand {
         byte[] undoBuf;
         byte[] redoBuf;
+        Bitmap undoBmp;
+        Bitmap redoBmp;
         int x, y, width, height;
+        Object undoBmpLock = new Object();
 
         byte[] convertToPngBytes(Bitmap bmp) {
             ByteArrayOutputStream os = new ByteArrayOutputStream();
@@ -33,8 +41,18 @@ public class UndoList {
             this.y = y;
             width = undo.getWidth();
             height = undo.getHeight();
-            undoBuf = convertToPngBytes(undo);
-            redoBuf = convertToPngBytes(redo);
+            undoBmp = undo;
+            redoBmp = redo;
+        }
+
+        void doCompression() {
+            undoBuf = convertToPngBytes(undoBmp);
+            redoBuf = convertToPngBytes(redoBmp);
+            synchronized (undoBmpLock) {
+                undoBmp = null;
+                redoBmp = null;
+            }
+            discardUntilSizeFit();
         }
 
         Bitmap decodeUndoBmp() {
@@ -50,6 +68,10 @@ public class UndoList {
         }
 
         public int getByteSize() {
+            synchronized (undoBmpLock) {
+                if(undoBmp != null)
+                    return 0; // now compressing. wait until compress finish.
+            }
             return undoBuf.length+redoBuf.length;
         }
         public void undo(Undoable undoTarget) {
@@ -69,17 +91,37 @@ public class UndoList {
         }
 
     }
+
+
     ArrayList<UndoCommand> commandList = new ArrayList<UndoCommand>();
     int currentPos = -1;
 
+
+    boolean waitUndo = false;
+    ExecutorService undoExecutor;
     Undoable undoTarget;
     public UndoList(Undoable target) {
         undoTarget = target;
+        undoExecutor = Executors.newSingleThreadExecutor();
+    }
+
+    class CompressTask implements Runnable {
+        BitmapUndoCommand target;
+        CompressTask(BitmapUndoCommand command) {
+            target = command;
+        }
+
+        @Override
+        public void run() {
+            target.doCompression();
+            discardUntilSizeFit();
+        }
     }
 
     public void pushBitmapUndoCommand(int x, int y, Bitmap undo, Bitmap redo) {
-        UndoCommand command = new BitmapUndoCommand(x, y, undo, redo);
+        BitmapUndoCommand command = new BitmapUndoCommand(x, y, undo, redo);
         pushUndoCommand(command);
+        undoExecutor.submit(new CompressTask(command));
     }
 
     public void pushUndoCommand(UndoCommand command) {
@@ -89,30 +131,76 @@ public class UndoList {
         discardUntilSizeFit();
     }
 
-    public boolean canUndo() {
-        return currentPos >= 0;
-    }
-    public boolean canRedo() {
-        return currentPos < commandList.size()-1;
+    synchronized int getCurrentPos() {
+        return currentPos;
     }
 
+    synchronized void incrementCurrentPos() {
+        currentPos++;
+    }
+
+    synchronized void decrementCurrentPos() {
+        currentPos--;
+    }
+
+    public boolean canUndo() {
+        if(waitUndo)
+            return false;
+        return getCurrentPos() >= 0;
+    }
+    public boolean canRedo() {
+        if(waitUndo)
+            return false;
+        return getCurrentPos() < commandList.size()-1;
+    }
+
+    Handler handler = new Handler();
     public void undo() {
         if(!canUndo())
             return;
-        commandList.get(currentPos).undo(undoTarget);
-        currentPos--;
+        waitUndo = true;
+        scheduleUndoCommand(new Runnable(){
+            @Override
+            public void run() {
+                commandList.get(getCurrentPos()).undo(undoTarget);
+                decrementCurrentPos();
+                waitUndoDone();
+            }
+        });
+    }
+
+    private void waitUndoDone() {
+        waitUndo = false;
+        undoTarget.changeUndoStatus();
+    }
+
+    private void scheduleUndoCommand(final Runnable doUndo) {
+        undoExecutor.submit(new Runnable() {
+            @Override
+            public void run() {
+                handler.post(doUndo);
+            }
+        });
     }
 
     interface Undoable {
         Bitmap getCommittedBitmap();
         void invalCommitedBitmap(Rect undoInval);
+        void changeUndoStatus();
     }
 
     public void redo() {
         if(!canRedo())
             return;
-        currentPos++;
-        commandList.get(currentPos).redo(undoTarget);
+        waitUndo = true;
+        scheduleUndoCommand(new Runnable(){
+            @Override
+            public void run() {
+                incrementCurrentPos();
+                commandList.get(getCurrentPos()).redo(undoTarget);
+                waitUndoDone();
+            }
+        });
     }
 
 
@@ -126,7 +214,7 @@ public class UndoList {
 
     final int COMMAND_MAX_SIZE = 1024*1024; // 1M
 
-    private void discardUntilSizeFit() {
+    private synchronized void discardUntilSizeFit() {
         // currentPos ==0, then do not remove even though it bigger than threshold (I guess never happen, though).
         while(currentPos > 0 && getCommandsSize() > COMMAND_MAX_SIZE) {
             commandList.remove(0);
@@ -134,7 +222,7 @@ public class UndoList {
         }
     }
 
-    private void discardLaterCommand() {
+    private synchronized void discardLaterCommand() {
         for(int i = commandList.size()-1; i > currentPos; i--) {
             commandList.remove(i);
         }

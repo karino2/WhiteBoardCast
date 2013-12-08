@@ -514,6 +514,11 @@ public class WhiteBoardCanvas extends View implements FrameRetrieval, PageScroll
         invalidate(undoInval);
     }
 
+    @Override
+    public void changeUndoStatus() {
+        overlay.changeUndoStatus();
+    }
+
 
     @Override
     public void pullUpdateRegion(int[] pixelBufs, Rect inval) {
