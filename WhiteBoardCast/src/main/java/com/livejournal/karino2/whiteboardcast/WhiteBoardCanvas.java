@@ -398,13 +398,20 @@ public class WhiteBoardCanvas extends View implements FrameRetrieval, PageScroll
                 if(!mDownHandled)
                     break;
                 if (overTolerance(x, y)) {
-                    for(int i = 0; i < event.getHistorySize(); i++) {
-                        float hx = event.getHistoricalX(i);
-                        float hy = event.getHistoricalY(i);
-                        if(overTolerance(hx, hy)) {
-                            mPath.quadTo(mX, mY, (hx + mX)/2, (hy + mY)/2);
-                            mX = hx;
-                            mY = hy;
+                    int historySize = event.getHistorySize();
+                    if(historySize == 0) {
+                        mPath.quadTo(mX, mY, (x + mX)/2, (y + mY)/2);
+                        mX = x;
+                        mY = y;
+                    }else {
+                        for(int i = 0; i < event.getHistorySize(); i++) {
+                            float hx = event.getHistoricalX(i);
+                            float hy = event.getHistoricalY(i);
+                            if(overTolerance(hx, hy)) {
+                                mPath.quadTo(mX, mY, (hx + mX)/2, (hy + mY)/2);
+                                mX = hx;
+                                mY = hy;
+                            }
                         }
                     }
                     penCanvas.drawPath(mPath, mPaint);
