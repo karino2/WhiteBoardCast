@@ -77,7 +77,7 @@ public class EncoderTask implements Runnable {
     public boolean encodeFrame(int[] frame, Rect invalRect) {
         long curr = System.currentTimeMillis();
         long diff = curr-beginMillis;
-        return encoder.encodeFrames(frame,  invalRect, (int)(diff*FPS_NUM/1000), LibVpxEnc.FOURCC_ARGB, errorBuf);
+        return encoder.encodeFrames(frame,  invalRect, (diff*FPS_NUM/1000), LibVpxEnc.FOURCC_ARGB, errorBuf);
     }
 
 
