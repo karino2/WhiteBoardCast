@@ -20,6 +20,11 @@
 #include <stdlib.h>
 #include <string.h>
 
+#define KARINO 1
+#ifdef KARINO
+#include <android/log.h>
+#endif
+
 struct vp8_extracfg
 {
     struct vpx_codec_pkt_list *pkt_list;
@@ -718,6 +723,18 @@ static void pick_quickcompress_mode(vpx_codec_alg_priv_t  *ctx,
                       * (uint64_t)ctx->cfg.g_timebase.num
                       / (uint64_t)ctx->cfg.g_timebase.den;
 
+// KARINO: when overflow, divide first. 
+#ifdef KARINO
+        if(duration_us < 0) {
+   __android_log_print(ANDROID_LOG_DEBUG, "WhiteBoardCast", "duration_us overflow: %llu", duration_us); 
+            duration_us = (((uint64_t)duration)/ ((uint64_t)ctx->cfg.g_timebase.den))
+			 * ((uint64_t) 1000000)
+                      * (uint64_t)ctx->cfg.g_timebase.num;
+   __android_log_print(ANDROID_LOG_DEBUG, "WhiteBoardCast", "overflow: new duration %llu", duration_us); 
+                       
+        }
+#endif
+
         /* If the deadline is more that the duration this frame is to be shown,
          * use good quality mode. Otherwise use realtime mode.
          */
@@ -850,6 +867,16 @@ static vpx_codec_err_t vp8e_encode(vpx_codec_alg_priv_t  *ctx,
         /* vp8 use 10,000,000 ticks/second as time stamp */
         dst_time_stamp    = pts * 10000000 * ctx->cfg.g_timebase.num / ctx->cfg.g_timebase.den;
         dst_end_time_stamp = (pts + duration) * 10000000 * ctx->cfg.g_timebase.num / ctx->cfg.g_timebase.den;
+#ifdef KARINO
+        if(dst_time_stamp < 0) {
+           dst_time_stamp    = ((int64_t)(pts / ctx->cfg.g_timebase.den)) * 10000000*ctx->cfg.g_timebase.num ;
+   // __android_log_print(ANDROID_LOG_DEBUG, "WhiteBoardCast", "dst_time_stamp overflow, new one: %llu", dst_time_stamp); 
+        }
+        if(dst_end_time_stamp < 0) {
+            dst_end_time_stamp = ((int64_t)(pts + duration)  / ctx->cfg.g_timebase.den)* 10000000 * ctx->cfg.g_timebase.num;
+            // __android_log_print(ANDROID_LOG_DEBUG, "WhiteBoardCast", "dst_end_time_stamp overflow, new one: %llu", dst_end_time_stamp); 
+        }
+#endif
 
         if (img != NULL)
         {
@@ -905,6 +932,22 @@ static vpx_codec_err_t vp8e_encode(vpx_codec_alg_priv_t  *ctx,
                     ((delta * ctx->cfg.g_timebase.den + round)
                     / ctx->cfg.g_timebase.num / 10000000);
                 pkt.data.frame.flags = lib_flags << 16;
+#ifdef KARINO
+   if(pkt.data.frame.pts < 0) {
+   // __android_log_print(ANDROID_LOG_DEBUG, "WhiteBoardCast", "frame.pts overflow: %llu", pkt.data.frame.pts); 
+// is this really round well?
+                pkt.data.frame.pts =
+                    (dst_time_stamp/10000000* ctx->cfg.g_timebase.den+ round/10000000)
+                    / ctx->cfg.g_timebase.num;
+/* still overflow 
+                    (dst_time_stamp/ctx->cfg.g_timebase.num * ctx->cfg.g_timebase.den/ctx->cfg.g_timebase.num + round/ctx->cfg.g_timebase.num )
+                    / 10000000;
+*/
+   }
+   if(pkt.data.frame.duration < 0) {
+   __android_log_print(ANDROID_LOG_DEBUG, "WhiteBoardCast", "frame.duration overflow: %x", pkt.data.frame.duration); 
+   }
+#endif
 
                 if (lib_flags & FRAMEFLAGS_KEY)
                     pkt.data.frame.flags |= VPX_FRAME_IS_KEY;
@@ -921,6 +964,11 @@ static vpx_codec_err_t vp8e_encode(vpx_codec_alg_priv_t  *ctx,
                     pkt.data.frame.pts = ((cpi->last_time_stamp_seen
                         * ctx->cfg.g_timebase.den + round)
                         / ctx->cfg.g_timebase.num / 10000000) + 1;
+#ifdef KARINO
+                    if(pkt.data.frame.pts  <0) {
+   __android_log_print(ANDROID_LOG_DEBUG, "WhiteBoardCast", "pkt.data.frame.pts overflow: %llu", pkt.data.frame.pts); 
+			}
+#endif
                     pkt.data.frame.duration = 0;
                 }
 
