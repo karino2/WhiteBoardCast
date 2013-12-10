@@ -1,7 +1,5 @@
 package com.livejournal.karino2.whiteboardcast;
 
-import android.util.Log;
-
 import com.google.libwebm.mkvparser.Block;
 import com.google.libwebm.mkvparser.BlockEntry;
 import com.google.libwebm.mkvparser.Cluster;
@@ -147,16 +145,8 @@ public class WebmReader {
     }
     public boolean isKey() { return block.isKey(); }
 
-    long prevBlockTime;
     public long getBlockTimeNS() {
-        long blocktime = block.getTime(cluster);
-        if(blocktime > 0)
-            prevBlockTime = blocktime;
-        if(blocktime < 0) {
-            Log.d("WhiteBoardCast", String.format("block time negative: %x", blocktime));
-            throw new RuntimeException("temp debug: ");
-        }
-        return blocktime;
+        return block.getTime(cluster);
     }
 
     boolean done = false;

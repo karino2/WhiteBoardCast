@@ -29,11 +29,7 @@ public class Rational {
     return new Rational(num * b.num(), den * b.den());
   }
 
-    public Rational multiply(long b) {
-        return new Rational(num * b, den);
-    }
-
-    public Rational multiply(int b) {
+  public Rational multiply(int b) {
     return new Rational(num * b, den);
   }
 

@@ -53,7 +53,7 @@ public class Encoder {
     }
 
 
-    public synchronized boolean encodeFrames(int[] srcFrame, Rect invalRect, long framesToEncode, long fourcc, StringBuilder error) {
+    public synchronized boolean encodeFrames(int[] srcFrame, Rect invalRect, int framesToEncode, long fourcc, StringBuilder error) {
         if(!encodeOneFrame(srcFrame, invalRect, framesToEncode, fourcc, error))
             return false;
         framesIn = framesToEncode;
@@ -65,7 +65,7 @@ public class Encoder {
     LibVpxEnc encoder = null;
     MkvWriter mkvWriter = null;
     Segment muxerSegment = null;
-    long framesIn = 1;
+    int framesIn = 1;
     Rational timeMultiplier = null;
     long newVideoTrackNumber = 0;
 
@@ -112,20 +112,10 @@ public class Encoder {
         return true;
     }
 
-    private boolean encodeOneFrame(int[] srcFrame, Rect invalRect, long endFrame, long fourcc,
+    private boolean encodeOneFrame(int[] srcFrame, Rect invalRect, int endFrame, long fourcc,
                                    StringBuilder error) {
         long frameStart = timeMultiplier.multiply(framesIn - 1).toLong();
         long nextFrameStart = timeMultiplier.multiply(endFrame).toLong();
-
-        if(endFrame > 0x0ffff) {
-            Log.d("WhiteBoardCast",
-                    String.format("endframe bigger than 4: %x, %x, %x, %x, %x", frameStart, nextFrameStart, framesIn, endFrame,  nextFrameStart-frameStart));
-        }
-        /*
-        long test1 = timeMultiplier.multiply(0x7fffffffL).toLong();
-        long test2 = timeMultiplier.multiply(0x80000000L).toLong();
-        long test3 = test2-test1;
-        */
 
         ArrayList<VpxCodecCxPkt> encPkt = null;
         try {
@@ -136,12 +126,8 @@ public class Encoder {
                 VpxCodecCxPkt pkt = encPkt.get(i);
                 final boolean isKey = (pkt.flags & 0x1) == 1;
 
-                if(pkt.pts < 0) {
-                    Log.d("WhiteBoardCast",
-                            String.format("pkt negative: %d, %d, %d, %x, %x, %x, %x, %x, %x", pkt.pts, -pkt.pts,frameStart ,pkt.pts, frameStart, nextFrameStart, framesIn, endFrame,  nextFrameStart-frameStart));
-                }
                 if (!muxerSegment.addFrame(pkt.buffer, newVideoTrackNumber, pkt.pts, isKey)) {
-                    showError(error, String.format("Could not add frame. %d, %d, %x, %x", pkt.pts, frameStart, pkt.pts, frameStart));
+                    showError(error, "Could not add frame.");
                     return false;
                 }
             }

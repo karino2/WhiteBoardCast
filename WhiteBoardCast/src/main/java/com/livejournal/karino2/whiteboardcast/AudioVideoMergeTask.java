@@ -97,17 +97,6 @@ public class AudioVideoMergeTask extends AsyncTask<String, Integer, String> {
         return null;
     }
 
-    boolean uint64Gt(long arg1, long arg2) {
-        if(arg1 >=0 && arg2 >= 0)
-            return arg1 > arg2;
-        if(arg1 < 0 && arg2 > 0)
-            return true;
-        if(arg1 >=0 && arg2 < 0)
-            return false;
-        // arg1 < 0 && arg2 < 0
-        return arg1 < arg2;
-    }
-
     private void doMergeAudioVideo(String videoPath, String audioPath, String resultPath) throws Exception {
         MkvWriter mkvWriter = null;
 
@@ -210,19 +199,16 @@ public class AudioVideoMergeTask extends AsyncTask<String, Integer, String> {
             byte[] webmFrame = null;
             vorbisFrame = audioReader.popFrame();
             webmFrame = webmReader.popFrame();
-
             // isDone return true after popFrame return null.
             try {
                 while (!audioReader.isDone() || !webmReader.isDone()) {
                     if(!audioReader.isDone() && !webmReader.isDone()) {
-                        // webmReader.getBlockTimeNS()> audioReader.getBlockTimeNS()
-                        if(uint64Gt(webmReader.getBlockTimeNS(), audioReader.getBlockTimeNS())) {
-                            while(!audioReader.isDone() && uint64Gt(webmReader.getBlockTimeNS(), audioReader.getBlockTimeNS())) {
+                        if(webmReader.getBlockTimeNS() > audioReader.getBlockTimeNS()) {
+                            while(!audioReader.isDone() && webmReader.getBlockTimeNS() > audioReader.getBlockTimeNS()) {
                                 vorbisFrame = addAudioFrameAndPopNext(audioReader, muxerSegment, newAudioTrackNumber, vorbisFrame);
                             }
-                            // webmReader.getBlockTimeNS() < audioReader.getBlockTimeNS()
-                        } else if(  uint64Gt(audioReader.getBlockTimeNS(),webmReader.getBlockTimeNS())) {
-                            while(!webmReader.isDone() && uint64Gt(audioReader.getBlockTimeNS(),webmReader.getBlockTimeNS())) {
+                        } else if(webmReader.getBlockTimeNS() < audioReader.getBlockTimeNS()) {
+                            while(!webmReader.isDone() && webmReader.getBlockTimeNS() < audioReader.getBlockTimeNS()) {
                                 webmFrame = addVideoFrameAndPopNext(webmReader, muxerSegment, newVideoTrackNumber, webmFrame);
                             }
                         } else { // ==
