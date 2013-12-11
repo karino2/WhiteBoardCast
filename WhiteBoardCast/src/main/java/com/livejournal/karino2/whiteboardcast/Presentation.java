@@ -100,6 +100,7 @@ public class Presentation {
     }
 
     public void resumeRecord() {
+        recStats = RecordStatus.RECORDING;
         long suspendedBegin = recorder.lastBlockEndMil();
         long suspendedDur = System.currentTimeMillis() - suspendedBegin;
         recorder.resume(suspendedDur);
