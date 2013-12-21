@@ -114,6 +114,8 @@ public class WhiteBoardCanvas extends View implements FrameRetrieval, PageScroll
         w = (w+15) & ~15;
         h = (h+15) & ~15;
         // Log.d("WBCast", "after, w,h=" + w+ "," + h);
+        if( w <= mWidth)
+            return; // when activity changing, some Android version call this when orientation changed (for other Activity!). just ignore.
         mWidth = w;
         mHeight = h;
         mX1 = CROSS_SIZE*2;
