@@ -93,12 +93,13 @@ public class ImportDialog extends ProgressDialog {
 
     public static File getThumbnailFile(File parent) throws IOException {
         File thumbnailDir = getThumbnailDirectory();
-        WhiteBoardCastActivity.ensureDirExist(thumbnailDir);
         return new File(thumbnailDir, parent.getName());
     }
 
     public static File getThumbnailDirectory() throws IOException {
-        return new File(getSlideListDirectory(), "thumbnail");
+        File thumbnailDir =  new File(getSlideListDirectory(), "thumbnail");
+        WhiteBoardCastActivity.ensureDirExist(thumbnailDir);
+        return thumbnailDir;
     }
 
     private int getResizeFactor(Uri imageUri) throws IOException {
