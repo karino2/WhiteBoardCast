@@ -33,6 +33,7 @@ public class PageScrollAnimator implements Runnable{
     Paint blackPaint;
     Direction scrollDirection;
 
+
     public PageScrollAnimator(ScheduledExecutorService execut, Animatee target) {
         executor = execut;
         this.target = target;
@@ -97,6 +98,12 @@ public class PageScrollAnimator implements Runnable{
             tickPrevLast(width, height);
     }
 
+    void clearDestCanvasSafe() {
+        synchronized(destBmpForLock) {
+            destCanvas.drawColor(Color.WHITE);
+        }
+    }
+
     void drawBmpDestCanvasSafe(Bitmap bmp, Rect src, Rect dest, Paint paint) {
         synchronized(destBmpForLock) {
             destCanvas.drawBitmap(bmp, src, dest, paint);
@@ -117,6 +124,8 @@ public class PageScrollAnimator implements Runnable{
 
         int border = (int)(height*rate);
 
+        clearDestCanvasSafe();
+
         srcRegion.set(0, height-border, width, height);
         destRegion.set(0, 0, width, border);
         drawBmpDestCanvasSafe(prevPage, srcRegion, destRegion, null);
@@ -133,6 +142,7 @@ public class PageScrollAnimator implements Runnable{
     private void tickPrevLast(int height, int width) {
         srcRegion.set(0, 0, width, height);
         destRegion.set(0, 0, width, height);
+        clearDestCanvasSafe();
         drawBmpDestCanvasSafe(prevPage, srcRegion, destRegion, null);
     }
 
@@ -142,6 +152,7 @@ public class PageScrollAnimator implements Runnable{
             tickNextLast(height, width);
             return;
         }
+        clearDestCanvasSafe();
 
         int border = height - (int)(height*rate);
         srcRegion.set(0, height-border+1, width, height);
@@ -160,6 +171,7 @@ public class PageScrollAnimator implements Runnable{
     private void tickNextLast(int height, int width) {
         srcRegion.set(0, 0, width, height);
         destRegion.set(0, 0, width, height);
+        clearDestCanvasSafe();
         drawBmpDestCanvasSafe(nextPage, srcRegion, destRegion, null);
     }
 

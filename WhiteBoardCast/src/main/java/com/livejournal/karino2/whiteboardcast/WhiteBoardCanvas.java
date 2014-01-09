@@ -2,7 +2,6 @@ package com.livejournal.karino2.whiteboardcast;
 
 import android.content.Context;
 import android.graphics.Bitmap;
-import android.graphics.BitmapFactory;
 import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.DashPathEffect;
@@ -14,20 +13,14 @@ import android.graphics.Rect;
 import android.graphics.RectF;
 import android.os.Handler;
 import android.util.AttributeSet;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.MotionEvent;
 import android.view.View;
 import android.widget.AdapterView;
 import android.widget.ListPopupWindow;
-import android.widget.PopupMenu;
-import android.widget.PopupWindow;
 
 import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileNotFoundException;
 import java.io.IOException;
-import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -51,8 +44,9 @@ public class WhiteBoardCanvas extends View implements FrameRetrieval, PageScroll
     private Path mPath;
     private Paint mBitmapPaint;
     private Paint       mPaint;
-    private Paint undoRedoPaint;
+    private Paint overwritePaint;
     private Paint mCursorPaint;
+    private Paint fillPaint;
     private Rect invalRegion;
 
     BoardList boardList;
@@ -86,8 +80,12 @@ public class WhiteBoardCanvas extends View implements FrameRetrieval, PageScroll
         mPaint.setStrokeWidth(DEFAULT_PEN_WIDTH);
         invalRegion = new Rect(0, 0, 0, 0);
 
-        undoRedoPaint = new Paint();
-        undoRedoPaint.setXfermode(new PorterDuffXfermode(PorterDuff.Mode.DST));
+        overwritePaint = new Paint();
+        overwritePaint.setXfermode(new PorterDuffXfermode(PorterDuff.Mode.SRC));
+
+        fillPaint = new Paint();
+        fillPaint.setColor(Color.WHITE);
+        fillPaint.setStyle(Paint.Style.FILL);
 
         mCursorPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
         mCursorPaint.setStyle(Paint.Style.STROKE);
@@ -169,6 +167,7 @@ public class WhiteBoardCanvas extends View implements FrameRetrieval, PageScroll
 
     private void drawToViewBmp(Rect region, Bitmap fg) {
         synchronized(viewBmp) {
+            viewCanvas.drawRect(region, fillPaint);
             viewCanvas.drawBitmap(getCurrentBackground(), region, region, mBitmapPaint);
             viewCanvas.drawBitmap(fg, region, region, mBitmapPaint);
         }
@@ -227,20 +226,21 @@ public class WhiteBoardCanvas extends View implements FrameRetrieval, PageScroll
     void backupCursorRegion(RectF region) {
         region.roundOut(lastBrushCursorRegion);
         widen(lastBrushCursorRegion, CURSOR_MARGIN);
-        fitIntoBrushSize(lastBrushCursorRegion);
+        fitInsideScreen(lastBrushCursorRegion);
+        // fitIntoBrushSize(lastBrushCursorRegion);
         if(lastBrushCursorRegion.width() <=0 || lastBrushCursorRegion.height() <= 0) {
             makeRegionInvalid(lastBrushCursorRegion);
             return;
         }
+        /*
         penCanvasBmp.getPixels(cursorBackupPixels, 0, penCursorWidth,
                 lastBrushCursorRegion.left, lastBrushCursorRegion.top,
                 lastBrushCursorRegion.width(), lastBrushCursorRegion.height());
-        /*
+                */
         Rect dest = new Rect(0, 0, lastBrushCursorRegion.width(), lastBrushCursorRegion.height());
         // TODO: too slow?
-        cursorBackupBmp.eraseColor(Color.TRANSPARENT);
-        cursorBackupCanvas.drawBitmap(penCanvasBmp, lastBrushCursorRegion, dest, null);
-        */
+        // cursorBackupBmp.eraseColor(Color.TRANSPARENT);
+        cursorBackupCanvas.drawBitmap(penCanvasBmp, lastBrushCursorRegion, dest, overwritePaint);
     }
 
     private void fitIntoBrushSize(Rect lastBrushCursorRegion) {
@@ -258,13 +258,13 @@ public class WhiteBoardCanvas extends View implements FrameRetrieval, PageScroll
     private void revertBrushDrawnRegionIfNecessary() {
         if(!isRectValid(lastBrushCursorRegion))
             return;
+        Rect srcRegion = new Rect(0, 0, lastBrushCursorRegion.width(), lastBrushCursorRegion.height());
+        penCanvas.drawBitmap(cursorBackupBmp, srcRegion, lastBrushCursorRegion, overwritePaint);
         /*
-        Rect tmp = new Rect(0, 0, lastBrushCursorRegion.width(), lastBrushCursorRegion.height());
-        penCanvas.drawBitmap(cursorBackupBmp, tmp, lastBrushCursorRegion, null);
-        */
         penCanvasBmp.setPixels(cursorBackupPixels, 0, penCursorWidth,
                 lastBrushCursorRegion.left, lastBrushCursorRegion.top,
                 lastBrushCursorRegion.width(), lastBrushCursorRegion.height());
+                */
 
         drawToViewBmp(lastBrushCursorRegion);
 
@@ -645,6 +645,8 @@ public class WhiteBoardCanvas extends View implements FrameRetrieval, PageScroll
     private void afterChangeBoard() {
         synchronized (viewBmp) {
             invalWholeRegionForEncoder();
+            Rect r = new Rect(0, 0, mWidth, mHeight);
+            viewCanvas.drawRect(r, fillPaint);
             viewCanvas.drawBitmap(getCurrentBackground(), 0, 0, mBitmapPaint);
             viewCanvas.drawBitmap(getCommittedBitmap(), 0, 0, mBitmapPaint);
         }
