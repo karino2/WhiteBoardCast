@@ -22,12 +22,14 @@ public class PanelColor2
 	private Bitmap mAdd = null;
 	private Bitmap mRemove = null;
     private PanelColor panelColor;
+    PanelPalette panelPalette;
 
-	public PanelColor2( int toolUnit, WhiteBoardCastActivity act, PanelColor panelColor1)
+	public PanelColor2( int toolUnit, WhiteBoardCastActivity act, PanelColor panelColor1, PanelPalette palette)
 	{
 		mAct = act;
 		mToolUnit = toolUnit;
         panelColor = panelColor1;
+        panelPalette = palette;
 
 		int m = (int)(0.75 * mToolUnit);
 		mChecker = Bitmap.createBitmap( m, m, Config.ARGB_8888 );
@@ -118,7 +120,7 @@ public class PanelColor2
 		Canvas c = new Canvas( mView );
 		
 		// 前景・背景色
-		PanelColor pc = panelColor();
+        PanelColor pc = panelColor;
 		int foreColor = pc.currentColor();
 		int bgColor = pc.bgColor();
 		
@@ -167,7 +169,7 @@ public class PanelColor2
 
 		dy = mToolUnit*3;
 		c.drawRect( new Rect( dx+1, dy+1, dx+mToolUnit-1, dy+mToolUnit-1), paint );
-		if (panelPaletteActiveIndex() == -1) paint.setAlpha( disableOpaque() );
+        if (panelPalette.mActiveIndex == -1) paint.setAlpha( disableOpaque() );
 		c.drawBitmap( mRemove, 0, dy, paint );
 	}
 	
@@ -178,7 +180,7 @@ public class PanelColor2
 			if (mType == 0)
 			{
 				// 色入れ替え
-				panelColor().swapColor();
+                panelColor.swapColor();
 			}
 			else
 			{
@@ -198,14 +200,14 @@ public class PanelColor2
 		if ((iy >= mToolUnit*2) && (iy < mToolUnit*3))
 		{
 			// パレット追加
-			panelPaletteAddColor();
-		}
+            panelPalette.addColor();
+        }
 		
 		if ((iy >= mToolUnit*3) && (iy < mToolUnit*4))
 		{
 			// パレット削除
-			panelPaletteRemoveColor();
-		}
+            panelPalette.removeColor();
+        }
 		
 		updatePanel();
 	}
@@ -219,13 +221,6 @@ public class PanelColor2
 		mView.recycle();
 	}
 
-    // DONE 
-
-    // mAct.mView.UI().panelColor()
-    PanelColor panelColor() {
-        return panelColor;
-    }
-
     // TODO: implement below.
     // 		UITablet.drawForeBG( foreColor, bgColor, c, r.left, r.top, mToolUnit );
     void drawForeBG(int foreColor, int bgColor, Canvas canvas, int left, int top, int unit) {
@@ -235,10 +230,7 @@ public class PanelColor2
     int getOpBG() {
         return Color.RED;
     }
-    // panelPalette().mActiveIndex
-    int panelPaletteActiveIndex() {
-        return -1;
-    }
+
     // UITablet.DisableOpaque
     int disableOpaque() {
         return 200; // below 255.
@@ -248,14 +240,6 @@ public class PanelColor2
     // MainActivity.nSetBrushDraw
     void setPenOrEraser(int mode) {
         showMessage("setPenOrEraser: " + mode);
-    }
-
-    // panelPalette().addColor(int color)
-    void panelPaletteAddColor() {
-        showMessage("addColor");
-    }
-    void panelPaletteRemoveColor() {
-        showMessage("removeColor");
     }
 
     void showMessage(String msg) {
