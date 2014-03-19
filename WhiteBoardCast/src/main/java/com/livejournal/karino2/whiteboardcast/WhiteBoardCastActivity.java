@@ -745,8 +745,17 @@ public class WhiteBoardCastActivity extends Activity implements EncoderTask.Erro
 
     }
 
+    // TODO: remove this.
     public void setPenOrEraser(int penIndex) {
         getWhiteBoardCanvas().setPenOrEraser(penIndex);
+    }
+
+    public void setPen() {
+        getWhiteBoardCanvas().setPen();
+    }
+
+    public void setEraser() {
+        getWhiteBoardCanvas().setEraser();
     }
 
     @Override

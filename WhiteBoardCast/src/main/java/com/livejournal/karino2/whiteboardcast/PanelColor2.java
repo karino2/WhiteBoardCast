@@ -186,7 +186,7 @@ public class PanelColor2
 			{
 				// 色モードに変更
 				mType = 0;
-                setPenOrEraser(0);
+                mAct.setPen();
 			}
 		}
 
@@ -194,7 +194,7 @@ public class PanelColor2
 		{
 			// 消しゴムモード
 			mType = 1;
-            setPenOrEraser(1);
+            mAct.setEraser();
 		}
 
 		if ((iy >= mToolUnit*2) && (iy < mToolUnit*3))
@@ -251,12 +251,6 @@ public class PanelColor2
         c.drawRect( rf, paintS );
     }
     // TODO: implement below.
-    // 		UITablet.drawForeBG( foreColor, bgColor, c, r.left, r.top, mToolUnit );
-    /*
-    void drawForeBG(int foreColor, int bgColor, Canvas canvas, int left, int top, int unit) {
-        showMessage("drawForeBG");
-    }
-    */
     // UITablet.OpBG
     int getOpBG() {
         return Color.RED;
@@ -267,13 +261,4 @@ public class PanelColor2
         return 200; // below 255.
     }
 
-    // 0 is pen, 1 is eraser.
-    // MainActivity.nSetBrushDraw
-    void setPenOrEraser(int mode) {
-        showMessage("setPenOrEraser: " + mode);
-    }
-
-    void showMessage(String msg) {
-        mAct.showMessage(msg);
-    }
 }

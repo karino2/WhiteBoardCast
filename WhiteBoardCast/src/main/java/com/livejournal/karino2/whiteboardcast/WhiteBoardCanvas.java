@@ -573,8 +573,7 @@ public class WhiteBoardCanvas extends View implements FrameRetrieval, PageScroll
 
     // TODO: remove this
     public void setPenOrEraser(int penIndex) {
-        mPaint.setXfermode(null);
-        setPenWidth(DEFAULT_PEN_WIDTH);
+        setPen();
 
         switch(penIndex) {
             case FloatingOverlay.PEN_INDEX_BLACK:
@@ -590,12 +589,21 @@ public class WhiteBoardCanvas extends View implements FrameRetrieval, PageScroll
                 mPaint.setColor(Color.GREEN);
                 break;
             case FloatingOverlay.PEN_INDEX_ERASER:
-                mPaint.setXfermode(new PorterDuffXfermode(
-                        PorterDuff.Mode.CLEAR));
-                // mPaint.setColor(Color.WHITE);
-                setPenWidth(ERASER_WIDTH);
+                setEraser();
                 break;
         }
+    }
+
+    public void setPen() {
+        mPaint.setXfermode(null);
+        setPenWidth(DEFAULT_PEN_WIDTH);
+    }
+
+    public void setEraser() {
+        mPaint.setXfermode(new PorterDuffXfermode(
+                PorterDuff.Mode.CLEAR));
+        // mPaint.setColor(Color.WHITE);
+        setPenWidth(ERASER_WIDTH);
     }
 
     public void changeRecStatus() {
