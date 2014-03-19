@@ -190,9 +190,11 @@ public class FloatingOverlay {
     }
 
     WhiteBoardCastActivity activity;
+    ColorPicker picker;
 
     public FloatingOverlay(WhiteBoardCastActivity act,  float toolHeightCm) {
         activity = act;
+
 
         DisplayMetrics metrics = new DisplayMetrics();
         act.getWindowManager().getDefaultDisplay().getMetrics(metrics);
@@ -223,6 +225,13 @@ public class FloatingOverlay {
         initPageUpDownImage();
         initToolbarImage();
 
+        picker = new ColorPicker(toolHeight, activity,  new PanelColor.ColorListener() {
+            @Override
+            public void setColor(int r, int g, int b) {
+                activity.showMessage("setColor");
+            }
+        });
+
 
     }
 
@@ -243,6 +252,8 @@ public class FloatingOverlay {
 
         if (toolX < 0) toolX = 0;
         if (toolY < 0) toolY = 0;
+
+        picker.setPosition(toolX, toolY-picker.height());
     }
 
     Rect popupRect = new Rect();
@@ -251,6 +262,14 @@ public class FloatingOverlay {
     {
         drawPageUpDownButton(canvas);
         drawToolBar(canvas);
+
+        // TODO: this is test code.
+        drawPanelColor(canvas);
+    }
+
+    private void drawPanelColor(Canvas canvas) {
+        //        picker.draw(canvas, toolX, toolY-picker.height());
+        picker.draw(canvas);
     }
 
     private void drawPageUpDownButton(Canvas canvas) {
@@ -307,6 +326,13 @@ public class FloatingOverlay {
     {
         int ix = (int)gx;
         int iy = (int)gy;
+
+
+        if(picker.isInside(ix, iy))
+        {
+            picker.onDown(ix, iy);
+            return true;
+        }
 
         int idx = insideIndex( gx, gy );
         touchingToolBar = (idx != -1);
@@ -386,6 +412,11 @@ public class FloatingOverlay {
         int ix = (int)gx;
         int iy = (int)gy;
 
+        if(picker.isSnap()) {
+            picker.onMove(ix, iy);
+            return true;
+        }
+
         subIndex = -1;
 
         if (dragging)
@@ -409,6 +440,9 @@ public class FloatingOverlay {
         int ix = (int)gx;
         int iy = (int)gy;
         boolean res = touchingToolBar;
+
+        // no side effect.
+        picker.onUp(ix, iy);
 
         if(penDown && subIndex != -1) {
             penIndex = subIndex;

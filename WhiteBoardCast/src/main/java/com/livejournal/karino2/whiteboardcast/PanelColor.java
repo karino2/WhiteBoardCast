@@ -392,6 +392,10 @@ public class PanelColor
 		
 		return Math.atan2( py, px );
 	}
+
+    public boolean isSnap() {
+        return mTouching;
+    }
 	
 	public void onDown( int ix, int iy )
 	{

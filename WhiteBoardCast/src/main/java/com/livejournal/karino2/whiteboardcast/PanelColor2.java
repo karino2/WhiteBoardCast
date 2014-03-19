@@ -221,11 +221,42 @@ public class PanelColor2
 		mView.recycle();
 	}
 
+    public static void drawForeBG( int foreColor, int bgColor, Canvas c, int x, int y, int m )
+    {
+        Paint paint = new Paint();
+        Paint paintS = new Paint();
+        paintS.setStyle( Style.STROKE );
+
+        int n = (int)(0.55 * m);
+        int cx1 = x;
+        int cy1 = y;
+        int cx2 = cx1 + m/3;
+        int cy2 = cy1 + m/3;
+
+        // 背景色
+        Rect rb = new Rect( cx2, cy2, cx2 + n, cy2 + n );
+        paint.setStyle( Style.FILL );
+        paint.setColor( bgColor );
+        c.drawRect( rb, paint );
+
+        paintS.setColor( 0xFF404040 );
+        c.drawRect( rb, paintS );
+
+        // 前景色
+        Rect rf = new Rect( cx1, cy1, cx1 + n, cy1 + n );
+        paint.setColor( foreColor );
+        c.drawRect( rf, paint );
+
+        paintS.setColor( 0xFF404040 );
+        c.drawRect( rf, paintS );
+    }
     // TODO: implement below.
     // 		UITablet.drawForeBG( foreColor, bgColor, c, r.left, r.top, mToolUnit );
+    /*
     void drawForeBG(int foreColor, int bgColor, Canvas canvas, int left, int top, int unit) {
         showMessage("drawForeBG");
     }
+    */
     // UITablet.OpBG
     int getOpBG() {
         return Color.RED;
