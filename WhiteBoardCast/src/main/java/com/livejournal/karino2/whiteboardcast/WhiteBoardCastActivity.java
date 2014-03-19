@@ -14,6 +14,7 @@ import android.content.Intent;
 import android.content.pm.ApplicationInfo;
 import android.content.pm.PackageManager;
 import android.content.res.Configuration;
+import android.graphics.Color;
 import android.net.Uri;
 import android.os.Bundle;
 import android.os.Environment;
@@ -36,7 +37,7 @@ import java.io.IOException;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 
-public class WhiteBoardCastActivity extends Activity implements EncoderTask.ErrorListener {
+public class WhiteBoardCastActivity extends Activity implements EncoderTask.ErrorListener, PanelColor.ColorListener {
 
     static final int DIALOG_ID_ABOUT = 1;
     static final int DIALOG_ID_QUERY_VIEW_SHARE = 2;
@@ -746,5 +747,10 @@ public class WhiteBoardCastActivity extends Activity implements EncoderTask.Erro
 
     public void setPenOrEraser(int penIndex) {
         getWhiteBoardCanvas().setPenOrEraser(penIndex);
+    }
+
+    @Override
+    public void setColor(int r, int g, int b) {
+        getWhiteBoardCanvas().setPenColor(Color.argb(0xff, r, g, b));
     }
 }

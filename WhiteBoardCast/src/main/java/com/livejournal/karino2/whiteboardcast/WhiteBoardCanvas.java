@@ -567,6 +567,11 @@ public class WhiteBoardCanvas extends View implements FrameRetrieval, PageScroll
         penWidth = width;
     }
 
+    public void setPenColor(int color) {
+        mPaint.setColor(color);
+    }
+
+    // TODO: remove this
     public void setPenOrEraser(int penIndex) {
         mPaint.setXfermode(null);
         setPenWidth(DEFAULT_PEN_WIDTH);

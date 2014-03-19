@@ -225,12 +225,7 @@ public class FloatingOverlay {
         initPageUpDownImage();
         initToolbarImage();
 
-        picker = new ColorPicker(toolHeight, activity,  new PanelColor.ColorListener() {
-            @Override
-            public void setColor(int r, int g, int b) {
-                activity.showMessage("setColor");
-            }
-        });
+        picker = new ColorPicker(toolHeight, activity, activity);
 
 
     }
