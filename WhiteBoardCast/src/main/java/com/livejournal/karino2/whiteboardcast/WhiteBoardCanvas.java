@@ -571,29 +571,6 @@ public class WhiteBoardCanvas extends View implements FrameRetrieval, PageScroll
         mPaint.setColor(color);
     }
 
-    // TODO: remove this
-    public void setPenOrEraser(int penIndex) {
-        setPen();
-
-        switch(penIndex) {
-            case FloatingOverlay.PEN_INDEX_BLACK:
-                mPaint.setColor(Color.DKGRAY);
-                break;
-            case FloatingOverlay.PEN_INDEX_BLUE:
-                mPaint.setColor(Color.BLUE);
-                break;
-            case FloatingOverlay.PEN_INDEX_RED:
-                mPaint.setColor(Color.RED);
-                break;
-            case FloatingOverlay.PEN_INDEX_GREEN:
-                mPaint.setColor(Color.GREEN);
-                break;
-            case FloatingOverlay.PEN_INDEX_ERASER:
-                setEraser();
-                break;
-        }
-    }
-
     public void setPen() {
         mPaint.setXfermode(null);
         setPenWidth(DEFAULT_PEN_WIDTH);
@@ -611,10 +588,6 @@ public class WhiteBoardCanvas extends View implements FrameRetrieval, PageScroll
         invalidate();
     }
 
-    public void changeSlidesStatus() {
-        overlay.changeSlidesStatus();
-        invalidate();
-    }
 
     public boolean canRedo() {
         return getUndoList().canRedo();

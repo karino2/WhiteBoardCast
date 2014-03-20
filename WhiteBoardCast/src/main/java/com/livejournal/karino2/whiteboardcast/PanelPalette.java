@@ -69,14 +69,13 @@ public class PanelPalette
 	}
 
     private int initialColorSetup(SharedPreferences settings) {
-        int num = 5;
+        int num = 4;
         settings.edit()
                 .putInt("PalNum", num)
                 .putInt("Pal0", Color.DKGRAY)
-                .putInt("Pal1", 0xffeeeeaa)
-                .putInt("Pal2", Color.BLUE)
-                .putInt("Pal3", Color.RED)
-                .putInt("Pal4", Color.GREEN)
+                .putInt("Pal1", Color.BLUE)
+                .putInt("Pal2", Color.RED)
+                .putInt("Pal3", Color.GREEN)
                 .commit();
         return num;
     }
