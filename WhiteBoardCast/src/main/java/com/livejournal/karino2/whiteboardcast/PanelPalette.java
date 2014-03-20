@@ -6,6 +6,7 @@ import android.content.SharedPreferences;
 import android.graphics.Bitmap;
 import android.graphics.Canvas;
 import android.graphics.Bitmap.Config;
+import android.graphics.Color;
 import android.graphics.Paint.Style;
 import android.graphics.Paint;
 import android.graphics.Rect;
@@ -36,14 +37,13 @@ public class PanelPalette
         colorListener = listener;
 
 		mColors = new ArrayList<Integer>();
-		
-		mColors.add( 0xFF000000 );
-		mColors.add( 0xFFFFFFFF );
+
 		openPalette();
 		
 		onResize();
 	}
-	
+
+
 	public Bitmap view(){ return mView;	}
 	public int width(){ return mView.getWidth(); }
 	public int height(){ return mView.getHeight(); }
@@ -54,8 +54,10 @@ public class PanelPalette
 	{
 		SharedPreferences settings = PreferenceManager.getDefaultSharedPreferences( mAct );
 		
-		int num = settings.getInt( "PalNum", 0 );
-		if (num == 0) return;
+		int num = settings.getInt( "PalNum", -1 );
+		if (num == -1) {
+            num = initialColorSetup(settings);
+        }
 		
 		mColors.clear();
 		for (int i=0; i<num; i++)
@@ -65,8 +67,21 @@ public class PanelPalette
 			mColors.add( color );
 		}
 	}
-	
-	public void savePalette()
+
+    private int initialColorSetup(SharedPreferences settings) {
+        int num = 5;
+        settings.edit()
+                .putInt("PalNum", num)
+                .putInt("Pal0", Color.DKGRAY)
+                .putInt("Pal1", 0xffeeeeaa)
+                .putInt("Pal2", Color.BLUE)
+                .putInt("Pal3", Color.RED)
+                .putInt("Pal4", Color.GREEN)
+                .commit();
+        return num;
+    }
+
+    public void savePalette()
 	{
 		SharedPreferences settings = PreferenceManager.getDefaultSharedPreferences( mAct );
 		SharedPreferences.Editor editor = settings.edit();
