@@ -229,15 +229,12 @@ public class PanelColor2
         paintS.setColor( 0xFF404040 );
         c.drawRect( rf, paintS );
     }
-    // TODO: implement below.
-    // UITablet.OpBG
     int getOpBG() {
-        return Color.RED;
+        return Color.DKGRAY;
     }
 
-    // UITablet.DisableOpaque
     int disableOpaque() {
-        return 200; // below 255.
+        return 50; // below 255.
     }
 
 }
