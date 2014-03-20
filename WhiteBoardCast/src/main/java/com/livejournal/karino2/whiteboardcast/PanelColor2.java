@@ -31,12 +31,11 @@ public class PanelColor2
         panelColor = panelColor1;
         panelPalette = palette;
 
-		int m = (int)(0.75 * mToolUnit);
-		mChecker = Bitmap.createBitmap( m, m, Config.ARGB_8888 );
-		fillChecker( mChecker, 0xFFFFFFFF, 0xFFC0C0C0, 8 );
+        Bitmap bmp = BitmapFactory.decodeResource(act.getResources(), R.drawable.eraser_button);
+        mChecker = fitHeight(bmp, mToolUnit);
 
 		// Add/Remove
-		Bitmap bmp = BitmapFactory.decodeResource( act.getResources(), R.drawable.op_add );
+		bmp = BitmapFactory.decodeResource( act.getResources(), R.drawable.op_add );
 		mAdd = fitHeight(bmp, mToolUnit);
 		
 		bmp = BitmapFactory.decodeResource( act.getResources(), R.drawable.op_remove );
@@ -73,36 +72,6 @@ public class PanelColor2
 
 
 
-    // TODO: remove this.
-    // 市松模様で塗る (size == 2の倍数)
-    public static void fillChecker( Bitmap dest, int c0, int c1, int size )
-    {
-        int w = dest.getWidth();
-        int h = dest.getHeight();
-
-        int mask = size - 1;
-        int hsize = size / 2;
-
-        int[] pixels = new int[w];
-        for (int j=0; j<h; j++)
-        {
-            int by = 0;
-            int my = j & mask;
-            if (my < hsize) by = 1;
-
-            for (int i=0; i<w; i++)
-            {
-                int bx = 0;
-                int mx = i & mask;
-                if (mx < hsize) bx = 1;
-
-                if (((bx + by) & 1) == 0) pixels[i] = c0; else pixels[i] = c1;
-            }
-
-            // ライン単位で書き込み
-            dest.setPixels( pixels, 0, w, 0, j, w, 1 );
-        }
-    }
 
 
     public Bitmap view(){ return mView;	}
@@ -179,22 +148,22 @@ public class PanelColor2
 		{
 			if (mType == 0)
 			{
-				// 色入れ替え
+                // do nothing
+                /*
                 panelColor.swapColor();
+                */
 			}
 			else
 			{
 				// 色モードに変更
-				mType = 0;
-                mAct.setPen();
+                setPen();
 			}
 		}
 
 		if ((iy >= mToolUnit) && (iy < mToolUnit*2))
 		{
 			// 消しゴムモード
-			mType = 1;
-            mAct.setEraser();
+            setEraser();
 		}
 
 		if ((iy >= mToolUnit*2) && (iy < mToolUnit*3))
@@ -212,7 +181,17 @@ public class PanelColor2
 		updatePanel();
 	}
 
-	public void onUp( int ix, int iy )
+    public void setEraser() {
+        mType = 1;
+        mAct.setEraser();
+    }
+
+    public void setPen() {
+        mType = 0;
+        mAct.setPen();
+    }
+
+    public void onUp( int ix, int iy )
 	{
 	}
 	

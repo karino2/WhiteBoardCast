@@ -110,10 +110,40 @@ public class PanelPalette
 		onResize();
 		savePalette();
 	}
-	
-	public void updatePanel()
+
+    // 市松模様で塗る (size == 2の倍数)
+    public static void fillChecker( Bitmap dest, int c0, int c1, int size )
+    {
+        int w = dest.getWidth();
+        int h = dest.getHeight();
+
+        int mask = size - 1;
+        int hsize = size / 2;
+
+        int[] pixels = new int[w];
+        for (int j=0; j<h; j++)
+        {
+            int by = 0;
+            int my = j & mask;
+            if (my < hsize) by = 1;
+
+            for (int i=0; i<w; i++)
+            {
+                int bx = 0;
+                int mx = i & mask;
+                if (mx < hsize) bx = 1;
+
+                if (((bx + by) & 1) == 0) pixels[i] = c0; else pixels[i] = c1;
+            }
+
+            // ライン単位で書き込み
+            dest.setPixels( pixels, 0, w, 0, j, w, 1 );
+        }
+    }
+
+    public void updatePanel()
 	{
-		PanelColor2.fillChecker( mView, 0xFFFFFFFF, 0xFFD0D0D0, 8 );
+		fillChecker( mView, 0xFFFFFFFF, 0xFFD0D0D0, 8 );
 		
 		Canvas canvas = new Canvas( mView );
 		Paint paint = new Paint();
