@@ -33,7 +33,7 @@ public class PanelPalette
         panelColor = panelCol;
 		mAct = act;
 		mToolUnit = toolUnit;
-		mToolUnitH = toolUnit/2;
+		mToolUnitH = toolUnit;
         colorListener = listener;
 
 		mColors = new ArrayList<Integer>();
@@ -98,7 +98,8 @@ public class PanelPalette
 	
 	public void onResize()
 	{
-		int n = W * 4; // 一行のパレット数
+		// int n = W * 4; // 一行のパレット数
+        int n = W ;
 		int h = (mColors.size() / n) + 1;
 		
 		recycle();
@@ -168,8 +169,8 @@ public class PanelPalette
 		int m = mToolUnitH;
 		for (int i=0; i<mColors.size(); i++)
 		{
-			int nx = i % (W * 2);
-			int ny = i / (W * 2);
+			int nx = i % W;
+			int ny = i / W;
 			int x = nx * m;
 			int y = ny * m;
 			
@@ -198,7 +199,7 @@ public class PanelPalette
 		int m = mToolUnitH;
 		int nx = ix / m;
 		int ny = iy / m;
-		int index = (ny * W * 2) + nx;
+		int index = (ny * W ) + nx;
 		
 		if (index < 0) return;
 		if (index >= mColors.size()) return;
