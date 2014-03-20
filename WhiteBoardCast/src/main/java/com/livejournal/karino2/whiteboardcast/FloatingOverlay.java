@@ -95,6 +95,9 @@ public class FloatingOverlay {
     Bitmap toolPen;
     ArrayList<Bitmap> toolPenIcon;
 
+    boolean pickerShowAbove = true;
+    boolean pickerVisible = false;
+
     void initToolbarImage() {
         toolBar = Bitmap.createBitmap(toolHeight *TOOLBAR_BUTTON_NUM, toolHeight, Config.ARGB_8888);
         toolBarPanel = floatResource(R.drawable.float_base, toolHeight *TOOLBAR_BUTTON_NUM, toolHeight);
@@ -248,7 +251,16 @@ public class FloatingOverlay {
         if (toolX < 0) toolX = 0;
         if (toolY < 0) toolY = 0;
 
-        picker.setPosition(toolX, toolY-picker.height());
+        int ypos = pickerYPos();
+        if(ypos < 0 || ypos +picker.height() > height)
+            pickerShowAbove = !pickerShowAbove;
+        picker.setPosition(toolX, pickerYPos());
+    }
+
+    int pickerYPos() {
+        if(pickerShowAbove)
+            return toolY-picker.height();
+        return toolY+toolHeight;
     }
 
     Rect popupRect = new Rect();
@@ -259,12 +271,8 @@ public class FloatingOverlay {
         drawToolBar(canvas);
 
         // TODO: this is test code.
-        drawPanelColor(canvas);
-    }
-
-    private void drawPanelColor(Canvas canvas) {
-        //        picker.draw(canvas, toolX, toolY-picker.height());
-        picker.draw(canvas);
+        if(pickerVisible)
+            picker.draw(canvas);
     }
 
     private void drawPageUpDownButton(Canvas canvas) {
@@ -280,16 +288,19 @@ public class FloatingOverlay {
         downButtonRect.set(pageUpDownX, pageDownY, pageUpDownX+downButton.getWidth(), pageDownY+downButton.getHeight());
     }
 
+    //TODO: this function is obsolete.
     private void drawToolBar(Canvas canvas) {
         forceToolPos();
         canvas.drawBitmap( toolBar, toolX, toolY, null );
 
         Bitmap src = null;
         int toolIndex = 0;
+        /*
         if(penDown) {
             src = toolPen;
             toolIndex = TOOLBAR_PEN;
         }
+        */
         if(src != null) {
             int x = toolX + toolHeight * toolIndex;
             int y = toolY - src.getHeight();
@@ -323,7 +334,7 @@ public class FloatingOverlay {
         int iy = (int)gy;
 
 
-        if(picker.isInside(ix, iy))
+        if(pickerVisible && picker.isInside(ix, iy))
         {
             picker.onDown(ix, iy);
             return true;
@@ -365,8 +376,7 @@ public class FloatingOverlay {
         } else if (idx == TOOLBAR_CLEAR) {
             activity.clearCanvas();
         } else if (idx == TOOLBAR_PEN) {
-            penDown = true;
-            updateToolbarImage();
+            pickerVisible = !pickerVisible;
         } else if (idx == TOOLBAR_UNDO) {
             if(activity.canUndo()) {
                 activity.undo();
@@ -421,11 +431,13 @@ public class FloatingOverlay {
             forceToolPos();
         }
 
+        /*
         if (penDown)
         {
             if (popupRect.contains( ix, iy )) subIndex = (iy - popupRect.top) / toolHeight;
             updateToolbarImage();
         }
+        */
 
         return touchingToolBar;
     }
@@ -439,6 +451,7 @@ public class FloatingOverlay {
         // no side effect.
         picker.onUp(ix, iy);
 
+        /*
         if(penDown && subIndex != -1) {
             penIndex = subIndex;
             updateToolbarImage();
@@ -446,6 +459,7 @@ public class FloatingOverlay {
         }
 
         penDown = false;
+        */
 
         cancelOperation();
 
