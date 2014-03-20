@@ -12,11 +12,38 @@ public class ColorPicker {
     int left = 0;
     int top = 0;
 
+    PanelColor.ColorListener listener;
+
     public ColorPicker(int toolUnit, WhiteBoardCastActivity act, PanelColor.ColorListener listener) {
-        panelColor = new PanelColor(toolUnit, listener);
-        panelPalette = new PanelPalette(toolUnit, act, panelColor);
+        this.listener = listener;
+        panelColor = new PanelColor(toolUnit, new PanelColor.ColorListener() {
+            @Override
+            public void setColor(int color) {
+                notifyColorSetFromPanelColor(color);
+            }
+        });
+        panelPalette = new PanelPalette(toolUnit, act, panelColor, new PanelColor.ColorListener() {
+            @Override
+            public void setColor(int color) {
+                notifyColorSetFromPalette(color);
+            }
+        });
         panelColor2 = new PanelColor2(toolUnit, act, panelColor, panelPalette);
     }
+
+    void notifyColorSetFromPanelColor(int color) {
+        listener.setColor(color);
+        panelColor2.setPen();
+        panelColor2.updatePanel();
+    }
+
+    void notifyColorSetFromPalette(int color) {
+        panelColor.setColor(color);
+        panelColor2.setPen();
+        panelColor2.updatePanel();
+        listener.setColor(color);
+    }
+
 
     public int width() {
         return panelColor.width()+panelColor2.width();

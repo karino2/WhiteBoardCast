@@ -759,7 +759,7 @@ public class WhiteBoardCastActivity extends Activity implements EncoderTask.Erro
     }
 
     @Override
-    public void setColor(int r, int g, int b) {
-        getWhiteBoardCanvas().setPenColor(Color.argb(0xff, r, g, b));
+    public void setColor(int color) {
+        getWhiteBoardCanvas().setPenColor(color);
     }
 }

@@ -25,14 +25,16 @@ public class PanelPalette
 	public int mActiveIndex = -1; // アクティブなパレット
 
     PanelColor panelColor;
+    PanelColor.ColorListener colorListener;
 	
-	public PanelPalette( int toolUnit, WhiteBoardCastActivity act, PanelColor panelCol)
+	public PanelPalette( int toolUnit, WhiteBoardCastActivity act, PanelColor panelCol, PanelColor.ColorListener listener)
 	{
         panelColor = panelCol;
 		mAct = act;
 		mToolUnit = toolUnit;
 		mToolUnitH = toolUnit/2;
-		
+        colorListener = listener;
+
 		mColors = new ArrayList<Integer>();
 		
 		mColors.add( 0xFF000000 );
@@ -143,7 +145,7 @@ public class PanelPalette
 
     public void updatePanel()
 	{
-		fillChecker( mView, 0xFFFFFFFF, 0xFFD0D0D0, 8 );
+		fillChecker(mView, 0xFFFFFFFF, 0xFFD0D0D0, 8);
 		
 		Canvas canvas = new Canvas( mView );
 		Paint paint = new Paint();
@@ -189,6 +191,7 @@ public class PanelPalette
 		mTouchColor = mColors.get( index );
 		mActiveIndex = index;
 
+        colorListener.setColor(mTouchColor);
 		updatePanel();
 	}
 

@@ -11,7 +11,7 @@ import android.graphics.RectF;
 public class PanelColor
 {
     public interface ColorListener {
-        void setColor(int r, int g, int b);
+        void setColor(int color);
     }
 
 
@@ -149,12 +149,16 @@ public class PanelColor
 		// 画面更新
 		updateSV();
 		updatePanel();
-        listener.setColor(currentR(), currentG(), currentB() );
+        setCurrentColor();
         /*
 		MainActivity.nSetColor( currentR(), currentG(), currentB() );
 		MainActivity.nSetColorBG( bgR(), bgG(), bgB() );
 		*/
 	}
+
+    public void setCurrentColor() {
+        listener.setColor(Color.argb(0xff, currentR(), currentG(), currentB()) );
+    }
 
     public static Point nearestPos( Bitmap bmp, int color )
     {
@@ -201,7 +205,7 @@ public class PanelColor
 		
 		// 画面更新
 		updatePanel();
-		listener.setColor(currentR(), currentG(), currentB());
+        setCurrentColor();
 	}
 	
 	// 現在のHue位相
@@ -445,8 +449,8 @@ public class PanelColor
 			updateSV();
 			updatePanel();
 		}
-		
-		listener.setColor(currentR(), currentG(), currentB());
+
+        setCurrentColor();
 	}
 
 	public void onUp( int ix, int iy )
