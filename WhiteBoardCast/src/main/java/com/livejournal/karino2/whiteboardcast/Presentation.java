@@ -26,7 +26,8 @@ public class Presentation {
     }
 
     public boolean afterStop() {
-        future.cancel(false);
+        if(future != null)
+            future.cancel(false);
         future = null;
         return encoderTask.doneEncoder();
     }
