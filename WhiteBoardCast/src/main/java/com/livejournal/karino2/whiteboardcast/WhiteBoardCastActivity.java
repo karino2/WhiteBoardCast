@@ -757,4 +757,9 @@ public class WhiteBoardCastActivity extends Activity implements EncoderTask.Erro
     public void setColor(int color) {
         getWhiteBoardCanvas().setPenColor(color);
     }
+
+    // size: 0 to 100
+    public void setPenOeEraserSize(int size) {
+        getWhiteBoardCanvas().setPenOrEraserSize(size);
+    }
 }

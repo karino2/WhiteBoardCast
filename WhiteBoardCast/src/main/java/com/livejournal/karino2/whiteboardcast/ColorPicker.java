@@ -9,6 +9,7 @@ public class ColorPicker {
     PanelColor panelColor;
     PanelColor2 panelColor2;
     PanelPalette panelPalette;
+    PanelSlider panelSlider;
     int left = 0;
     int top = 0;
 
@@ -29,6 +30,7 @@ public class ColorPicker {
             }
         });
         panelColor2 = new PanelColor2(toolUnit, act, panelColor, panelPalette);
+        panelSlider = new PanelSlider(toolUnit, act);
     }
 
     void notifyColorSetFromPanelColor(int color) {
@@ -49,7 +51,7 @@ public class ColorPicker {
         return panelColor.width()+panelColor2.width();
     }
     public int height() {
-        return panelColor.height()+panelPalette.height();
+        return panelColor.height()+panelSlider.height()+panelPalette.height();
     }
 
     public void setPosition(int left, int top) {
@@ -58,22 +60,28 @@ public class ColorPicker {
     }
 
     public boolean isInside(int x, int y) {
-        return isInsideColorPanel(x, y) ||
-                isInsideColorPanel2(x, y) ||
-                isInsideColorPalette(x, y);
+        return isInsidePanelColor(x, y) ||
+                isInsidePanelColor2(x, y) ||
+                isInsidePanelSlider(x, y) ||
+                isInsidePanelPalette(x, y);
     }
 
-    private boolean isInsideColorPalette(int x, int y) {
+    public boolean isInsidePanelPalette(int x, int y) {
         return isInsideRegion(x, y, panelPaletteLeft(), panelPaletteTop(), panelPalette.width(), panelPalette.height());
     }
 
-    private boolean isInsideColorPanel2(int x, int y) {
+    public boolean isInsidePanelSlider(int x, int y) {
+        return isInsideRegion(x, y, panelSliderLeft(), panelSliderTop(), panelSlider.width(), panelSlider.height());
+    }
+
+    public boolean isInsidePanelColor2(int x, int y) {
         return isInsideRegion(x, y, panelColor2Left(), panelColor2Top(), panelColor2.width(), panelColor2.height());
     }
 
-    private boolean isInsideColorPanel(int x, int y) {
+    public boolean isInsidePanelColor(int x, int y) {
         return isInsideRegion(x, y, panelColorLeft(), panelColorTop(), panelColor.width(), panelColor.height());
     }
+
 
     int panelColorLeft() { return left; }
     int panelColorTop() { return top; }
@@ -81,14 +89,26 @@ public class ColorPicker {
     int panelColor2Top() { return top; }
     int panelPaletteLeft() { return left; }
     int panelPaletteTop() { return top + panelColor.height(); }
+    int panelSliderLeft() { return left; }
+    int panelSliderTop() { return top+panelColor.height()+panelPalette.height();}
 
     public void onDown(int absX, int absY) {
-        if(isInsideColorPanel(absX, absY))
+        if(isInsidePanelColor(absX, absY))
             panelColor.onDown(toColorRelativeLeft(absX), toColorRelativeTop(absY));
-        if(isInsideColorPalette(absX, absY))
+        if(isInsidePanelPalette(absX, absY))
             panelPalette.onDown(absX-panelPaletteLeft(), absY-panelPaletteTop());
-        if(isInsideColorPanel2(absX, absY))
+        if(isInsidePanelSlider(absX, absY))
+            panelSlider.onDown(toSliderRelativeLeft(absX), toSliderRelativeTop(absY));
+        if(isInsidePanelColor2(absX, absY))
             panelColor2.onDown(absX-panelColor2Left(), absY-panelColor2Top());
+    }
+
+    public int toSliderRelativeTop(int absY) {
+        return absY-panelSliderTop();
+    }
+
+    public int toSliderRelativeLeft(int absX) {
+        return absX-panelSliderLeft();
     }
 
     private int toColorRelativeTop(int absY) {
@@ -100,19 +120,22 @@ public class ColorPicker {
     }
 
     public boolean isSnap() {
-        return panelColor.isSnap();
+        return panelColor.isSnap() || panelSlider.isSnap();
     }
 
     public void onMove(int absX, int absY) {
         panelColor.onMove(toColorRelativeLeft(absX), toColorRelativeTop(absY));
+        panelSlider.onMove(toSliderRelativeLeft(absX), toSliderRelativeTop(absY));
     }
     public void onUp(int absX, int absY) {
         panelColor.onUp(toColorRelativeLeft(absX), toColorRelativeTop(absY));
         panelColor2.onUp(absX-panelColor2Left(), absY-panelColor2Top());
+        panelSlider.onUp();
     }
 
     public void draw(Canvas canvas) {
         canvas.drawBitmap( panelPalette.view(), panelPaletteLeft(), panelPaletteTop(), null );
+        canvas.drawBitmap( panelSlider.view(), panelSliderLeft(), panelSliderTop(), null);
         canvas.drawBitmap( panelColor.view(), panelColorLeft(), panelColorTop(), null );
         canvas.drawBitmap( panelColor2.view(), panelColor2Left(), panelColor2Top(), null );
     }

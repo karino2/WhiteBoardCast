@@ -732,6 +732,9 @@ public class WhiteBoardCanvas extends View implements FrameRetrieval, PageScroll
         return mHeight;
     }
 
+    public void setPenOrEraserSize(int size) {
+    }
+
     class InsertBGUndoRedoCommand implements UndoList.UndoCommand {
         Board.BackgroundImage prev;
         Board.BackgroundImage cur;
