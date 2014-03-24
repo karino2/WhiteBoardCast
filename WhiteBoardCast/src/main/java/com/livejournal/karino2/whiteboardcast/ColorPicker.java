@@ -143,4 +143,8 @@ public class ColorPicker {
     private boolean isInsideRegion(int x, int y, int left, int top, int width, int height) {
         return x >= left && x <= (left+width) && y >= top && y <= (top+height);
     }
+
+    public boolean isEraser() {
+        return panelColor2.isEraser();
+    }
 }

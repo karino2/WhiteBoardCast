@@ -416,4 +416,8 @@ public class FloatingOverlay {
     public void changeSlidesStatus() {
         updateToolbarImage();
     }
+
+    public boolean isEraser() {
+        return picker.isEraser();
+    }
 }

@@ -237,4 +237,7 @@ public class PanelColor2
         return 50; // below 255.
     }
 
+    public boolean isEraser() {
+        return mType == 1;
+    }
 }

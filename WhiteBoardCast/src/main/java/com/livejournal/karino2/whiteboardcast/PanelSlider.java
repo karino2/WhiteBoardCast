@@ -59,8 +59,9 @@ public class PanelSlider {
     }
 
     public void onUp() {
+        if(dragging)
+            activity.setPenOeEraserSize(pos);
         dragging = false;
-        activity.setPenOeEraserSize(pos);
     }
 
     private void updatePanel() {

@@ -56,9 +56,10 @@ public class WhiteBoardCanvas extends View implements FrameRetrieval, PageScroll
     static final int DEFAULT_PEN_WIDTH = 6;
     static final int ERASER_WIDTH = 60;
 
-    private boolean isAnimating = false;
+    int penSize;
+    int eraserSize;
 
-    int penCursorWidth, penCursorHeight;
+    private boolean isAnimating = false;
 
     private List<File> slides = new ArrayList<File>(); // null object.
 
@@ -70,6 +71,9 @@ public class WhiteBoardCanvas extends View implements FrameRetrieval, PageScroll
 
         overlay = new FloatingOverlay((WhiteBoardCastActivity)context, 0);
 
+        penSize = DEFAULT_PEN_WIDTH;
+        eraserSize = ERASER_WIDTH;
+
         mPaint = new Paint();
         mPaint.setColor(Color.DKGRAY);
         mPaint.setAntiAlias(true);
@@ -77,7 +81,7 @@ public class WhiteBoardCanvas extends View implements FrameRetrieval, PageScroll
         mPaint.setStyle(Paint.Style.STROKE);
         mPaint.setStrokeJoin(Paint.Join.ROUND);
         mPaint.setStrokeCap(Paint.Cap.ROUND);
-        mPaint.setStrokeWidth(DEFAULT_PEN_WIDTH);
+        mPaint.setStrokeWidth(penSize);
         invalRegion = new Rect(0, 0, 0, 0);
 
         overwritePaint = new Paint();
@@ -92,14 +96,16 @@ public class WhiteBoardCanvas extends View implements FrameRetrieval, PageScroll
         mCursorPaint.setPathEffect(new DashPathEffect(new float[]{5, 2}, 0));
 
         boardList = new BoardList(this);
-        penCursorWidth = (ERASER_WIDTH+2*CURSOR_MARGIN);
-        penCursorHeight = (ERASER_WIDTH+2*CURSOR_MARGIN);
-        cursorBackupPixels = new int[penCursorWidth*penCursorHeight];
-        cursorBackupBmp = Bitmap.createBitmap(penCursorWidth, penCursorHeight, Bitmap.Config.ARGB_8888);
+
+        setupCursorBackupStore(ERASER_WIDTH*2);
+    }
+
+    public void setupCursorBackupStore(int size) {
+        cursorBackupPixels = new int[size*size];
+        cursorBackupBmp = Bitmap.createBitmap(size, size, Bitmap.Config.ARGB_8888);
         cursorBackupBmp.eraseColor(Color.TRANSPARENT);
         cursorBackupCanvas = new Canvas(cursorBackupBmp);
     }
-
 
 
     int mWidth;
@@ -227,7 +233,6 @@ public class WhiteBoardCanvas extends View implements FrameRetrieval, PageScroll
         region.roundOut(lastBrushCursorRegion);
         widen(lastBrushCursorRegion, CURSOR_MARGIN);
         fitInsideScreen(lastBrushCursorRegion);
-        // fitIntoBrushSize(lastBrushCursorRegion);
         if(lastBrushCursorRegion.width() <=0 || lastBrushCursorRegion.height() <= 0) {
             makeRegionInvalid(lastBrushCursorRegion);
             return;
@@ -243,17 +248,6 @@ public class WhiteBoardCanvas extends View implements FrameRetrieval, PageScroll
         cursorBackupCanvas.drawBitmap(penCanvasBmp, lastBrushCursorRegion, dest, overwritePaint);
     }
 
-    private void fitIntoBrushSize(Rect lastBrushCursorRegion) {
-        fitInsideScreen(lastBrushCursorRegion);
-        lastBrushCursorRegion.intersect(lastBrushCursorRegion.left, lastBrushCursorRegion.top,
-                lastBrushCursorRegion.left + penCursorWidth, lastBrushCursorRegion.top + penCursorHeight);
-
-        /*
-        lastBrushCursorRegion.set(lastBrushCursorRegion.left, lastBrushCursorRegion.top,
-                lastBrushCursorRegion.left+Math.min(lastBrushCursorRegion.width(), penCursorWidth),
-                lastBrushCursorRegion.top+Math.min(lastBrushCursorRegion.height(), penCursorHeight));
-                */
-    }
 
     private void revertBrushDrawnRegionIfNecessary() {
         if(!isRectValid(lastBrushCursorRegion))
@@ -310,7 +304,7 @@ public class WhiteBoardCanvas extends View implements FrameRetrieval, PageScroll
     }
 
     private float getCursorSize() {
-        return (float)penWidth;
+        return (float) currentPenOrEraserSize;
     }
 
     private void setBrushCursorPos(float x, float y)
@@ -560,12 +554,7 @@ public class WhiteBoardCanvas extends View implements FrameRetrieval, PageScroll
         invalRegion.set(0, 0, viewBmp.getWidth(), viewBmp.getHeight());
     }
 
-    private int penWidth = DEFAULT_PEN_WIDTH;
-
-    private void setPenWidth(int width) {
-        mPaint.setStrokeWidth(width);
-        penWidth = width;
-    }
+    private int currentPenOrEraserSize = DEFAULT_PEN_WIDTH;
 
     public void setPenColor(int color) {
         mPaint.setColor(color);
@@ -573,14 +562,18 @@ public class WhiteBoardCanvas extends View implements FrameRetrieval, PageScroll
 
     public void setPen() {
         mPaint.setXfermode(null);
-        setPenWidth(DEFAULT_PEN_WIDTH);
+        setCurrentPenOrEraserSizeInternal(penSize);
     }
 
     public void setEraser() {
         mPaint.setXfermode(new PorterDuffXfermode(
                 PorterDuff.Mode.CLEAR));
-        // mPaint.setColor(Color.WHITE);
-        setPenWidth(ERASER_WIDTH);
+        setCurrentPenOrEraserSizeInternal(eraserSize);
+    }
+
+    void setCurrentPenOrEraserSizeInternal(int width) {
+        currentPenOrEraserSize = width;
+        mPaint.setStrokeWidth(currentPenOrEraserSize);
     }
 
     public void changeRecStatus() {
@@ -732,7 +725,34 @@ public class WhiteBoardCanvas extends View implements FrameRetrieval, PageScroll
         return mHeight;
     }
 
+    void setPenSize(int size) {
+        ensureCursorBackupSize(size);
+        penSize = size;
+        setCurrentPenOrEraserSizeInternal(penSize);
+    }
+
+    void setEraserSize(int size) {
+        ensureCursorBackupSize(size);
+        eraserSize = size;
+        setCurrentPenOrEraserSizeInternal(eraserSize);
+    }
+
+    private boolean isEraser() {
+        return overlay.isEraser();
+    }
+
     public void setPenOrEraserSize(int size) {
+        if(isEraser()) {
+            setEraserSize(size);
+        } else {
+            setPenSize(size);
+        }
+    }
+
+    public void ensureCursorBackupSize(int size) {
+        if(cursorBackupBmp.getWidth() < size*2) {
+            setupCursorBackupStore(size*2);
+        }
     }
 
     class InsertBGUndoRedoCommand implements UndoList.UndoCommand {
