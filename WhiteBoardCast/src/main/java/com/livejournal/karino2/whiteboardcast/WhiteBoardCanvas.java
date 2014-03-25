@@ -757,6 +757,13 @@ public class WhiteBoardCanvas extends View implements FrameRetrieval, PageScroll
         }
     }
 
+    public boolean handleBackKey() {
+        boolean handled = overlay.handleBack();
+        if(handled)
+            invalidate();
+        return handled;
+    }
+
     class InsertBGUndoRedoCommand implements UndoList.UndoCommand {
         Board.BackgroundImage prev;
         Board.BackgroundImage cur;

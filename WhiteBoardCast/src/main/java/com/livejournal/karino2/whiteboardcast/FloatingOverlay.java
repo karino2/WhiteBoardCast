@@ -263,6 +263,14 @@ public class FloatingOverlay {
         return (int)((gx - toolX) / toolHeight);
     }
 
+    public boolean handleBack() {
+        if(pickerVisible) {
+            pickerVisible = false;
+            return true;
+        }
+        return false;
+    }
+
     // if return true, should not respond outsize.
     public boolean onTouchDown( float gx, float gy )
     {

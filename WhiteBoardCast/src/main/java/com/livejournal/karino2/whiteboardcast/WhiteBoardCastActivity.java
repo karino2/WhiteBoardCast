@@ -413,6 +413,9 @@ public class WhiteBoardCastActivity extends Activity implements EncoderTask.Erro
         {
             switch(event.getKeyCode()) {
                 case KeyEvent.KEYCODE_BACK:
+                    if(getWhiteBoardCanvas().handleBackKey())
+                        return true;
+
                     new AlertDialog.Builder(this)
                             .setIcon(android.R.drawable.ic_dialog_alert)
                         .setMessage(R.string.query_back_message)
