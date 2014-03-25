@@ -31,7 +31,7 @@ public class PanelSlider {
 
 
     // 0 to 100.
-    int pos = 10;
+    int pos = WhiteBoardCanvas.DEFAULT_PEN_WIDTH;
     int getPos() {
         return pos;
     }
@@ -80,4 +80,8 @@ public class PanelSlider {
 
     }
 
+    public void setPos(int size) {
+        pos = size;
+        updatePanel();
+    }
 }

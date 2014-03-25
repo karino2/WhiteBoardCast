@@ -151,4 +151,8 @@ public class ColorPicker {
     public boolean isEraser() {
         return panelColor2.isEraser();
     }
+
+    public void setSliderPos(int size) {
+        panelSlider.setPos(size);
+    }
 }

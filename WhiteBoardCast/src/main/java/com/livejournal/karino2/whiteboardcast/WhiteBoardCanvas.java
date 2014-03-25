@@ -53,11 +53,12 @@ public class WhiteBoardCanvas extends View implements FrameRetrieval, PageScroll
 
     FloatingOverlay overlay;
 
-    static final int DEFAULT_PEN_WIDTH = 6;
+    public static final int DEFAULT_PEN_WIDTH = 6;
     static final int ERASER_WIDTH = 60;
 
     int penSize;
     int eraserSize;
+    private int currentPenOrEraserSize = DEFAULT_PEN_WIDTH;
 
     private boolean isAnimating = false;
 
@@ -554,7 +555,6 @@ public class WhiteBoardCanvas extends View implements FrameRetrieval, PageScroll
         invalRegion.set(0, 0, viewBmp.getWidth(), viewBmp.getHeight());
     }
 
-    private int currentPenOrEraserSize = DEFAULT_PEN_WIDTH;
 
     public void setPenColor(int color) {
         mPaint.setColor(color);
@@ -563,12 +563,14 @@ public class WhiteBoardCanvas extends View implements FrameRetrieval, PageScroll
     public void setPen() {
         mPaint.setXfermode(null);
         setCurrentPenOrEraserSizeInternal(penSize);
+        overlay.setSliderPos(penSize);
     }
 
     public void setEraser() {
         mPaint.setXfermode(new PorterDuffXfermode(
                 PorterDuff.Mode.CLEAR));
         setCurrentPenOrEraserSizeInternal(eraserSize);
+        overlay.setSliderPos(eraserSize);
     }
 
     void setCurrentPenOrEraserSizeInternal(int width) {

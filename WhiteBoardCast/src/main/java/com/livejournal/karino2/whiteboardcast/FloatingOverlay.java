@@ -420,4 +420,8 @@ public class FloatingOverlay {
     public boolean isEraser() {
         return picker.isEraser();
     }
+
+    public void setSliderPos(int size) {
+        picker.setSliderPos(size);
+    }
 }
