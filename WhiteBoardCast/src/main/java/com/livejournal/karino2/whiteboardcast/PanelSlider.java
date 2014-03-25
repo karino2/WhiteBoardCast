@@ -77,6 +77,14 @@ public class PanelSlider {
         paint.setColor(Color.WHITE);
         c.drawRect(r, paint);
 
+        paint.setColor(Color.BLACK);
+        paint.setTextSize(toolUnit/2);
+        if(width()-rectRight > (15*toolUnit)/20) {
+            c.drawText(String.valueOf(pos), (float)rectRight, (float)height(), paint);
+        } else {
+            c.drawText(String.valueOf(pos), (float)rectRight-(15*toolUnit)/20, (float)height(), paint);
+        }
+
 
     }
 
