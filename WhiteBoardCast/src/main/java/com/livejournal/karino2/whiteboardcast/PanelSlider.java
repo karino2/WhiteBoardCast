@@ -53,7 +53,7 @@ public class PanelSlider {
         if(!dragging)
             return;
 
-        int deltaX = ix-beginX;
+        int deltaX = 100*(ix-beginX)/width();
         pos = Math.min(100, Math.max(0, beginPos+deltaX));
         updatePanel();
     }
