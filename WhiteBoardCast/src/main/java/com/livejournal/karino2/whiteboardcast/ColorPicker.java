@@ -1,6 +1,7 @@
 package com.livejournal.karino2.whiteboardcast;
 
 import android.graphics.Canvas;
+import android.graphics.Color;
 
 /**
  * Created by karino on 3/19/14.
@@ -23,6 +24,9 @@ public class ColorPicker {
                 notifyColorSetFromPanelColor(color);
             }
         });
+        // this must be the same as WhiteBoardCanvas initial color.
+        // WhiteBoardCanvas is not available from activity at this stage.
+        panelColor.setColorWithoutNotify(Color.DKGRAY);
         panelPalette = new PanelPalette(toolUnit, act, panelColor, new PanelColor.ColorListener() {
             @Override
             public void setColor(int color) {

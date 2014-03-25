@@ -129,34 +129,7 @@ public class PanelColor
 		return (mBGColor >> 0) & 0xFF;
 	}
 
-    // TODO: remove this.
-	// 入れ替え
-	public void swapColor()
-	{
-		// 色を入れ替え
-		mBGColor = currentColor();
-
-		// 座標入れ替え
-		double tmpd = mWheelRad;
-		mWheelRad = mWheelRad2; mWheelRad2 = tmpd;
-	
-		int tmp = mWheelX;
-		mWheelX = mWheelX2; mWheelX2 = tmp;
-		
-		tmp = mWheelY;
-		mWheelY = mWheelY2; mWheelY2 = tmp;
-		
-		// 画面更新
-		updateSV();
-		updatePanel();
-        setCurrentColor();
-        /*
-		MainActivity.nSetColor( currentR(), currentG(), currentB() );
-		MainActivity.nSetColorBG( bgR(), bgG(), bgB() );
-		*/
-	}
-
-    public void setCurrentColor() {
+    void setCurrentColor() {
         listener.setColor(Color.argb(0xff, currentR(), currentG(), currentB()) );
     }
 
@@ -194,21 +167,25 @@ public class PanelColor
 	// 色をセット
 	public void setColor( int color )
 	{
-		float[] hsv = { 0, 0, 0 };
-		Color.colorToHSV( color, hsv );
-		mWheelRad = hsv[0] * 2 * Math.PI / 360;
-		updateSV();
-		
-		Point p = nearestPos(mColorGrad, color);
-		mWheelX = p.x;
-		mWheelY = p.y;
-		
-		// 画面更新
-		updatePanel();
+        setColorWithoutNotify(color);
         setCurrentColor();
 	}
-	
-	// 現在のHue位相
+
+    public void setColorWithoutNotify(int color) {
+        float[] hsv = { 0, 0, 0 };
+        Color.colorToHSV(color, hsv);
+        mWheelRad = hsv[0] * 2 * Math.PI / 360;
+        updateSV();
+
+        Point p = nearestPos(mColorGrad, color);
+        mWheelX = p.x;
+        mWheelY = p.y;
+
+        // 画面更新
+        updatePanel();
+    }
+
+    // 現在のHue位相
 	private int currentHue()
 	{
 		double rad = mWheelRad;
