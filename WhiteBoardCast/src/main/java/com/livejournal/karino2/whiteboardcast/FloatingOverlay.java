@@ -383,7 +383,7 @@ public class FloatingOverlay {
         boolean res = touchingToolBar;
 
         // no side effect.
-        picker.onUp(ix, iy);
+        res = res || picker.onUp(ix, iy);
 
         cancelOperation();
 

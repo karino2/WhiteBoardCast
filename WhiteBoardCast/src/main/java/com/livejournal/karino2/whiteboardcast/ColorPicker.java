@@ -2,6 +2,9 @@ package com.livejournal.karino2.whiteboardcast;
 
 import android.graphics.Canvas;
 import android.graphics.Color;
+import android.graphics.DashPathEffect;
+import android.graphics.Paint;
+import android.graphics.RectF;
 
 /**
  * Created by karino on 3/19/14.
@@ -15,8 +18,16 @@ public class ColorPicker {
     int top = 0;
 
     PanelColor.ColorListener listener;
+    Paint cursorPaint;
+    RectF cursorRect;
 
     public ColorPicker(int toolUnit, WhiteBoardCastActivity act, PanelColor.ColorListener listener) {
+        cursorPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
+        cursorPaint.setStyle(Paint.Style.STROKE);
+        cursorPaint.setPathEffect(new DashPathEffect(new float[]{5, 2}, 0));
+        cursorRect = new RectF();
+
+
         this.listener = listener;
         panelColor = new PanelColor(toolUnit, new PanelColor.ColorListener() {
             @Override
@@ -131,10 +142,11 @@ public class ColorPicker {
         panelColor.onMove(toColorRelativeLeft(absX), toColorRelativeTop(absY));
         panelSlider.onMove(toSliderRelativeLeft(absX), toSliderRelativeTop(absY));
     }
-    public void onUp(int absX, int absY) {
+    public boolean onUp(int absX, int absY) {
         panelColor.onUp(toColorRelativeLeft(absX), toColorRelativeTop(absY));
         panelColor2.onUp(absX-panelColor2Left(), absY-panelColor2Top());
-        panelSlider.onUp();
+        boolean needInval = panelSlider.onUp();
+        return needInval;
     }
 
     public void draw(Canvas canvas) {
@@ -142,6 +154,17 @@ public class ColorPicker {
         canvas.drawBitmap( panelSlider.view(), panelSliderLeft(), panelSliderTop(), null);
         canvas.drawBitmap( panelColor.view(), panelColorLeft(), panelColorTop(), null );
         canvas.drawBitmap( panelColor2.view(), panelColor2Left(), panelColor2Top(), null );
+        if(panelSlider.isSnap()) {
+            drawCursorPreview(canvas, panelSlider.getSize());
+        }
+    }
+
+    private void drawCursorPreview(Canvas canvas, int size) {
+        float cx = canvas.getWidth()/2.0f;
+        float cy = canvas.getHeight()/2.0f;
+        float halfSize = size/2.0f;
+        cursorRect.set(Math.max(0, cx-halfSize), Math.max(0, cy-halfSize), Math.min(canvas.getWidth(), cx+halfSize), Math.min(canvas.getHeight(), cy+halfSize));
+        canvas.drawOval(cursorRect, cursorPaint);
     }
 
     private boolean isInsideRegion(int x, int y, int left, int top, int width, int height) {

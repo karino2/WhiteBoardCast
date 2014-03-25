@@ -14,14 +14,20 @@ public class PanelSlider {
     WhiteBoardCastActivity activity;
     int toolUnit;
     Bitmap mView;
+    Paint paint;
+    Canvas canvas;
+    Rect region;
 
 
     public PanelSlider( int toolUnit, WhiteBoardCastActivity act)
     {
         this.toolUnit = toolUnit;
         activity = act;
+        paint = new Paint();
 
         mView = Bitmap.createBitmap( toolUnit*4, toolUnit, Bitmap.Config.ARGB_8888 );
+        canvas = new Canvas(mView);
+        region = new Rect();
         updatePanel();
     }
 
@@ -32,7 +38,7 @@ public class PanelSlider {
 
     // 0 to 100.
     int pos = WhiteBoardCanvas.DEFAULT_PEN_WIDTH;
-    int getPos() {
+    public int getSize() {
         return pos;
     }
 
@@ -42,7 +48,7 @@ public class PanelSlider {
     {
         dragging = true;
         beginX = ix;
-        beginPos = getPos();
+        beginPos = getSize();
     }
 
 
@@ -58,31 +64,31 @@ public class PanelSlider {
         updatePanel();
     }
 
-    public void onUp() {
+    public boolean onUp() {
+        boolean needInval = dragging;
         if(dragging)
             activity.setPenOeEraserSize(pos);
         dragging = false;
+        return needInval;
     }
 
     private void updatePanel() {
         mView.eraseColor( 0xFFc0c0c0 );
-        Canvas c = new Canvas( mView );
-        int pos = getPos();
+        int pos = getSize();
 
         int dy = 0;
         int rectRight = Math.max(2, width()*pos/100 - 2);
-        Rect r = new Rect( 2, dy + 2, rectRight, dy + height() - 2 );
+        region.set(2, dy + 2, rectRight, dy + height() - 2);
 
-        Paint paint = new Paint();
         paint.setColor(Color.WHITE);
-        c.drawRect(r, paint);
+        canvas.drawRect(region, paint);
 
         paint.setColor(Color.BLACK);
         paint.setTextSize(toolUnit/2);
         if(width()-rectRight > (15*toolUnit)/20) {
-            c.drawText(String.valueOf(pos), (float)rectRight, (float)height(), paint);
+            canvas.drawText(String.valueOf(pos), (float) rectRight, (float) height(), paint);
         } else {
-            c.drawText(String.valueOf(pos), (float)rectRight-(15*toolUnit)/20, (float)height(), paint);
+            canvas.drawText(String.valueOf(pos), (float) rectRight - (15 * toolUnit) / 20, (float) height(), paint);
         }
 
 
