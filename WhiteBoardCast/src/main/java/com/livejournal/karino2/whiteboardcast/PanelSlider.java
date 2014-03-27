@@ -83,12 +83,19 @@ public class PanelSlider {
         paint.setColor(Color.WHITE);
         canvas.drawRect(region, paint);
 
+        int fontHeight = toolUnit/2;
         paint.setColor(Color.BLACK);
-        paint.setTextSize(toolUnit/2);
+        paint.setTextSize(fontHeight);
+        paint.setAntiAlias(true);
+        float y = height()-(height()-fontHeight)/2.0f;
         if(width()-rectRight > (15*toolUnit)/20) {
-            canvas.drawText(String.valueOf(pos), (float) rectRight, (float) height(), paint);
+            canvas.drawText(String.valueOf(pos), (float) rectRight, y, paint);
         } else {
-            canvas.drawText(String.valueOf(pos), (float) rectRight - (15 * toolUnit) / 20, (float) height(), paint);
+            String text = String.valueOf(pos);
+            if(text.length() == 3)
+                canvas.drawText(String.valueOf(pos), (float) rectRight - (18 * toolUnit) / 20, y, paint);
+            else
+                canvas.drawText(String.valueOf(pos), (float) rectRight - (12 * toolUnit) / 20, y, paint);
         }
 
 
