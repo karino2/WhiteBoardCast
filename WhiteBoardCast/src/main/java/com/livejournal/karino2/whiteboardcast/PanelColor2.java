@@ -21,6 +21,7 @@ public class PanelColor2
 	
 	private Bitmap mAdd = null;
 	private Bitmap mRemove = null;
+    private Bitmap mPenLabel = null;
     private PanelColor panelColor;
     PanelPalette panelPalette;
 
@@ -33,6 +34,9 @@ public class PanelColor2
 
         Bitmap bmp = BitmapFactory.decodeResource(act.getResources(), R.drawable.eraser_button);
         mChecker = fitHeight(bmp, mToolUnit);
+
+        bmp = BitmapFactory.decodeResource(act.getResources(), R.drawable.pen_labelonly);
+        mPenLabel = fitHeight(bmp, mToolUnit);
 
 		// Add/Remove
 		bmp = BitmapFactory.decodeResource( act.getResources(), R.drawable.op_add );
@@ -91,11 +95,11 @@ public class PanelColor2
 		// 前景・背景色
         PanelColor pc = panelColor;
 		int foreColor = pc.currentColor();
-		int bgColor = pc.bgColor();
-		
+
 		int dy = 0;
 		Rect r = new Rect( 2, dy + 2, mToolUnit - 2, dy + mToolUnit - 2 );
-		drawForeBG(foreColor, bgColor, c, r.left, r.top, mToolUnit);
+		drawPenButton(foreColor, c, r.left, r.top, mToolUnit);
+
 
 		// ハイライト
 		int colorHilight = 0xFFFF4E4E;
@@ -200,19 +204,22 @@ public class PanelColor2
 		mView.recycle();
 	}
 
-    public static void drawForeBG( int foreColor, int bgColor, Canvas c, int x, int y, int m )
+    public void drawPenButton(int foreColor, Canvas c, int x, int y, int m)
     {
         Paint paint = new Paint();
         Paint paintS = new Paint();
         paintS.setStyle( Style.STROKE );
 
-        int n = (int)(0.55 * m);
-        int cx1 = x;
-        int cy1 = y;
+        int n = (int)(0.6 * m);
+        int cx1 = x+(m-n)/2;
+        int cy1 = y+5;
+        /*
         int cx2 = cx1 + m/3;
         int cy2 = cy1 + m/3;
+        */
 
         // 背景色
+        /*
         Rect rb = new Rect( cx2, cy2, cx2 + n, cy2 + n );
         paint.setStyle( Style.FILL );
         paint.setColor( bgColor );
@@ -220,6 +227,10 @@ public class PanelColor2
 
         paintS.setColor( 0xFF404040 );
         c.drawRect( rb, paintS );
+        */
+
+        c.drawBitmap(mPenLabel, x, y, paint);
+
 
         // 前景色
         Rect rf = new Rect( cx1, cy1, cx1 + n, cy1 + n );
@@ -228,6 +239,7 @@ public class PanelColor2
 
         paintS.setColor( 0xFF404040 );
         c.drawRect( rf, paintS );
+
     }
     int getOpBG() {
         return Color.DKGRAY;
