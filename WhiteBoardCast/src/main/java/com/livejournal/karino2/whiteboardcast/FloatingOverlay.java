@@ -247,7 +247,7 @@ public class FloatingOverlay {
             pickerShowAbove = false;
         else if(!pickerShowAbove && ypos+picker.height()/2 > height)
             pickerShowAbove = true;
-        picker.setPosition(toolX, pickerYPos());
+        picker.setPosition(toolX+toolHeight*TOOLBAR_PEN, pickerYPos());
     }
 
     int pickerYPos() {
