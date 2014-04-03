@@ -56,15 +56,15 @@ public class FloatingOverlay {
     boolean dragging = false;
 
     final int TOOLBAR_HANDLE = 0;
-    final int TOOLBAR_RECORD = 1;
-    final int TOOLBAR_PEN = 2;
-    final int TOOLBAR_UNDO = 3;
-    final int TOOLBAR_REDO = 4;
-    final int TOOLBAR_DONE = 5;
-    final int TOOLBAR_CLEAR = 6;
-    final int TOOLBAR_POP = 7;
-    final int TOOLBAR_MENU = 8;
-    final int TOOLBAR_BUTTON_NUM = TOOLBAR_MENU+1;
+    final int TOOLBAR_PEN = 1;
+    final int TOOLBAR_UNDO = 2;
+    final int TOOLBAR_REDO = 3;
+    final int TOOLBAR_DONE = 4;
+    final int TOOLBAR_CLEAR = 5;
+    final int TOOLBAR_POP = 6;
+    final int TOOLBAR_MENU = 7;
+    final int TOOLBAR_RECORD = 8;
+    final int TOOLBAR_BUTTON_NUM = TOOLBAR_RECORD+1;
 
     static final int REC_NORMAL = 0;
     static final int REC_SETUP = 1;
@@ -139,23 +139,25 @@ public class FloatingOverlay {
         Canvas canvas = new Canvas(toolBar);
         canvas.drawBitmap(toolBarPanel, 0, 0, null);
 
-        canvas.drawBitmap(getRecIcon(), toolHeight, 0, null);
 
         updateToolPen();
-        canvas.drawBitmap(toolPen, toolHeight * 2, 0, null);
+        canvas.drawBitmap(toolPen, toolHeight * TOOLBAR_PEN, 0, null);
 
         Paint undoPaint = activity.canUndo()? null: disablePaint;
         Paint redoPaint = activity.canRedo()? null: disablePaint;
-        canvas.drawBitmap(undoButton, toolHeight * 3, 0, undoPaint);
-        canvas.drawBitmap(redoButton, toolHeight * 4, 0, redoPaint);
+        canvas.drawBitmap(undoButton, toolHeight * TOOLBAR_UNDO, 0, undoPaint);
+        canvas.drawBitmap(redoButton, toolHeight * TOOLBAR_REDO, 0, redoPaint);
 
         Paint doenPaint = activity.canStop()? null: disablePaint;
-        canvas.drawBitmap(doneButton, toolHeight * 5, 0, doenPaint);
-        canvas.drawBitmap(clearButton, toolHeight * 6, 0, null);
+        canvas.drawBitmap(doneButton, toolHeight * TOOLBAR_DONE, 0, doenPaint);
+        canvas.drawBitmap(clearButton, toolHeight * TOOLBAR_CLEAR, 0, null);
 
         Paint popPaint = activity.slideAvailable()? null: disablePaint;
-        canvas.drawBitmap(popButton, toolHeight * 7, 0, popPaint);
-        canvas.drawBitmap(menuButton, toolHeight * 8, 0, null);
+        canvas.drawBitmap(popButton, toolHeight * TOOLBAR_POP, 0, popPaint);
+        canvas.drawBitmap(menuButton, toolHeight * TOOLBAR_MENU, 0, null);
+
+        canvas.drawBitmap(getRecIcon(), toolHeight*TOOLBAR_RECORD, 0, null);
+
 
     }
 
