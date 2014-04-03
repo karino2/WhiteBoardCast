@@ -21,9 +21,37 @@ android {
     compileSdkVersion 17
     buildToolsVersion "19.0.3"
 
+    lintOptions {
+        checkReleaseBuilds false
+    }
+
+    signingConfigs {
+        myConfig {
+            storeFile file("/Users/karino/Dropbox/backup/releasekey/release.keystore")
+            storePassword "XXXX"
+            // storePassword System.console().readLine("\n\$ Enter keystore password: ")
+            keyAlias "releasekey"
+            keyPassword "XXXX"
+            // keyPassword System.console().readLine("\n\$ Enter key password: ")
+        }
+    }
+
+
+    buildTypes {
+        release {
+            debuggable false
+            signingConfig signingConfigs.myConfig
+            runProguard false
+            proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.txt'
+        }
+    }
+
     defaultConfig {
         minSdkVersion 15
         targetSdkVersion 16
+        versionCode 21
+        versionName "3.1"
+
     }
 }
 
