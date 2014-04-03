@@ -4,6 +4,7 @@ import android.graphics.Bitmap;
 import android.graphics.Bitmap.Config;
 import android.graphics.BitmapFactory;
 import android.graphics.Canvas;
+import android.graphics.Color;
 import android.graphics.Matrix;
 import android.graphics.Paint;
 import android.graphics.Rect;
@@ -123,6 +124,7 @@ public class FloatingOverlay {
     }
 
     private void updateToolPen() {
+        toolPen.eraseColor(Color.TRANSPARENT);
         toolPenCanvas.drawBitmap(toolPenWithoutColor, 0, 0, null);
         penPaint.setColor(selectedColor);
         toolPenCanvas.drawRect(penColorRect, penPaint);
