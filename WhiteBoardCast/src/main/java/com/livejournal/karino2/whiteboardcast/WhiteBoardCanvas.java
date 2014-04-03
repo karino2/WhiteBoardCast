@@ -76,7 +76,7 @@ public class WhiteBoardCanvas extends View implements FrameRetrieval, PageScroll
         eraserSize = ERASER_WIDTH;
 
         mPaint = new Paint();
-        mPaint.setColor(Color.DKGRAY);
+        mPaint.setColor(ColorPicker.getDefaultColor());
         mPaint.setAntiAlias(true);
         mPaint.setDither(true);
         mPaint.setStyle(Paint.Style.STROKE);

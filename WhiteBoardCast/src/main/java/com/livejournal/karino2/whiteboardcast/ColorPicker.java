@@ -21,6 +21,8 @@ public class ColorPicker {
     Paint cursorPaint;
     RectF cursorRect;
 
+    public static int getDefaultColor() { return Color.DKGRAY; }
+
     public ColorPicker(int toolUnit, WhiteBoardCastActivity act, PanelColor.ColorListener listener) {
         cursorPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
         cursorPaint.setStyle(Paint.Style.STROKE);
@@ -35,9 +37,7 @@ public class ColorPicker {
                 notifyColorSetFromPanelColor(color);
             }
         });
-        // this must be the same as WhiteBoardCanvas initial color.
-        // WhiteBoardCanvas is not available from activity at this stage.
-        panelColor.setColorWithoutNotify(Color.DKGRAY);
+        panelColor.setColorWithoutNotify(getDefaultColor());
         panelPalette = new PanelPalette(toolUnit, act, panelColor, new PanelColor.ColorListener() {
             @Override
             public void setColor(int color) {

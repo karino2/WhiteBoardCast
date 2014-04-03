@@ -86,7 +86,11 @@ public class FloatingOverlay {
 
     Bitmap pullDownBG;
     Bitmap pullDownHiglight;
+    Bitmap toolPenWithoutColor;
     Bitmap toolPen;
+    Canvas toolPenCanvas;
+    Paint penPaint;
+    Rect penColorRect;
 
     boolean pickerShowAbove = true;
     boolean pickerVisible = false;
@@ -105,7 +109,10 @@ public class FloatingOverlay {
         pullDownBG = floatResource(R.drawable.pd_bg, toolHeight, toolHeight);
         pullDownHiglight = floatResource(R.drawable.pd_hilight, toolHeight, toolHeight);
 
-        toolPen = floatResource(R.drawable.pen_button, toolHeight, toolHeight);
+        toolPenWithoutColor = floatResource(R.drawable.pen_button, toolHeight, toolHeight);
+        toolPen = Bitmap.createBitmap(toolHeight, toolHeight, Config.ARGB_8888);
+        toolPenCanvas = new Canvas(toolPen);
+        penColorRect.set((toolHeight*2)/10, toolHeight/10, (toolHeight*8)/10, (toolHeight*18)/100);
 
         recIcon = new ArrayList<Bitmap>();
         recIcon.add(floatResource(R.drawable.rec_button, toolHeight, toolHeight));
@@ -113,6 +120,12 @@ public class FloatingOverlay {
         recIcon.add(floatResource(R.drawable.pause_button, toolHeight, toolHeight));
 
         updateToolbarImage();
+    }
+
+    private void updateToolPen() {
+        toolPenCanvas.drawBitmap(toolPenWithoutColor, 0, 0, null);
+        penPaint.setColor(selectedColor);
+        toolPenCanvas.drawRect(penColorRect, penPaint);
     }
 
 
@@ -128,6 +141,7 @@ public class FloatingOverlay {
 
         canvas.drawBitmap(getRecIcon(), toolHeight, 0, null);
 
+        updateToolPen();
         canvas.drawBitmap(toolPen, toolHeight * 2, 0, null);
 
         Paint undoPaint = activity.canUndo()? null: disablePaint;
@@ -150,6 +164,7 @@ public class FloatingOverlay {
     ColorPicker picker;
     Paint disablePaint;
 
+    int selectedColor = ColorPicker.getDefaultColor();
 
     public FloatingOverlay(WhiteBoardCastActivity act,  float toolHeightCm) {
         activity = act;
@@ -184,13 +199,26 @@ public class FloatingOverlay {
         disablePaint = new Paint();
         disablePaint.setAlpha(32);
 
+        penPaint = new Paint();
+        penColorRect = new Rect();
 
         initPageUpDownImage();
         initToolbarImage();
 
-        picker = new ColorPicker(toolHeight, activity, activity);
+        picker = new ColorPicker(toolHeight, activity, new PanelColor.ColorListener() {
+            @Override
+            public void setColor(int color) {
+                onColorChange(color);
+                activity.setColor(color);
+            }
+        });// activity);
 
 
+    }
+
+    private void onColorChange(int color) {
+        selectedColor = color;
+        updateToolbarImage();
     }
 
 
