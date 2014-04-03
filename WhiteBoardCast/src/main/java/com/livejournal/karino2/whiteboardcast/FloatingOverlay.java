@@ -239,9 +239,12 @@ public class FloatingOverlay {
         if (toolX < 0) toolX = 0;
         if (toolY < 0) toolY = 0;
 
+        // if hide more then height/2, then switch to above-below
         int ypos = pickerYPos();
-        if(ypos < 0 || ypos +picker.height() > height)
-            pickerShowAbove = !pickerShowAbove;
+        if(ypos+picker.height()/2 < 0 && pickerShowAbove)
+            pickerShowAbove = false;
+        else if(!pickerShowAbove && ypos+picker.height()/2 > height)
+            pickerShowAbove = true;
         picker.setPosition(toolX, pickerYPos());
     }
 
