@@ -97,9 +97,9 @@ public class PanelColor2
 		int foreColor = pc.currentColor();
 
 		int dy = 0;
-		Rect r = new Rect( 2, dy + 2, mToolUnit - 2, dy + mToolUnit - 2 );
-		drawPenButton(foreColor, c, r.left, r.top, mToolUnit);
+		drawPenButton(foreColor, c, 0, dy, mToolUnit);
 
+        Rect r;
 
 		// ハイライト
 		int colorHilight = 0xFFFF4E4E;
