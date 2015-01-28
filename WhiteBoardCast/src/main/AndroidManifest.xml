@@ -41,6 +41,8 @@
             android:label="@string/title_activity_multi_gallery"
             >
         </activity>
+        <activity android:name=".SettingsActivity" android:label="Settings" />
+
     </application>
 
 </manifest>

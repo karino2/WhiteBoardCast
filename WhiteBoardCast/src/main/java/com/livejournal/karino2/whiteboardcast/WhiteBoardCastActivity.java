@@ -11,6 +11,7 @@ import android.content.ContentUris;
 import android.content.ContentValues;
 import android.content.DialogInterface;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.content.pm.ApplicationInfo;
 import android.content.pm.PackageManager;
 import android.content.res.Configuration;
@@ -19,6 +20,7 @@ import android.net.Uri;
 import android.os.Bundle;
 import android.os.Environment;
 import android.os.Handler;
+import android.preference.PreferenceManager;
 import android.provider.MediaStore;
 import android.util.Log;
 import android.view.KeyEvent;
@@ -458,6 +460,14 @@ public class WhiteBoardCastActivity extends Activity implements EncoderTask.Erro
     }
 
     @Override
+    protected void onResume() {
+        super.onResume();
+
+        SharedPreferences pref = PreferenceManager.getDefaultSharedPreferences(this);
+        getWhiteBoardCanvas().setDisableTouch(pref.getBoolean("DISABLE_TOUCH", false));
+    }
+
+    @Override
     public boolean onPrepareOptionsMenu(Menu menu) {
         boolean canManageSlides = !canStop();
         menu.findItem(R.id.menu_id_new).setEnabled(canManageSlides);
@@ -480,6 +490,10 @@ public class WhiteBoardCastActivity extends Activity implements EncoderTask.Erro
                 return true;
             case R.id.menu_id_new:
                 showDialog(DIALOG_ID_NEW);
+                return true;
+            case R.id.menu_id_settings:
+                Intent intent = new Intent(this, SettingsActivity.class);
+                startActivity(intent);
                 return true;
         }
         return super.onMenuItemSelected(featureId, item);

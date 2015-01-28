@@ -63,6 +63,7 @@ public class WhiteBoardCanvas extends View implements FrameRetrieval, PageScroll
     private boolean isAnimating = false;
 
     private List<File> slides = new ArrayList<File>(); // null object.
+    private boolean disableTouch;
 
 
     public WhiteBoardCanvas(Context context, AttributeSet attrs) {
@@ -358,6 +359,13 @@ public class WhiteBoardCanvas extends View implements FrameRetrieval, PageScroll
         drawBrushCursorIfNecessary();
     }
 
+    static final int TOOL_TYPE_FINGER = 1;
+    // static final int TOOL_TYPE_STYLUS = 2;
+    public boolean isFinger(android.view.MotionEvent event) {
+        return TOOL_TYPE_FINGER == event.getToolType(0);
+    }
+
+
     public boolean onTouchEvent(MotionEvent event) {
         if(isAnimating)
             return true;
@@ -375,6 +383,9 @@ public class WhiteBoardCanvas extends View implements FrameRetrieval, PageScroll
     private void onTouchWithoutCursor(MotionEvent event, float x, float y) {
         switch (event.getAction()) {
             case MotionEvent.ACTION_DOWN:
+                if(disableTouch && isFinger(event))
+                    return;
+
                 if(overlay.onTouchDown(x, y)) {
                     invalidate();
                     break;
@@ -387,6 +398,9 @@ public class WhiteBoardCanvas extends View implements FrameRetrieval, PageScroll
                 invalidate();
                 break;
             case MotionEvent.ACTION_MOVE:
+                if(disableTouch && isFinger(event))
+                    return;
+
                 paintFpsCounter.push(System.currentTimeMillis());
                 if(overlay.onTouchMove(x, y)) {
                     invalidate();
@@ -429,6 +443,8 @@ public class WhiteBoardCanvas extends View implements FrameRetrieval, PageScroll
                 break;
             case MotionEvent.ACTION_UP:
                 eraseBrushCursor();
+                if(disableTouch && isFinger(event))
+                    return;
                 if(overlay.onTouchUp(x, y)) {
                     invalidate();
                     break;
@@ -762,6 +778,10 @@ public class WhiteBoardCanvas extends View implements FrameRetrieval, PageScroll
         if(handled)
             invalidate();
         return handled;
+    }
+
+    public void setDisableTouch(boolean disableTouch) {
+        this.disableTouch = disableTouch;
     }
 
     class InsertBGUndoRedoCommand implements UndoList.UndoCommand {
