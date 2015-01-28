@@ -75,10 +75,11 @@ public class Encoder {
         // Log.d("WBCast", "width, height=" + width + "," + height);
         try {
             encoderConfig = new LibVpxEncConfig(width, height);
+            // encoderConfig.setTimebase(1, 1000);
+            encoderConfig.setTimebase(1, 1000000000);
+
             encoder = new LibVpxEnc(encoderConfig);
 
-            // libwebm expects nanosecond units
-            encoderConfig.setTimebase(1, 1000000000);
             Rational timeBase = encoderConfig.getTimebase();
             Rational frameRate = new Rational(rate, scale);
             timeMultiplier = timeBase.multiply(frameRate).reciprocal();
@@ -97,6 +98,7 @@ public class Encoder {
             }
 
             SegmentInfo muxerSegmentInfo = muxerSegment.getSegmentInfo();
+            // muxerSegmentInfo.setTimecodeScale(1000);
             muxerSegmentInfo.setWritingApp("y4mEncodeSample");
 
             newVideoTrackNumber = muxerSegment.addVideoTrack(width, height, 0);
@@ -126,6 +128,7 @@ public class Encoder {
                 VpxCodecCxPkt pkt = encPkt.get(i);
                 final boolean isKey = (pkt.flags & 0x1) == 1;
 
+                // Log.d("WhiteBoardCast", "PTS: " + pkt.pts);
                 if (!muxerSegment.addFrame(pkt.buffer, newVideoTrackNumber, pkt.pts, isKey)) {
                     showError(error, "Could not add frame.");
                     return false;

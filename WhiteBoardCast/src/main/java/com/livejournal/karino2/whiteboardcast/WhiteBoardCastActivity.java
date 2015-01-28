@@ -372,6 +372,7 @@ public class WhiteBoardCastActivity extends Activity implements EncoderTask.Erro
                     handler.postDelayed(new Runnable(){
                         @Override
                         public void run() {
+                            // showDialog(DIALOG_ID_QUERY_VIEW_SHARE);
                             try {
                                 renameAndDeleteWorkFiles();
                                 showDialog(DIALOG_ID_QUERY_VIEW_SHARE);
