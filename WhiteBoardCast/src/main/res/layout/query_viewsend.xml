@@ -20,7 +20,7 @@
     <Button
         android:layout_width="wrap_content"
         android:layout_height="fill_parent"
-        android:text="@string/label_file_name"
+        android:text="@string/label_rename"
         android:drawableLeft="@android:drawable/ic_menu_edit"
         android:id="@+id/button_rename"/>
 </LinearLayout>
