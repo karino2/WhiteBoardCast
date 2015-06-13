@@ -13,7 +13,7 @@
     <string name="query_title">View or Share?</string>
     <string name="query_merge_title">Try postprocess?</string>
     <string name="query_merge_body">Previous working file exists.\nTry postprocess again?</string>
-    <string name="label_rename">Rename</string>
+    <string name="label_file_name">File Name</string>
     <string name="label_save">Save</string>
     <string name="title_activity_slide_list">Manage Slides</string>
     <string name="action_settings">Settings</string>

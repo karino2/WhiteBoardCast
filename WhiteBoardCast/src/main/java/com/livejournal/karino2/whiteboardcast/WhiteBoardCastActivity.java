@@ -15,8 +15,6 @@ import android.content.SharedPreferences;
 import android.content.pm.ApplicationInfo;
 import android.content.pm.PackageManager;
 import android.content.res.Configuration;
-import android.graphics.Bitmap;
-import android.graphics.Color;
 import android.net.Uri;
 import android.os.Bundle;
 import android.os.Environment;
@@ -49,6 +47,7 @@ public class WhiteBoardCastActivity extends Activity implements EncoderTask.Erro
     static final int DIALOG_ID_NEW = 5;
     static final int DIALOG_ID_COPYING = 6;
     static final int DIALOG_ID_EXPORT_PDF = 7;
+    static final int DIALOG_ID_PDF_FILE_NAME = 8;
 
     static final int REQUEST_PICK_IMAGE = 10;
 
@@ -499,7 +498,7 @@ public class WhiteBoardCastActivity extends Activity implements EncoderTask.Erro
                 showDialog(DIALOG_ID_NEW);
                 return true;
             case R.id.menu_id_export:
-                showDialog(DIALOG_ID_EXPORT_PDF);
+                showDialog(DIALOG_ID_PDF_FILE_NAME);
                 return true;
             case R.id.menu_id_settings:
                 Intent intent = new Intent(this, SettingsActivity.class);
@@ -519,11 +518,13 @@ public class WhiteBoardCastActivity extends Activity implements EncoderTask.Erro
             case DIALOG_ID_QUERY_MERGE_AGAIN:
                 return createQueryMergeWorkingFileDialog();
             case DIALOG_ID_FILE_RENAME:
-                return createFileRenameDialog();
+                return createFileNameDialog();
             case DIALOG_ID_NEW:
                 return createNewDialog();
             case DIALOG_ID_COPYING:
                 return new ImportDialog(this);
+            case DIALOG_ID_PDF_FILE_NAME:
+                return createFileNameDialog();
             case DIALOG_ID_EXPORT_PDF:
                 return new ExportPDFDialog(this);
         }
@@ -610,15 +611,19 @@ public class WhiteBoardCastActivity extends Activity implements EncoderTask.Erro
                 break;
             case DIALOG_ID_EXPORT_PDF:
                 ExportPDFDialog exp = (ExportPDFDialog)dialog;
-                try {
-                    exp.preparePDFExport(getDateNameFile(".pdf"), getWhiteBoardCanvas().getBoardList());
-                } catch (IOException e) {
-                    showMessage("Fail to create pdf file: " + e.getMessage());
+                if(pdfFile == null) { // logically, this could happen for activity recycle case, but very rare.
+                    showMessage("Export pdf does not support activity recycle.");
+                    dialog.dismiss();
+                    return;
                 }
+                pdfFile = new File(pdfFile.getParentFile(), args.getString("EXPORT_PDF_PATH"));
+                exp.preparePDFExport(pdfFile, getWhiteBoardCanvas().getBoardList());
                 break;
         }
         super.onPrepareDialog(id, dialog, args);
     }
+
+    File pdfFile;
 
     private void setupSlidePresentation() throws IOException {
         newPresentation();
@@ -638,6 +643,32 @@ public class WhiteBoardCastActivity extends Activity implements EncoderTask.Erro
                     return;
                 }
                 et.setText(presen.getResultFile().getName());
+
+                setupFileNameViewListener(dialog, new FileNameListener() {
+                    @Override
+                    public boolean tryFinish(String fileName) {
+                        return renameFileNameTo(fileName);
+                    }
+                });
+
+                break;
+            case DIALOG_ID_PDF_FILE_NAME:
+                EditText et2 = (EditText)dialog.findViewById(R.id.edit_filename);
+                try {
+                    pdfFile = getDateNameFile(".pdf");
+                    et2.setText(pdfFile.getName());
+                } catch (IOException e) {
+                    showMessage("Fail to create pdf file: " + e.getMessage());
+                }
+                setupFileNameViewListener(dialog, new FileNameListener() {
+                    @Override
+                    public boolean tryFinish(String fileName) {
+                        Bundle bundle = new Bundle();
+                        bundle.putString("EXPORT_PDF_PATH", fileName);
+                        showDialog(DIALOG_ID_EXPORT_PDF, bundle);
+                        return true;
+                    }
+                });
                 break;
             case DIALOG_ID_NEW:
                 newDialog = dialog;
@@ -649,28 +680,39 @@ public class WhiteBoardCastActivity extends Activity implements EncoderTask.Erro
     Dialog fileRenameDialog;
 
 
-    private Dialog createFileRenameDialog() {
+    private Dialog createFileNameDialog() {
         LayoutInflater inflater = LayoutInflater.from(this);
-        final View view = inflater.inflate(R.layout.rename, null);
-        setOnClickListener(view, R.id.button_cancel, new View.OnClickListener() {
+        View view = inflater.inflate(R.layout.rename, null);
+        fileRenameDialog = new AlertDialog.Builder(this).setTitle(R.string.label_file_name)
+                .setView(view)
+                .create();
+        return fileRenameDialog;
+    }
+
+    interface FileNameListener {
+        boolean tryFinish(String fileName);
+    }
+
+    FileNameListener fileNameListener;
+
+    private void setupFileNameViewListener(Dialog dialog, FileNameListener onFinish) {
+        fileRenameDialog = dialog;
+        fileNameListener = onFinish;
+        setOnClickListener(fileRenameDialog, R.id.button_cancel, new View.OnClickListener() {
             @Override
             public void onClick(View view) {
                 fileRenameDialog.dismiss();
             }
         });
-        setOnClickListener(view, R.id.button_save, new View.OnClickListener() {
+        setOnClickListener(fileRenameDialog, R.id.button_save, new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                EditText et = (EditText)view.findViewById(R.id.edit_filename);
-                boolean success = renameFileNameTo(et.getText().toString());
+                EditText et = (EditText)fileRenameDialog.findViewById(R.id.edit_filename);
+                boolean success = fileNameListener.tryFinish(et.getText().toString()); // renameFileNameTo(et.getText().toString());
                 if(success)
                     fileRenameDialog.dismiss();
             }
         });
-        fileRenameDialog = new AlertDialog.Builder(this).setTitle(R.string.label_rename)
-                .setView(view)
-                .create();
-        return fileRenameDialog;
     }
 
     private boolean renameFileNameTo(String newName) {
@@ -751,6 +793,12 @@ public class WhiteBoardCastActivity extends Activity implements EncoderTask.Erro
     private void renameVideoFileName() {
         showDialog(DIALOG_ID_FILE_RENAME);
     }
+
+    private void setOnClickListener(Dialog dialog, int id, View.OnClickListener onclick) {
+        Button button = (Button)dialog.findViewById(id);
+        button.setOnClickListener(onclick);
+    }
+
 
     private void setOnClickListener(View view, int id, View.OnClickListener onclick) {
         Button button = (Button)view.findViewById(id);
