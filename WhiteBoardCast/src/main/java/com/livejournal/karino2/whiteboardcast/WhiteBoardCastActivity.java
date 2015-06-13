@@ -48,6 +48,7 @@ public class WhiteBoardCastActivity extends Activity implements EncoderTask.Erro
     static final int DIALOG_ID_FILE_RENAME = 4;
     static final int DIALOG_ID_NEW = 5;
     static final int DIALOG_ID_COPYING = 6;
+    static final int DIALOG_ID_EXPORT_PDF = 7;
 
     static final int REQUEST_PICK_IMAGE = 10;
 
@@ -498,7 +499,7 @@ public class WhiteBoardCastActivity extends Activity implements EncoderTask.Erro
                 showDialog(DIALOG_ID_NEW);
                 return true;
             case R.id.menu_id_export:
-                exportPDF();
+                showDialog(DIALOG_ID_EXPORT_PDF);
                 return true;
             case R.id.menu_id_settings:
                 Intent intent = new Intent(this, SettingsActivity.class);
@@ -506,24 +507,6 @@ public class WhiteBoardCastActivity extends Activity implements EncoderTask.Erro
                 return true;
         }
         return super.onMenuItemSelected(featureId, item);
-    }
-
-    private void exportPDF() {
-        try {
-            File pdf = getDateNameFile(".pdf");
-            BoardList boardList = getWhiteBoardCanvas().getBoardList();
-
-            ImagePDFWriter writer = new ImagePDFWriter(pdf, boardList.getWidth(), boardList.getHeight(), boardList.size());
-            for(int i = 0; i < boardList.size(); i++) {
-                writer.writePage(boardList.getBoard(i).createSynthesizedTempBmp());
-            }
-            writer.done();
-
-
-        } catch (IOException e) {
-            showMessage("Fail to create pdf: " + e.getMessage());
-        }
-
     }
 
     @Override
@@ -541,6 +524,8 @@ public class WhiteBoardCastActivity extends Activity implements EncoderTask.Erro
                 return createNewDialog();
             case DIALOG_ID_COPYING:
                 return new ImportDialog(this);
+            case DIALOG_ID_EXPORT_PDF:
+                return new ExportPDFDialog(this);
         }
         return super.onCreateDialog(id);
     }
@@ -622,6 +607,14 @@ public class WhiteBoardCastActivity extends Activity implements EncoderTask.Erro
                         }
                     }
                 });
+                break;
+            case DIALOG_ID_EXPORT_PDF:
+                ExportPDFDialog exp = (ExportPDFDialog)dialog;
+                try {
+                    exp.preparePDFExport(getDateNameFile(".pdf"), getWhiteBoardCanvas().getBoardList());
+                } catch (IOException e) {
+                    showMessage("Fail to create pdf file: " + e.getMessage());
+                }
                 break;
         }
         super.onPrepareDialog(id, dialog, args);
