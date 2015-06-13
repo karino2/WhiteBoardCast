@@ -15,6 +15,7 @@ import android.content.SharedPreferences;
 import android.content.pm.ApplicationInfo;
 import android.content.pm.PackageManager;
 import android.content.res.Configuration;
+import android.graphics.Bitmap;
 import android.graphics.Color;
 import android.net.Uri;
 import android.os.Bundle;
@@ -395,10 +396,8 @@ public class WhiteBoardCastActivity extends Activity implements EncoderTask.Erro
         File workAudio = new File(getWorkAudioPath());
         if(!result.exists())
             throw new IOException("no encoded file exists.");
-        SimpleDateFormat timeStampFormat = new SimpleDateFormat("yyyyMMddHHmmssSS");
-        String filename = timeStampFormat.format(new Date()) + ".webm";
 
-        presen.setResult(new File(getFileStoreDirectory(), filename));
+        presen.setResult(getDateNameFile(".webm"));
         result.renameTo(presen.getResultFile());
         workVideo.delete();
         workAudio.delete();
@@ -406,6 +405,13 @@ public class WhiteBoardCastActivity extends Activity implements EncoderTask.Erro
         presen.setResultUri(insertLastResultToContentResolver());
 
 
+    }
+
+    private File getDateNameFile(String extension) throws IOException {
+        SimpleDateFormat timeStampFormat = new SimpleDateFormat("yyyyMMddHHmmssSS");
+        String filename = timeStampFormat.format(new Date()) + extension;
+
+        return new File(getFileStoreDirectory(), filename);
     }
 
 
@@ -491,12 +497,33 @@ public class WhiteBoardCastActivity extends Activity implements EncoderTask.Erro
             case R.id.menu_id_new:
                 showDialog(DIALOG_ID_NEW);
                 return true;
+            case R.id.menu_id_export:
+                exportPDF();
+                return true;
             case R.id.menu_id_settings:
                 Intent intent = new Intent(this, SettingsActivity.class);
                 startActivity(intent);
                 return true;
         }
         return super.onMenuItemSelected(featureId, item);
+    }
+
+    private void exportPDF() {
+        try {
+            File pdf = getDateNameFile(".pdf");
+            BoardList boardList = getWhiteBoardCanvas().getBoardList();
+
+            ImagePDFWriter writer = new ImagePDFWriter(pdf, boardList.getWidth(), boardList.getHeight(), boardList.size());
+            for(int i = 0; i < boardList.size(); i++) {
+                writer.writePage(boardList.getBoard(i).createSynthesizedTempBmp());
+            }
+            writer.done();
+
+
+        } catch (IOException e) {
+            showMessage("Fail to create pdf: " + e.getMessage());
+        }
+
     }
 
     @Override

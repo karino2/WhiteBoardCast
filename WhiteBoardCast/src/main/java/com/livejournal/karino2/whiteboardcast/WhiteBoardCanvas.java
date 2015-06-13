@@ -109,6 +109,10 @@ public class WhiteBoardCanvas extends View implements FrameRetrieval, PageScroll
         cursorBackupCanvas = new Canvas(cursorBackupBmp);
     }
 
+    public BoardList getBoardList() {
+        return boardList;
+    }
+
 
     int mWidth;
     int mHeight;

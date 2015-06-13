@@ -36,7 +36,7 @@ public class BoardList {
     }
 
     public Board getCurrent() {
-        return list.get(currentPos);
+        return getBoard(currentPos);
     }
 
     public Bitmap createPrevSynthesizedBmp() {
@@ -51,6 +51,14 @@ public class BoardList {
 
     public int size() {
         return list.size();
+    }
+
+    public int getWidth() {
+        return width;
+    }
+
+    public int getHeight() {
+        return height;
     }
 
     public void addNewBoard() {
@@ -76,5 +84,9 @@ public class BoardList {
 
     private boolean isLastPage() {
         return size() == currentPos+1;
+    }
+
+    public Board getBoard(int pos) {
+        return list.get(pos);
     }
 }

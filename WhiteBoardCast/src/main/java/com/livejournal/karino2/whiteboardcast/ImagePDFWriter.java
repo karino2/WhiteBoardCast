@@ -43,4 +43,13 @@ public class ImagePDFWriter {
         currentPage++;
         writer.writeDeflatedImagePage(deflatedImage, width, height);
     }
+
+    public void writePage(Bitmap image) throws IOException {
+        if(currentPage != 0)
+            writer.newOrphanPage();
+
+        currentPage++;
+        writer.writeImagePage(image, true);
+    }
+
 }

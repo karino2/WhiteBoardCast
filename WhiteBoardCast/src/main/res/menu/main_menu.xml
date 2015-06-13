@@ -3,6 +3,7 @@
 <menu xmlns:android="http://schemas.android.com/apk/res/android">
     <item android:title="@string/menu_new" android:id="@+id/menu_id_new"
         android:icon="@drawable/ic_menu_new"></item>
+    <item android:title="@string/menu_export_pdf" android:id="@+id/menu_id_export" />
     <item android:title="@string/menu_settings" android:id="@+id/menu_id_settings" android:icon="@android:drawable/ic_menu_preferences" />
     <item android:title="@string/menu_about" android:id="@+id/menu_id_about" android:icon="@android:drawable/ic_menu_info_details"></item>
     <item android:title="@string/menu_quit" android:id="@+id/menu_id_quit"></item>

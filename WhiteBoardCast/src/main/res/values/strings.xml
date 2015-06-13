@@ -35,4 +35,5 @@
     <string name="menu_settings">Settings</string>
     <string name="title_disable_touch">Stylus only mode</string>
     <string name="summary_disable_touch">Disable finger touch and respond to stylus only. For stylus equipped devices mode.</string>
+    <string name="menu_export_pdf">Export PDF</string>
 </resources>
