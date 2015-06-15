@@ -521,14 +521,41 @@ public class WhiteBoardCastActivity extends Activity implements EncoderTask.Erro
                 return createFileNameDialog();
             case DIALOG_ID_NEW:
                 return createNewDialog();
-            case DIALOG_ID_COPYING:
-                return new ImportDialog(this);
             case DIALOG_ID_PDF_FILE_NAME:
                 return createFileNameDialog();
-            case DIALOG_ID_EXPORT_PDF:
-                return new ExportPDFDialog(this);
+
         }
         return super.onCreateDialog(id);
+    }
+
+    @Override
+    protected Dialog onCreateDialog(int id, Bundle args) {
+        switch(id) {
+            case DIALOG_ID_COPYING:
+                ImportDialog imp = new ImportDialog(this);
+                imp.prepareCopy(getContentResolver(), getWhiteBoardCanvas().getStoredWidth(),
+                        getWhiteBoardCanvas().getStoredHeight(), args.getStringArrayList("all_path"), new ImportDialog.FinishListener() {
+                            @Override
+                            public void onFinish() {
+                                try {
+                                    setupSlidePresentation();
+                                } catch (IOException e) {
+                                    showError("Fail to setup presentation: " + e.getMessage());
+                                }
+                            }
+                        });
+                return imp;
+            case DIALOG_ID_EXPORT_PDF:
+                if(pdfFile == null) { // logically, this could happen for activity recycle case, but very rare.
+                    showMessage("Export pdf does not support activity recycle.");
+                    return super.onCreateDialog(id, args);
+                }
+                ExportPDFDialog exp = new ExportPDFDialog(this);
+                pdfFile = new File(pdfFile.getParentFile(), args.getString("EXPORT_PDF_PATH"));
+                exp.preparePDFExport(pdfFile, getWhiteBoardCanvas().getBoardList());
+                return exp;
+        }
+        return super.onCreateDialog(id, args);
     }
 
     private void startNewPresentation(){
@@ -592,36 +619,6 @@ public class WhiteBoardCastActivity extends Activity implements EncoderTask.Erro
         return newDialog;
     }
 
-    @Override
-    protected void onPrepareDialog(int id, Dialog dialog, Bundle args) {
-        switch(id) {
-            case DIALOG_ID_COPYING:
-                ImportDialog imp = (ImportDialog) dialog;
-                imp.prepareCopy(getContentResolver(), getWhiteBoardCanvas().getStoredWidth(),
-                        getWhiteBoardCanvas().getStoredHeight(), args.getStringArrayList("all_path"), new ImportDialog.FinishListener() {
-                    @Override
-                    public void onFinish() {
-                        try {
-                            setupSlidePresentation();
-                        } catch (IOException e) {
-                            showError("Fail to setup presentation: " + e.getMessage());
-                        }
-                    }
-                });
-                break;
-            case DIALOG_ID_EXPORT_PDF:
-                ExportPDFDialog exp = (ExportPDFDialog)dialog;
-                if(pdfFile == null) { // logically, this could happen for activity recycle case, but very rare.
-                    showMessage("Export pdf does not support activity recycle.");
-                    dialog.dismiss();
-                    return;
-                }
-                pdfFile = new File(pdfFile.getParentFile(), args.getString("EXPORT_PDF_PATH"));
-                exp.preparePDFExport(pdfFile, getWhiteBoardCanvas().getBoardList());
-                break;
-        }
-        super.onPrepareDialog(id, dialog, args);
-    }
 
     File pdfFile;
 
@@ -714,6 +711,8 @@ public class WhiteBoardCastActivity extends Activity implements EncoderTask.Erro
             }
         });
     }
+
+
 
     private boolean renameFileNameTo(String newName) {
         if(newName.equals(""))
