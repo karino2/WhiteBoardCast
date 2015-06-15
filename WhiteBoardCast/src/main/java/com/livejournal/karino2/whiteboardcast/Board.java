@@ -1,17 +1,21 @@
 package com.livejournal.karino2.whiteboardcast;
 
+import android.content.ContentResolver;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.Paint;
+import android.net.Uri;
 import android.util.Log;
 
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.OutputStream;
 
 /**
  * Created by karino on 7/27/13.
@@ -19,7 +23,6 @@ import java.io.InputStream;
 public class Board {
 
     Bitmap boardBmp;
-    Bitmap backgroundBmp;
     UndoList undoList;
     int width;
     int height;
@@ -34,6 +37,48 @@ public class Board {
         boardBmp = null;
         width = height = 0;
         undoList = new UndoList(target);
+    }
+
+    private File getFile(File folder, int index) {
+        return new File(folder, String.format("fg_%04d.png", index));
+    }
+    public void saveSnapshot(File folder, int index) throws IOException {
+        background.saveSnapshot(folder, index);
+        if(boardBmp != null) {
+            File saveFile = getFile(folder, index);
+            saveBitmap(boardBmp, saveFile);
+        }
+    }
+    public void restoreSnapshot(File folder, int index) throws FileNotFoundException {
+        background.restoreSnapshot(folder, index);
+        File file = getFile(folder, index);
+        if(file.exists()) {
+            boardBmp = loadBitmap(file);
+        }
+    }
+
+    static void saveBitmap(Bitmap bitmap, File result) throws IOException {
+        OutputStream stream = new FileOutputStream(result);
+        bitmap.compress(Bitmap.CompressFormat.PNG, 80, stream);
+        stream.close();
+    }
+
+    static Bitmap loadBitmap(File bmpFile) throws FileNotFoundException {
+        InputStream is = null;
+        try {
+            is = new FileInputStream(bmpFile);
+
+            Bitmap bmp = BitmapFactory.decodeStream(is);
+            return bmp;
+        } finally {
+            try {
+                is.close();
+            } catch (IOException e) {
+                // What can I do?
+                Log.d("WhiteBoardCast", "loadBitmap, IOException on Close: " + e.getMessage());
+            }
+        }
+
     }
 
     public void resetCanvas(int w, int h) {
@@ -92,25 +137,38 @@ public class Board {
             return new BackgroundImage(backgroundFile);
         }
 
+        void restoreSnapshot(File folder, int index) {
+            File result = getFile(folder, index);
+            if(result.exists())
+            {
+                // backgroundFile and saved snapshot is logically different, but practically it's the same for this purpose.
+                backgroundFile = result;
+                background = null;
+            }
+        }
+
+        // save only bmp, not backgroundFile. Because undo information is lost anyway and I need only for pdf export.
+        void saveSnapshot(File folder, int index) throws IOException {
+            if(background != null) {
+                File result = getFile(folder, index);
+                saveBitmap(background, result);
+            }
+        }
+
+        private File getFile(File folder, int index) {
+            return new File(folder, String.format("bg_%04d.png", index));
+        }
+
         Bitmap getBackground(int w, int h) {
             if(background != null)
                 return background;
             if(backgroundFile != null) {
-                InputStream is = null;
                 try {
-                    is = new FileInputStream(backgroundFile);
-                    background = BitmapFactory.decodeStream(is);
+                    background = loadBitmap(backgroundFile);
                     return background;
                 } catch (FileNotFoundException e) {
                     // What can I do?
                     Log.d("WhiteBoardCast", "getBackground, FileNotFoundException: " + e.getMessage());
-                } finally {
-                    try {
-                    is.close();
-                    } catch (IOException e) {
-                        // What can I do?
-                        Log.d("WhiteBoardCast", "getBackground, IOException on Close: " + e.getMessage());
-                    }
                 }
 
             }

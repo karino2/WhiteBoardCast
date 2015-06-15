@@ -58,7 +58,7 @@ public class SlideList {
 
 
 
-    private void deleteAllFiles(File folder) {
+    public static void deleteAllFiles(File folder) {
         for(File file : folder.listFiles(new FileFilter() {
             @Override
             public boolean accept(File pathname) {

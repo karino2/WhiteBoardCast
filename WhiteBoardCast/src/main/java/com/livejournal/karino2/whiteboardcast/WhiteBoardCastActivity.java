@@ -367,11 +367,19 @@ public class WhiteBoardCastActivity extends Activity implements EncoderTask.Erro
         return resolver.insert(MediaStore.Video.Media.EXTERNAL_CONTENT_URI, content);
     }
 
+    boolean snapshotSaved = false;
+
     private void beginAudioVideoMergeTask() {
         try {
             new AudioVideoMergeTask(this, new AudioVideoMergeTask.NotifyFinishListener() {
                 @Override
                 public void onFinish() {
+                    try {
+                        getWhiteBoardCanvas().getBoardList().saveSnapshots();
+                        snapshotSaved = true;
+                    } catch (IOException e) {
+                        postErrorMessage("Save board snapshot fail: " + e.getMessage());
+                    }
                     handler.postDelayed(new Runnable(){
                         @Override
                         public void run() {
@@ -387,6 +395,30 @@ public class WhiteBoardCastActivity extends Activity implements EncoderTask.Erro
             }).execute(getWorkVideoPath(), getWorkAudioPath(), getResultPath());
         } catch (IOException e) {
             showError("Fail to create WhiteBoardCast folder(2). " + e.getMessage());
+        }
+    }
+
+    @Override
+    protected void onSaveInstanceState(Bundle outState) {
+        if(snapshotSaved) {
+            outState.putBoolean("SNAPSHOT_SAVED", true);
+            outState.putInt("BOARD_NUM", getWhiteBoardCanvas().getBoardList().size());
+        }
+        super.onSaveInstanceState(outState);
+    }
+
+    @Override
+    protected void onRestoreInstanceState(Bundle savedInstanceState) {
+        super.onRestoreInstanceState(savedInstanceState);
+        snapshotSaved = savedInstanceState.getBoolean("SNAPSHOT_SAVED", false);
+        // maybe later condition is always met. But I try to re-restore snapshot for avoiding data loss.
+        if(snapshotSaved && getWhiteBoardCanvas().getBoardList().size() == 1) {
+            int boardNum = savedInstanceState.getInt("BOARD_NUM");
+            try {
+                getWhiteBoardCanvas().getBoardList().restoreSnapshots(boardNum);
+            } catch (IOException e) {
+                showError("Fail to restore board snapshot: " + e.getMessage());
+            }
         }
     }
 

@@ -5,6 +5,9 @@ import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.Paint;
 
+import java.io.File;
+import java.io.FilenameFilter;
+import java.io.IOException;
 import java.util.ArrayList;
 
 /**
@@ -48,6 +51,52 @@ public class BoardList {
             return emptyPage;
         return list.get(currentPos + 1).createSynthesizedTempBmp();
     }
+
+    public static File getBoardSnapshotDirectory() throws IOException {
+        File parent = WhiteBoardCastActivity.getFileStoreDirectory();
+        File dir = new File(parent, "boards");
+        WhiteBoardCastActivity.ensureDirExist(dir);
+        return dir;
+    }
+
+    public void saveSnapshots() throws IOException {
+        File dir = getBoardSnapshotDirectory();
+        SlideList.deleteAllFiles(dir);
+
+        for(int i = 0; i < size(); i++) {
+            list.get(i).saveSnapshot(dir, i);
+        }
+        /*
+        File boardNum = new File(dir, String.format("boardnum_%04d", size()));
+        boardNum.createNewFile();
+        */
+    }
+
+    int parseBoardNum(File dir) {
+        final int[] boardNum = {1};
+        dir.listFiles(new FilenameFilter() {
+            @Override
+            public boolean accept(File dir, String filename) {
+                if(filename.startsWith("boardnum_")) {
+                    boardNum[0] = Integer.parseInt(filename.substring(9));
+                }
+                return false;
+            }
+        });
+        return boardNum[0];
+    }
+
+    public void restoreSnapshots(int boardNum) throws IOException {
+        File dir = getBoardSnapshotDirectory();
+        // int boardNum = parseBoardNum(dir);
+
+        for(int i = 0; i < boardNum; i++) {
+            if(i != 0 )
+                addNewBoard();
+            list.get(i).restoreSnapshot(dir, i);
+        }
+    }
+
 
     public int size() {
         return list.size();
