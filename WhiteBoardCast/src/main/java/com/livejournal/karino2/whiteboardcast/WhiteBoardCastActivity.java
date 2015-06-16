@@ -377,7 +377,7 @@ public class WhiteBoardCastActivity extends Activity implements EncoderTask.Erro
                         public void run() {
                             try {
                                 renameAndDeleteWorkFiles();
-                                showDialog(DIALOG_ID_QUERY_VIEW_SHARE);
+                                startDetailActivity();
                             } catch (IOException e) {
                                 showError("Rename encoded file fail: " + e.getMessage());
                             }
@@ -388,6 +388,14 @@ public class WhiteBoardCastActivity extends Activity implements EncoderTask.Erro
         } catch (IOException e) {
             showError("Fail to create WhiteBoardCast folder(2). " + e.getMessage());
         }
+    }
+
+    void startDetailActivity()
+    {
+        Intent intent = new Intent(this, DetailActivity.class);
+        intent.putExtra("VIDEO_PATH", presen.getResultFile().getAbsolutePath());
+        intent.putExtra("VIDEO_URI", presen.getResultUri().toString());
+        startActivity(intent);
     }
 
     private void renameAndDeleteWorkFiles() throws IOException {

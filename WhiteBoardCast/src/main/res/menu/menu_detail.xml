@@ -1,0 +1,10 @@
+<menu xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    tools:context="com.livejournal.karino2.whiteboardcast.DetailActivity">
+    <item android:id="@+id/action_send" android:title="@string/label_share"
+        android:icon="@android:drawable/ic_menu_share"
+        android:showAsAction="always" />
+    <item android:id="@+id/action_rename" android:title="@string/label_rename"
+        android:icon="@android:drawable/ic_menu_edit"
+        android:showAsAction="ifRoom" />
+</menu>
