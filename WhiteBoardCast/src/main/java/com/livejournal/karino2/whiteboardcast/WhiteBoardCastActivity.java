@@ -41,13 +41,9 @@ import java.util.Date;
 public class WhiteBoardCastActivity extends Activity implements EncoderTask.ErrorListener, PanelColor.ColorListener {
 
     static final int DIALOG_ID_ABOUT = 1;
-    static final int DIALOG_ID_QUERY_VIEW_SHARE = 2;
     static final int DIALOG_ID_QUERY_MERGE_AGAIN = 3;
-    static final int DIALOG_ID_FILE_RENAME = 4;
     static final int DIALOG_ID_NEW = 5;
     static final int DIALOG_ID_COPYING = 6;
-    static final int DIALOG_ID_EXPORT_PDF = 7;
-    static final int DIALOG_ID_PDF_FILE_NAME = 8;
 
     static final int REQUEST_PICK_IMAGE = 10;
 
@@ -335,21 +331,6 @@ public class WhiteBoardCastActivity extends Activity implements EncoderTask.Erro
     }
 
 
-    private void viewVideoIntent() {
-        Intent i = new Intent(Intent.ACTION_VIEW);
-        i.setDataAndType(Uri.fromFile(presen.getResultFile()), "video/*");
-        i.putExtra(MediaStore.EXTRA_FINISH_ON_COMPLETION, false);
-        startActivity(i);
-    }
-
-    private void shareVideoIntent() {
-        Intent i = new Intent(Intent.ACTION_SEND);
-        i.setType("video/webm");
-
-        i.putExtra(Intent.EXTRA_STREAM, presen.getResultUri());
-        startActivity(Intent.createChooser(i, "Share video"));
-
-    }
 
     private Uri insertLastResultToContentResolver() {
         SimpleDateFormat timeStampFormat = new SimpleDateFormat("yyyy-MM-dd-HH:mm");
@@ -367,11 +348,30 @@ public class WhiteBoardCastActivity extends Activity implements EncoderTask.Erro
         return resolver.insert(MediaStore.Video.Media.EXTERNAL_CONTENT_URI, content);
     }
 
+    private void exportPDF() {
+        BoardList boardList = getWhiteBoardCanvas().getBoardList();
+        ImagePDFWriter writer = null;
+        try {
+            File dir = getTemporaryPdfFolder();
+            SlideList.deleteAllFiles(dir);
+
+            pdfFile = createTemporaryPDF();
+            writer = new ImagePDFWriter(pdfFile, boardList.getWidth(), boardList.getHeight(), boardList.size());
+            for(int i = 0; i < boardList.size(); i++) {
+                writer.writePage(boardList.getBoard(i).createSynthesizedTempBmp());
+            }
+            writer.done();
+        } catch (IOException e) {
+            postErrorMessage("Fail to write pdf: " + e.getMessage());
+        }
+    }
+
     private void beginAudioVideoMergeTask() {
         try {
             new AudioVideoMergeTask(this, new AudioVideoMergeTask.NotifyFinishListener() {
                 @Override
                 public void onFinish() {
+                    exportPDF();
                     handler.postDelayed(new Runnable(){
                         @Override
                         public void run() {
@@ -395,6 +395,7 @@ public class WhiteBoardCastActivity extends Activity implements EncoderTask.Erro
         Intent intent = new Intent(this, DetailActivity.class);
         intent.putExtra("VIDEO_PATH", presen.getResultFile().getAbsolutePath());
         intent.putExtra("VIDEO_URI", presen.getResultUri().toString());
+        intent.putExtra("PDF_PATH", pdfFile.getAbsolutePath());
         startActivity(intent);
     }
 
@@ -416,10 +417,27 @@ public class WhiteBoardCastActivity extends Activity implements EncoderTask.Erro
     }
 
     private File getDateNameFile(String extension) throws IOException {
+        File folder = getFileStoreDirectory();
+        return getDateNameFile(folder, extension);
+    }
+
+    private File createTemporaryPDF() throws IOException {
+        File dir = getTemporaryPdfFolder();
+        return getDateNameFile(dir, ".pdf");
+    }
+
+    private File getTemporaryPdfFolder() throws IOException {
+        File parent = getFileStoreDirectory();
+        File dir = new File(parent, "temporaryPdf");
+        ensureDirExist(dir);
+        return dir;
+    }
+
+    private File getDateNameFile(File folder, String extension) {
         SimpleDateFormat timeStampFormat = new SimpleDateFormat("yyyyMMddHHmmssSS");
         String filename = timeStampFormat.format(new Date()) + extension;
 
-        return new File(getFileStoreDirectory(), filename);
+        return new File(folder, filename);
     }
 
 
@@ -505,9 +523,6 @@ public class WhiteBoardCastActivity extends Activity implements EncoderTask.Erro
             case R.id.menu_id_new:
                 showDialog(DIALOG_ID_NEW);
                 return true;
-            case R.id.menu_id_export:
-                showDialog(DIALOG_ID_PDF_FILE_NAME);
-                return true;
             case R.id.menu_id_settings:
                 Intent intent = new Intent(this, SettingsActivity.class);
                 startActivity(intent);
@@ -521,16 +536,10 @@ public class WhiteBoardCastActivity extends Activity implements EncoderTask.Erro
         switch(id) {
             case DIALOG_ID_ABOUT:
                 return createAbout();
-            case DIALOG_ID_QUERY_VIEW_SHARE:
-                return createQueryViewShareDialog();
             case DIALOG_ID_QUERY_MERGE_AGAIN:
                 return createQueryMergeWorkingFileDialog();
-            case DIALOG_ID_FILE_RENAME:
-                return createFileNameDialog();
             case DIALOG_ID_NEW:
                 return createNewDialog();
-            case DIALOG_ID_PDF_FILE_NAME:
-                return createFileNameDialog();
 
         }
         return super.onCreateDialog(id);
@@ -553,15 +562,6 @@ public class WhiteBoardCastActivity extends Activity implements EncoderTask.Erro
                             }
                         });
                 return imp;
-            case DIALOG_ID_EXPORT_PDF:
-                if(pdfFile == null) { // logically, this could happen for activity recycle case, but very rare.
-                    showMessage("Export pdf does not support activity recycle.");
-                    return super.onCreateDialog(id, args);
-                }
-                ExportPDFDialog exp = new ExportPDFDialog(this);
-                pdfFile = new File(pdfFile.getParentFile(), args.getString("EXPORT_PDF_PATH"));
-                exp.preparePDFExport(pdfFile, getWhiteBoardCanvas().getBoardList());
-                return exp;
         }
         return super.onCreateDialog(id, args);
     }
@@ -640,116 +640,11 @@ public class WhiteBoardCastActivity extends Activity implements EncoderTask.Erro
     @Override
     protected void onPrepareDialog(int id, Dialog dialog) {
         switch(id) {
-            case DIALOG_ID_FILE_RENAME:
-                EditText et = (EditText)dialog.findViewById(R.id.edit_filename);
-                // back from another app but this app is already killed. just dismiss.
-                if(presen.getResultFile() == null) {
-                    dialog.dismiss();
-                    return;
-                }
-                et.setText(presen.getResultFile().getName());
-
-                setupFileNameViewListener(dialog, new FileNameListener() {
-                    @Override
-                    public boolean tryFinish(String fileName) {
-                        return renameFileNameTo(fileName);
-                    }
-                });
-
-                break;
-            case DIALOG_ID_PDF_FILE_NAME:
-                EditText et2 = (EditText)dialog.findViewById(R.id.edit_filename);
-                try {
-                    pdfFile = getDateNameFile(".pdf");
-                    et2.setText(pdfFile.getName());
-                } catch (IOException e) {
-                    showMessage("Fail to create pdf file: " + e.getMessage());
-                }
-                setupFileNameViewListener(dialog, new FileNameListener() {
-                    @Override
-                    public boolean tryFinish(String fileName) {
-                        Bundle bundle = new Bundle();
-                        bundle.putString("EXPORT_PDF_PATH", fileName);
-                        showDialog(DIALOG_ID_EXPORT_PDF, bundle);
-                        return true;
-                    }
-                });
-                break;
             case DIALOG_ID_NEW:
                 newDialog = dialog;
                 break;
         }
         super.onPrepareDialog(id, dialog);
-    }
-
-    Dialog fileRenameDialog;
-
-
-    private Dialog createFileNameDialog() {
-        LayoutInflater inflater = LayoutInflater.from(this);
-        View view = inflater.inflate(R.layout.rename, null);
-        fileRenameDialog = new AlertDialog.Builder(this).setTitle(R.string.label_file_name)
-                .setView(view)
-                .create();
-        return fileRenameDialog;
-    }
-
-    interface FileNameListener {
-        boolean tryFinish(String fileName);
-    }
-
-    FileNameListener fileNameListener;
-
-    private void setupFileNameViewListener(Dialog dialog, FileNameListener onFinish) {
-        fileRenameDialog = dialog;
-        fileNameListener = onFinish;
-        setOnClickListener(fileRenameDialog, R.id.button_cancel, new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                fileRenameDialog.dismiss();
-            }
-        });
-        setOnClickListener(fileRenameDialog, R.id.button_save, new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                EditText et = (EditText)fileRenameDialog.findViewById(R.id.edit_filename);
-                boolean success = fileNameListener.tryFinish(et.getText().toString()); // renameFileNameTo(et.getText().toString());
-                if(success)
-                    fileRenameDialog.dismiss();
-            }
-        });
-    }
-
-
-
-    private boolean renameFileNameTo(String newName) {
-        if(newName.equals(""))
-        {
-            showMessage("Empty file name!");
-            return false;
-        }
-
-        File newNameFile = new File(presen.getResultFile().getParentFile(), newName);
-        if(newNameFile.exists()) {
-            showMessage("This file is already exists");
-            return false;
-        }
-
-        presen.renameResult(newNameFile);
-        updateNewFIleNameToContentDB(presen.getResultFile());
-        return true;
-    }
-
-    private void updateNewFIleNameToContentDB(File newFile) {
-        ContentValues content = new ContentValues(2);
-
-        long id = ContentUris.parseId(presen.getResultUri());
-
-
-        content.put(MediaStore.Video.Media.DATA, newFile.getAbsolutePath());
-        content.put(MediaStore.Video.Media.DISPLAY_NAME, newFile.getName());
-        ContentResolver resolver = getBaseContext().getContentResolver();
-        resolver.update(MediaStore.Video.Media.EXTERNAL_CONTENT_URI, content, "_id = ?", new String[] {String.valueOf(id)});
     }
 
 
@@ -771,47 +666,6 @@ public class WhiteBoardCastActivity extends Activity implements EncoderTask.Erro
                 .create();
     }
 
-    private Dialog createQueryViewShareDialog() {
-        LayoutInflater inflater = LayoutInflater.from(this);
-        View view = inflater.inflate(R.layout.query_viewsend, null);
-        setOnClickListener(view, R.id.button_view, new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                viewVideoIntent();
-            }
-        });
-        setOnClickListener(view, R.id.button_share, new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                shareVideoIntent();
-            }
-        });
-        setOnClickListener(view, R.id.button_rename, new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                renameVideoFileName();
-            }
-        });
-        return new AlertDialog.Builder(this).setTitle(R.string.query_title)
-                .setView(view)
-                .create();
-    }
-
-    private void renameVideoFileName() {
-        showDialog(DIALOG_ID_FILE_RENAME);
-    }
-
-    private void setOnClickListener(Dialog dialog, int id, View.OnClickListener onclick) {
-        Button button = (Button)dialog.findViewById(id);
-        button.setOnClickListener(onclick);
-    }
-
-
-    private void setOnClickListener(View view, int id, View.OnClickListener onclick) {
-        Button button = (Button)view.findViewById(id);
-        button.setOnClickListener(onclick);
-    }
-
     private AlertDialog createAbout() {
         final WebView webView = new WebView(this);
         webView.loadUrl("file:///android_asset/licenses.html");
@@ -825,11 +679,6 @@ public class WhiteBoardCastActivity extends Activity implements EncoderTask.Erro
 
     }
 
-
-
-    private Button findButton(int id) {
-        return (Button)findViewById(id);
-    }
 
     @Override
     protected void onPostCreate(Bundle savedInstanceState) {

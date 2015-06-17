@@ -24,18 +24,37 @@ import android.widget.Toast;
 import android.widget.VideoView;
 
 import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
 import java.io.IOException;
+import java.nio.channels.FileChannel;
 
 
 public class DetailActivity extends Activity {
     final int DIALOG_ID_FILE_RENAME = 1;
 
+    // only support ".webm" for a while.
+    String baseName(File file) {
+        String name = file.getName();
+        if(!name.endsWith(".webm"))
+            throw new IllegalArgumentException("Not .webm extension: " + name);
+        return name.substring(0, name.length()-5);
+    }
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_detail);
         getActionBar().setDisplayHomeAsUpEnabled(true);
+
+
+        Button btn = (Button)findViewById(R.id.buttonVideoName);
+        btn.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                showDialog(DIALOG_ID_FILE_RENAME);
+            }
+        });
 
         ImageView iv = (ImageView)findViewById(R.id.videoThumbnailView);
         iv.setOnClickListener(new View.OnClickListener() {
@@ -51,7 +70,9 @@ public class DetailActivity extends Activity {
         {
             videoFile = new File(intent.getStringExtra("VIDEO_PATH"));
             videoUri = Uri.parse(intent.getStringExtra("VIDEO_URI"));
+            pdfFile = new File(intent.getStringExtra("PDF_PATH"));
 
+            setLabelToNameButton(baseName(videoFile));
 
             Bitmap bmp = ThumbnailUtils.createVideoThumbnail(videoFile.getAbsolutePath(), MediaStore.Video.Thumbnails.MINI_KIND);
             iv.setImageBitmap(bmp);
@@ -64,9 +85,15 @@ public class DetailActivity extends Activity {
 
     }
 
+    private void setLabelToNameButton(String newName) {
+        Button btn = (Button)findViewById(R.id.buttonVideoName);
+
+        btn.setText(newName);
+    }
+
     File videoFile;
     Uri videoUri;
-    // File pdfFile;
+    File pdfFile;
 
     public void showMessage(String msg) {
         Toast.makeText(this, msg, Toast.LENGTH_LONG).show();
@@ -94,8 +121,12 @@ public class DetailActivity extends Activity {
             case R.id.action_send:
                 shareVideoIntent();
                 return true;
-            case R.id.action_rename:
-                showDialog(DIALOG_ID_FILE_RENAME);
+            case R.id.action_export:
+                try {
+                    copyPdf();
+                } catch (IOException e) {
+                    showMessage("Fail to copy pdf file: " + e.getMessage());
+                }
                 return true;
             case android.R.id.home:
                 finish();
@@ -103,6 +134,35 @@ public class DetailActivity extends Activity {
         }
 
         return super.onOptionsItemSelected(item);
+    }
+
+
+    private void copyFile(File src, File dest) throws IOException {
+        dest.createNewFile();
+        FileChannel source = null;
+        FileChannel destination = null;
+
+        try {
+            source = new FileInputStream(src).getChannel();
+            destination = new FileOutputStream(dest).getChannel();
+            destination.transferFrom(source, 0, source.size());
+        }
+        finally {
+            if(source != null) {
+                source.close();
+            }
+            if(destination != null) {
+                destination.close();
+            }
+        }
+    }
+
+
+    private void copyPdf() throws IOException {
+        Button btn = (Button)findViewById(R.id.buttonVideoName);
+        File targetPdf = new File(WhiteBoardCastActivity.getFileStoreDirectory(), btn.getText().toString() + ".pdf");
+        copyFile(pdfFile, targetPdf);
+        showMessage("Export to: " + targetPdf.getAbsolutePath());
     }
 
 
@@ -121,12 +181,16 @@ public class DetailActivity extends Activity {
             case DIALOG_ID_FILE_RENAME:
                 EditText et = (EditText)dialog.findViewById(R.id.edit_filename);
                 // back from another app but this app is already killed. just dismiss.
-                et.setText(videoFile.getName());
+                et.setText(baseName(videoFile));
 
                 setupFileNameViewListener(dialog, new FileNameListener() {
                     @Override
-                    public boolean tryFinish(String fileName) {
-                        return renameFileNameTo(fileName);
+                    public boolean tryFinish(String newName) {
+                        boolean success = renameFileNameTo(newName + ".webm");
+                        if(success) {
+                            setLabelToNameButton(newName);
+                        }
+                        return success;
                     }
                 });
 
