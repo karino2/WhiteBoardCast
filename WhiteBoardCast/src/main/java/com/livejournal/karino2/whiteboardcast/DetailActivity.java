@@ -19,6 +19,7 @@ import android.view.MenuItem;
 import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
+import android.widget.FrameLayout;
 import android.widget.ImageView;
 import android.widget.Toast;
 import android.widget.VideoView;
@@ -56,8 +57,8 @@ public class DetailActivity extends Activity {
             }
         });
 
-        ImageView iv = (ImageView)findViewById(R.id.videoThumbnailView);
-        iv.setOnClickListener(new View.OnClickListener() {
+        FrameLayout frame = (FrameLayout)findViewById(R.id.videoThumbnailFame);
+        frame.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 viewVideoIntent();
@@ -75,6 +76,8 @@ public class DetailActivity extends Activity {
             setLabelToNameButton(baseName(videoFile));
 
             Bitmap bmp = ThumbnailUtils.createVideoThumbnail(videoFile.getAbsolutePath(), MediaStore.Video.Thumbnails.MINI_KIND);
+
+            ImageView iv = (ImageView)findViewById(R.id.videoThumbnailView);
             iv.setImageBitmap(bmp);
 
             // VideoView vv;

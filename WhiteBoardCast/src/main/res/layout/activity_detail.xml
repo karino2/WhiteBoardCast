@@ -11,7 +11,6 @@
         android:layout_height="wrap_content"
         android:text="20150708"
         android:id="@+id/buttonVideoName"
-        android:layout_toLeftOf="@+id/textView3"
         android:layout_alignParentLeft="true" />
     <TextView
         android:layout_width="wrap_content"
@@ -20,14 +19,26 @@
         android:text=".webm"
         android:id="@+id/textView3"
         android:layout_alignBottom="@+id/buttonVideoName"
-        android:layout_alignRight="@+id/videoThumbnailView" />
+        android:layout_toRightOf="@+id/buttonVideoName" />
 
-    <ImageView
-        android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:id="@+id/videoThumbnailView"
+    <FrameLayout
+        android:layout_width="fill_parent"
+        android:gravity="center"
+        android:layout_height="fill_parent"
         android:layout_alignParentLeft="true"
-        android:layout_below="@+id/buttonVideoName" />
+        android:id="@+id/videoThumbnailFame"
+        android:layout_below="@+id/buttonVideoName"
+        >
+        <ImageView
+        android:layout_width="fill_parent"
+        android:layout_height="fill_parent"
+            android:id="@+id/videoThumbnailView"/>
+        <ImageView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center"
+            android:src="@drawable/ic_control_play" />
+    </FrameLayout>
 
 
 
