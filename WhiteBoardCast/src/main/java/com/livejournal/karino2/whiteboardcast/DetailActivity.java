@@ -83,8 +83,24 @@ public class DetailActivity extends Activity {
             // VideoView vv;
 
             // iv.setImageURI(videoUri);
-            showMessage(videoUri.toString());
         }
+
+    }
+
+    @Override
+    protected void onSaveInstanceState(Bundle outState) {
+        outState.putString("VIDEO_PATH", videoFile.getAbsolutePath());
+        outState.putString("VIDEO_URI", videoUri.toString());
+        outState.putString("PDF_PATH", pdfFile.getAbsolutePath());
+        super.onSaveInstanceState(outState);
+    }
+
+    @Override
+    protected void onRestoreInstanceState(Bundle savedInstanceState) {
+        super.onRestoreInstanceState(savedInstanceState);
+        videoFile = new File(savedInstanceState.getString("VIDEO_PATH"));
+        videoUri = Uri.parse(savedInstanceState.getString("VIDEO_URI"));
+        pdfFile = new File(savedInstanceState.getString("PDF_PATH"));
 
     }
 
