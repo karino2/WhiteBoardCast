@@ -11,7 +11,6 @@ import android.graphics.Bitmap;
 import android.media.ThumbnailUtils;
 import android.net.Uri;
 import android.provider.MediaStore;
-import android.support.v7.app.ActionBarActivity;
 import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.Menu;
@@ -22,7 +21,6 @@ import android.widget.EditText;
 import android.widget.FrameLayout;
 import android.widget.ImageView;
 import android.widget.Toast;
-import android.widget.VideoView;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -233,11 +231,11 @@ public class DetailActivity extends Activity {
 
         videoFile.renameTo(newNameFile);
         videoFile = newNameFile;
-        updateNewFIleNameToContentDB(videoFile);
+        updateNewFileNameToContentDB(videoFile);
         return true;
     }
 
-    private void updateNewFIleNameToContentDB(File newFile) {
+    private void updateNewFileNameToContentDB(File newFile) {
         ContentValues content = new ContentValues(2);
 
         long id = ContentUris.parseId(videoUri);
