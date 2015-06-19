@@ -200,16 +200,7 @@ public class DetailActivity extends Activity {
                 // back from another app but this app is already killed. just dismiss.
                 et.setText(baseName(videoFile));
 
-                setupFileNameViewListener(dialog, new FileNameListener() {
-                    @Override
-                    public boolean tryFinish(String newName) {
-                        boolean success = renameFileNameTo(newName + ".webm");
-                        if(success) {
-                            setLabelToNameButton(newName);
-                        }
-                        return success;
-                    }
-                });
+                setupFileNameViewListener(dialog);
 
                 break;
         }
@@ -266,14 +257,9 @@ public class DetailActivity extends Activity {
         return fileRenameDialog;
     }
 
-    interface FileNameListener {
-        boolean tryFinish(String fileName);
-    }
-    FileNameListener fileNameListener;
 
-    private void setupFileNameViewListener(Dialog dialog, FileNameListener onFinish) {
+    private void setupFileNameViewListener(Dialog dialog) {
         fileRenameDialog = dialog;
-        fileNameListener = onFinish;
         setOnClickListener(fileRenameDialog, R.id.button_cancel, new View.OnClickListener() {
             @Override
             public void onClick(View view) {
@@ -284,9 +270,11 @@ public class DetailActivity extends Activity {
             @Override
             public void onClick(View v) {
                 EditText et = (EditText)fileRenameDialog.findViewById(R.id.edit_filename);
-                boolean success = fileNameListener.tryFinish(et.getText().toString()); // renameFileNameTo(et.getText().toString());
-                if(success)
+                boolean success = renameFileNameTo(et.getText().toString() + ".webm");
+                if(success) {
+                    setLabelToNameButton(baseName(videoFile));
                     fileRenameDialog.dismiss();
+                }
             }
         });
     }
