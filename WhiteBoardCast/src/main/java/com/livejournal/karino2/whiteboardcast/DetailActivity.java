@@ -101,7 +101,7 @@ public class DetailActivity extends Activity {
         videoFile = new File(savedInstanceState.getString("VIDEO_PATH"));
         videoUri = Uri.parse(savedInstanceState.getString("VIDEO_URI"));
         pdfFile = new File(savedInstanceState.getString("PDF_PATH"));
-
+        setLabelToNameButton(baseName(videoFile));
     }
 
     private void setLabelToNameButton(String newName) {
@@ -227,11 +227,12 @@ public class DetailActivity extends Activity {
 
         File newNameFile = new File(videoFile.getParentFile(), newName);
         if(newNameFile.exists()) {
-            showMessage("This file is already exists");
+            showMessage("File \"" + newNameFile.getAbsolutePath()+ "\" is already exists");
             return false;
         }
 
         videoFile.renameTo(newNameFile);
+        videoFile = newNameFile;
         updateNewFIleNameToContentDB(videoFile);
         return true;
     }
