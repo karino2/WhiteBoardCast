@@ -280,7 +280,12 @@ public class WhiteBoardCanvas extends View implements FrameRetrieval, PageScroll
     }
 
     void fitInsideScreen(Rect region) {
-        region.intersect(0, 0, mWidth, mHeight);
+        if(region.intersect(0, 0, mWidth, mHeight)) {
+            region.left = Math.max(0, region.left);
+            region.top = Math.max(0, region.top);
+            region.right = Math.min(mWidth, region.right);
+            region.bottom = Math.min(mHeight, region.bottom);
+        }
     }
 
     private void invalViewBmpRegion(Rect region) {
