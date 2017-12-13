@@ -107,7 +107,7 @@ class MediaLoadRequest implements Runnable {
     }
 
     public  /* static */ int computeSampleSizeLarger(float scale) {
-        int initialSize = (int) FloatMath.floor(1f / scale);
+        int initialSize = (int) Math.floor(1f / scale);
         if (initialSize <= 1) return 1;
 
         return initialSize <= 8
@@ -128,7 +128,7 @@ class MediaLoadRequest implements Runnable {
 
 
     public /* static */ int computeSampleSize(float scale) {
-        int initialSize = Math.max(1, (int) FloatMath.ceil(1 / scale));
+        int initialSize = Math.max(1, (int) Math.ceil(1 / scale));
         return initialSize <= 8
                 ? nextPowerOf2(initialSize)
                 : (initialSize + 7) / 8 * 8;
@@ -174,8 +174,8 @@ class MediaLoadRequest implements Runnable {
 
         final int MAX_PIXEL_COUNT = 640000; // 400 x 1600
         if ((w / options.inSampleSize) * (h / options.inSampleSize) > MAX_PIXEL_COUNT) {
-            options.inSampleSize = computeSampleSize(
-                    FloatMath.sqrt((float) MAX_PIXEL_COUNT / (w * h)));
+            options.inSampleSize = computeSampleSize((float)
+                    Math.sqrt((double) MAX_PIXEL_COUNT / (w * h)));
         }
 
         options.inJustDecodeBounds = false;
