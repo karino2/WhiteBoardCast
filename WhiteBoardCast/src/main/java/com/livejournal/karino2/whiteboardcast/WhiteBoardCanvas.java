@@ -167,6 +167,10 @@ public class WhiteBoardCanvas extends View implements FrameRetrieval, PageScroll
 
     long lastDrawn = 0;
 
+    // every 5 seconds
+    final long TIME_CHECK_INTERVAL = 5000;
+    final long TIME_DRAW_INTERVAL = 4000;
+
     boolean stopTimeInvalChecker = false;
     Runnable timeInvalChecker = new Runnable() {
 
@@ -176,19 +180,16 @@ public class WhiteBoardCanvas extends View implements FrameRetrieval, PageScroll
                 return;
 
             long dur = System.currentTimeMillis() - lastDrawn;
-            // update at least once in 10 sec
-            if(lastDrawn == 0 || dur > 10000) {
+            if(lastDrawn == 0 || dur > TIME_DRAW_INTERVAL) {
                 invalidate();
             }
-            // check every 5 sec
-            handler.postDelayed(timeInvalChecker, 5000);
+            handler.postDelayed(timeInvalChecker, TIME_CHECK_INTERVAL);
         }
     };
 
     public void startTimeDraw() {
         stopTimeInvalChecker = false;
-        // check every 5 sec
-        handler.postDelayed(timeInvalChecker, 5000);
+        handler.postDelayed(timeInvalChecker, TIME_CHECK_INTERVAL);
     }
 
     public void stopTimeDraw() {
@@ -255,18 +256,19 @@ public class WhiteBoardCanvas extends View implements FrameRetrieval, PageScroll
     void drawTime(Canvas canvas) {
         long hours = 0;
         long minutes = 0;
-        long secs = 0;
+        long tensecs = 0;
 
         if(beginMill != 0) {
             long dur = System.currentTimeMillis() - beginMill;
             hours = dur/(60*60*1000);
             minutes = (dur%(60*60*1000))/(60*1000);
-            secs = (dur%(60*1000))/1000;
+            long secs = (dur%(60*1000))/1000;
+            tensecs = 10*(secs/10);
         }
 
 
-        // String result = String.format("%02d:%02d:%02d", hours, minutes, secs);
-        String result = String.format("%02d:%02d", hours, minutes);
+        String result = String.format("%02d:%02d:%02d", hours, minutes, tensecs);
+        // String result = String.format("%02d:%02d", hours, minutes);
 
 
         float w = canvas.getWidth();
