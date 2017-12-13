@@ -13,6 +13,7 @@ import android.graphics.Rect;
 import android.graphics.RectF;
 import android.os.Handler;
 import android.util.AttributeSet;
+import android.util.TypedValue;
 import android.view.LayoutInflater;
 import android.view.MotionEvent;
 import android.view.View;
@@ -65,6 +66,8 @@ public class WhiteBoardCanvas extends View implements FrameRetrieval, PageScroll
     private List<File> slides = new ArrayList<File>(); // null object.
     private boolean disableTouch;
 
+    Paint timePaint;
+    int toolUnit = 50;
 
     public WhiteBoardCanvas(Context context, AttributeSet attrs) {
         super(context, attrs);
@@ -72,6 +75,7 @@ public class WhiteBoardCanvas extends View implements FrameRetrieval, PageScroll
         mBitmapPaint = new Paint(Paint.DITHER_FLAG);
 
         overlay = new FloatingOverlay((WhiteBoardCastActivity)context, 0);
+        toolUnit = overlay.getToolUnit();
 
         penSize = DEFAULT_PEN_WIDTH;
         eraserSize = ERASER_WIDTH;
@@ -85,6 +89,17 @@ public class WhiteBoardCanvas extends View implements FrameRetrieval, PageScroll
         mPaint.setStrokeCap(Paint.Cap.ROUND);
         mPaint.setStrokeWidth(penSize);
         invalRegion = new Rect(0, 0, 0, 0);
+
+        timePaint = new Paint();
+        // timePaint.setColor(0xAAeeeeFF);
+        timePaint.setColor(0xAAAAAAFF);
+
+        float pixel = TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_SP, 50, getResources().getDisplayMetrics());
+        timePaint.setTextSize(pixel);
+        /*
+        timePaint.setTextSize(50);
+        */
+
 
         overwritePaint = new Paint();
         overwritePaint.setXfermode(new PorterDuffXfermode(PorterDuff.Mode.SRC));
@@ -150,9 +165,40 @@ public class WhiteBoardCanvas extends View implements FrameRetrieval, PageScroll
     }
 
 
+    long lastDrawn = 0;
+
+    boolean stopTimeInvalChecker = false;
+    Runnable timeInvalChecker = new Runnable() {
+
+        @Override
+        public void run() {
+            if(stopTimeInvalChecker)
+                return;
+
+            long dur = System.currentTimeMillis() - lastDrawn;
+            // update at least once in 10 sec
+            if(lastDrawn == 0 || dur > 10000) {
+                invalidate();
+            }
+            // check every 5 sec
+            handler.postDelayed(timeInvalChecker, 5000);
+        }
+    };
+
+    public void startTimeDraw() {
+        stopTimeInvalChecker = false;
+        // check every 5 sec
+        handler.postDelayed(timeInvalChecker, 5000);
+    }
+
+    public void stopTimeDraw() {
+        stopTimeInvalChecker = true;
+    }
 
     protected void onDraw(Canvas canvas) {
         canvas.drawColor(0xFFFFFFFF);
+
+        lastDrawn = System.currentTimeMillis();
 
         if(isAnimating) {
             synchronized(viewBmp) {
@@ -168,6 +214,8 @@ public class WhiteBoardCanvas extends View implements FrameRetrieval, PageScroll
         overlay.onDraw(canvas);
 
         drawFps(canvas);
+
+        drawTime(canvas);
 
     }
 
@@ -196,6 +244,34 @@ public class WhiteBoardCanvas extends View implements FrameRetrieval, PageScroll
             return;
         drawFpsBar(canvas, encoderFpsCounter.cycleFps(), 5, 0xFF0000FF);
         drawFpsBar(canvas, paintFpsCounter.cycleFps(), 5+12, 0xFFFF0000);
+    }
+
+    long beginMill = 0;
+
+    public void notifyBeginMillChanged(long newBeginMill) {
+        beginMill = newBeginMill;
+    }
+
+    void drawTime(Canvas canvas) {
+        long hours = 0;
+        long minutes = 0;
+        long secs = 0;
+
+        if(beginMill != 0) {
+            long dur = System.currentTimeMillis() - beginMill;
+            hours = dur/(60*60*1000);
+            minutes = (dur%(60*60*1000))/(60*1000);
+            secs = (dur%(60*1000))/1000;
+        }
+
+
+        // String result = String.format("%02d:%02d:%02d", hours, minutes, secs);
+        String result = String.format("%02d:%02d", hours, minutes);
+
+
+        float w = canvas.getWidth();
+        float textWidth = timePaint.measureText(result);
+        canvas.drawText(result, w-(textWidth+toolUnit*1.2f), timePaint.getTextSize(), timePaint);
     }
 
     private void drawFpsBar(Canvas canvas, int fps, int py, int fgColor) {

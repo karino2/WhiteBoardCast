@@ -42,6 +42,8 @@ public class FloatingOverlay {
     Bitmap toolBarPanel = null;
     Bitmap toolBar = null;
 
+    int getToolUnit() { return toolHeight; }
+
     int toolHeight = 50;
     float dpi = 150;
 

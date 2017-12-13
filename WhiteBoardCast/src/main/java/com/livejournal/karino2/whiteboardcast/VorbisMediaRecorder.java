@@ -42,6 +42,10 @@ public class VorbisMediaRecorder {
         prevBlockEndNano = 0;
     }
 
+    public long getBeginMill() {
+        return beginMill;
+    }
+
     enum State {INITIALIZING, READY, RECORDING, ERROR, STOPPED};
     State state;
     String filePath;

@@ -100,6 +100,10 @@ public class Presentation {
 
     }
 
+    public long getBeginMill() {
+        return recorder.getBeginMill();
+    }
+
     public void resumeRecord() {
         recStats = RecordStatus.RECORDING;
         long suspendedBegin = recorder.lastBlockEndMil();

@@ -158,6 +158,7 @@ public class WhiteBoardCastActivity extends Activity implements EncoderTask.Erro
         // under processing.
         presen.stopRecordBegin();
         getWhiteBoardCanvas().changeRecStatus();
+        getWhiteBoardCanvas().stopTimeDraw();
         showMessage("record end, start post process...");
 
         presen.stopRecord();
@@ -218,6 +219,7 @@ public class WhiteBoardCastActivity extends Activity implements EncoderTask.Erro
     public void pauseRecord() {
         presen.pauseRecord();
         getWhiteBoardCanvas().changeRecStatus();
+        getWhiteBoardCanvas().stopTimeDraw();
 
         showMessage("pause");
     }
@@ -226,7 +228,11 @@ public class WhiteBoardCastActivity extends Activity implements EncoderTask.Erro
         presen.resumeRecord();
 
         presen.scheduleEncodeTask();
-        getWhiteBoardCanvas().changeRecStatus();
+        WhiteBoardCanvas wb = getWhiteBoardCanvas();
+        wb.notifyBeginMillChanged(presen.getBeginMill());
+        wb.changeRecStatus();
+        wb.startTimeDraw();
+
         showMessage("resume");
     }
 
@@ -279,6 +285,7 @@ public class WhiteBoardCastActivity extends Activity implements EncoderTask.Erro
         }
 
         presen.newRecorder(currentMill);
+        wb.notifyBeginMillChanged(currentMill);
         try {
             presen.getRecorder().setOutputFile(getWorkAudioPath());
         } catch (IOException e) {
@@ -297,6 +304,7 @@ public class WhiteBoardCastActivity extends Activity implements EncoderTask.Erro
 
         presen.startRecord();
         wb.changeRecStatus();
+        wb.startTimeDraw();
         showMessage("record start");
     }
 
