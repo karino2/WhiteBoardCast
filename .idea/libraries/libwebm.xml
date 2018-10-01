@@ -1,9 +1,0 @@
-<component name="libraryTable">
-  <library name="libwebm">
-    <CLASSES>
-      <root url="jar://$PROJECT_DIR$/WhiteBoardCast/libs/libwebm.jar!/" />
-    </CLASSES>
-    <JAVADOC />
-    <SOURCES />
-  </library>
-</component>

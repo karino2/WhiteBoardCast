@@ -2,10 +2,6 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     package="com.livejournal.karino2.whiteboardcast" >
 
-    <uses-sdk
-        android:minSdkVersion="15"
-        android:targetSdkVersion="16" />
-
     <uses-feature
         android:name="android.hardware.microphone"
         android:required="true" />
