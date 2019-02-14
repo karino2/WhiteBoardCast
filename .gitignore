@@ -4,3 +4,5 @@ projectFilesBackup/
 WhiteBoardCast/releases/
 .gradle/
 WhiteBoardCast/release/
+.idea/libraries/
+.idea/caches/
