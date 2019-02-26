@@ -81,7 +81,7 @@ public class VorbisMediaRecorder {
             audioRecorder.setRecordPositionUpdateListener(updateListener);
             audioRecorder.setPositionNotificationPeriod(framePeriod);
 
-            // create vorbis encoder here.
+            // create vorbis videoEncoder here.
             VorbisEncConfig vorbisConf = new VorbisEncConfig(nChannels, sampleRate, bSamples);
             vorbisConf.setTimebase(1, 1000000000);
 

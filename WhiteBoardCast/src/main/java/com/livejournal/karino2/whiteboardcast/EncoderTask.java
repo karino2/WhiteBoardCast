@@ -2,20 +2,6 @@ package com.livejournal.karino2.whiteboardcast;
 
 import android.graphics.Bitmap;
 import android.graphics.Rect;
-import android.os.Environment;
-import android.util.Log;
-
-import com.google.libvpx.LibVpxEnc;
-import com.google.libvpx.LibVpxEncConfig;
-import com.google.libvpx.LibVpxException;
-import com.google.libvpx.Rational;
-import com.google.libvpx.VpxCodecCxPkt;
-import com.google.libwebm.mkvmuxer.MkvWriter;
-import com.google.libwebm.mkvmuxer.Segment;
-import com.google.libwebm.mkvmuxer.SegmentInfo;
-
-import java.util.ArrayList;
-import java.util.TimerTask;
 
 /**
  * Created by karino on 6/26/13.
@@ -33,7 +19,7 @@ public class EncoderTask implements Runnable {
     Bitmap bitmap;
     FrameRetrieval retrieval;
     int[] pixelBuf;
-    Encoder encoder;
+    VideoEncoder videoEncoder;
     StringBuilder errorBuf;
     int width;
     int height;
@@ -44,7 +30,7 @@ public class EncoderTask implements Runnable {
         retrieval = frameR;
         updateBitmap(parentBmp);
         errorBuf = new StringBuilder();
-        encoder = new Encoder();
+        videoEncoder = new WebmEncoder();
         this.workVideoPath = workVideoPath;
         errorListener = elistn;
     }
@@ -53,7 +39,7 @@ public class EncoderTask implements Runnable {
     static final int FPS_DENOM = 1;
 
     public boolean initEncoder(long currentMill) {
-        boolean res = encoder.initEncoder(workVideoPath, width, height, FPS_NUM, FPS_DENOM, errorBuf);
+        boolean res = videoEncoder.initEncoder(workVideoPath, width, height, FPS_NUM, FPS_DENOM, errorBuf);
         beginMillis = currentMill;
         return res;
     }
@@ -77,17 +63,17 @@ public class EncoderTask implements Runnable {
     public boolean encodeFrame(int[] frame, Rect invalRect) {
         long curr = System.currentTimeMillis();
         long diff = curr-beginMillis;
-        return encoder.encodeFrames(frame,  invalRect, (int)(diff*FPS_NUM/1000), LibVpxEnc.FOURCC_ARGB, errorBuf);
+        return videoEncoder.encodeFrames(frame,  invalRect, (int)(diff*FPS_NUM/1000), errorBuf);
     }
 
 
     // when call doneEncoder, you do not need to call finalizeEncoder()
     public synchronized boolean doneEncoder() {
-        return encoder.doneEncoder(errorBuf);
+        return videoEncoder.doneEncoder(errorBuf);
     }
 
     public void finalizeEncoder() {
-        encoder.finalizeEncoder();
+        videoEncoder.finalizeEncoder();
     }
 
     Rect invalRect = new Rect();
@@ -96,7 +82,7 @@ public class EncoderTask implements Runnable {
         try {
             doWholeTask();
         }catch(RuntimeException e) {
-            errorListener.postErrorMessage("Unknown encoder runtime exception: " + e.getMessage());
+            errorListener.postErrorMessage("Unknown videoEncoder runtime exception: " + e.getMessage());
         }
     }
 

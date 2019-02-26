@@ -17,7 +17,7 @@ import java.util.ArrayList;
 /**
  * Created by karino on 6/27/13.
  */
-public class Encoder {
+public class WebmEncoder implements VideoEncoder {
 
     public synchronized boolean doneEncoder(StringBuilder error) {
         return doneEncoderCore(error);
@@ -53,8 +53,8 @@ public class Encoder {
     }
 
 
-    public synchronized boolean encodeFrames(int[] srcFrame, Rect invalRect, int framesToEncode, long fourcc, StringBuilder error) {
-        if(!encodeOneFrame(srcFrame, invalRect, framesToEncode, fourcc, error))
+    public synchronized boolean encodeFrames(int[] srcFrame, Rect invalRect, int framesToEncode, StringBuilder error) {
+        if(!encodeOneFrame(srcFrame, invalRect, framesToEncode, LibVpxEnc.FOURCC_ARGB, error))
             return false;
         framesIn = framesToEncode;
 
@@ -106,7 +106,7 @@ public class Encoder {
             }
         }
         catch (LibVpxException e) {
-            showError(error, "Encoder error : " + e);
+            showError(error, "VideoEncoder error : " + e);
             return false;
         }
         return true;
@@ -132,7 +132,7 @@ public class Encoder {
                 }
             }
         } catch (LibVpxException e) {
-            showError(error, "Encoder error : " + e);
+            showError(error, "VideoEncoder error : " + e);
             return false;
         }
         return true;
