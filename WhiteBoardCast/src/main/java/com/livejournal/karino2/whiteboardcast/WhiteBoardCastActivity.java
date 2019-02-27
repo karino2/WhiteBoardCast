@@ -7,7 +7,6 @@ import android.app.Activity;
 import android.app.AlertDialog;
 import android.app.Dialog;
 import android.content.ContentResolver;
-import android.content.ContentUris;
 import android.content.ContentValues;
 import android.content.DialogInterface;
 import android.content.Intent;
@@ -23,14 +22,12 @@ import android.preference.PreferenceManager;
 import android.provider.MediaStore;
 import android.util.Log;
 import android.view.KeyEvent;
-import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
 import android.webkit.WebView;
 import android.widget.Button;
-import android.widget.EditText;
 import android.widget.Toast;
 
 import java.io.File;
@@ -173,6 +170,7 @@ public class WhiteBoardCastActivity extends Activity implements EncoderTask.Erro
                 }
 
                 postShowMessage("post process done.");
+                /*
                 handler.post(new Runnable(){
                     @Override
                     public void run() {
@@ -180,6 +178,7 @@ public class WhiteBoardCastActivity extends Activity implements EncoderTask.Erro
                     }
                 }
                 );
+                */
 
             }
         }).start();
@@ -268,8 +267,9 @@ public class WhiteBoardCastActivity extends Activity implements EncoderTask.Erro
     private void startRecordSecondPhase() {
         WhiteBoardCanvas wb = getWhiteBoardCanvas();
         wb.invalWholeRegionForEncoder(); // for restart. make it a little heavy.
+        long currentMill = System.currentTimeMillis();
         try {
-            presen.newEncoderTask(wb, wb.getBitmap(), getWorkVideoPath(), this);
+            presen.newEncoderTask(wb, wb.getBitmap(), getWorkVideoPath(), this, currentMill);
 
             if(debuggable)
                 presen.getEncoderTask().setFpsListener(getWhiteBoardCanvas().getEncoderFpsCounter());
@@ -277,23 +277,17 @@ public class WhiteBoardCastActivity extends Activity implements EncoderTask.Erro
             showError("Fail to get workVideoPath: " + e.getMessage());
             return;
         }
-        long currentMill = System.currentTimeMillis();
-
-        if(!presen.getEncoderTask().initEncoder(currentMill)) {
-            showError("init encode fail");
-            return;
-        }
 
         presen.newRecorder(currentMill);
         wb.notifyBeginMillChanged(currentMill);
         try {
-            presen.getRecorder().setOutputFile(getWorkAudioPath());
+            presen.setAudioFileName(getWorkAudioPath());
         } catch (IOException e) {
             showError("IOException: Create WhiteBoardCast folder fail: " + e.getMessage());
             return;
         }
         try {
-            presen.getRecorder().prepare();
+            presen.prepareAudioRecorder();
         } catch (IOException e) {
             showError("IOException: MediaRecoder prepare fail: " + e.getMessage());
             return;
@@ -335,7 +329,7 @@ public class WhiteBoardCastActivity extends Activity implements EncoderTask.Erro
     }
 
     private String getWorkVideoPath() throws IOException {
-        return getFileStoreDirectory().getAbsolutePath() + "/temp.webm";
+        return getFileStoreDirectory().getAbsolutePath() + "/temp.m4a";
     }
 
 

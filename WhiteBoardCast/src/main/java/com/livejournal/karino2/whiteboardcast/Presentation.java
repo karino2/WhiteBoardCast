@@ -1,7 +1,10 @@
 package com.livejournal.karino2.whiteboardcast;
 
 import android.graphics.Bitmap;
+import android.media.MediaMuxer;
 import android.net.Uri;
+
+import com.google.libvorbis.VorbisException;
 
 import java.io.File;
 import java.io.IOException;
@@ -15,9 +18,16 @@ import java.util.concurrent.TimeUnit;
  * Created by karino on 11/28/13.
  */
 public class Presentation {
+    Mp4aRecorder recorder;
+    MediaMuxer muxer;
+
     public void stopRecord() {
         recorder.stop();
         recorder.release();
+
+        muxer.stop();
+        muxer.release();
+
         recStats = RecordStatus.DONE;
     }
 
@@ -32,16 +42,24 @@ public class Presentation {
         return encoderTask.doneEncoder();
     }
 
+
     public void newRecorder(long currentMill) {
-        recorder = new VorbisMediaRecorder();
-        recorder.setBeginMill(currentMill);
+        recorder = new Mp4aRecorder(muxer, currentMill);
+        // recorder = new VorbisMediaRecorder();
+        // recorder.setBeginMill(currentMill);
     }
 
-    public VorbisMediaRecorder getRecorder() {
-        return recorder;
+    public void setAudioFileName(String fileName) {
+        // TODO: remove this.
+        // recorder.setOutputFile(fileName);
+    }
+
+    public void prepareAudioRecorder() throws IOException, VorbisException {
+        recorder.prepare();
     }
 
     public void startRecord() {
+        // muxer.start();
         recorder.start();
 
         scheduleEncodeTask();
@@ -82,12 +100,13 @@ public class Presentation {
         return encoderTask;
     }
 
-    VorbisMediaRecorder recorder;
     Future<?> future = null;
 
 
-    public void newEncoderTask(FrameRetrieval frameR, Bitmap parentBmp, String workVideoPath, EncoderTask.ErrorListener elistn) {
-        encoderTask = new EncoderTask(frameR, parentBmp, workVideoPath, elistn);
+
+    public void newEncoderTask(FrameRetrieval frameR, Bitmap parentBmp, String workVideoPath, EncoderTask.ErrorListener elistn, long currentMil) throws IOException {
+        muxer = new MediaMuxer(workVideoPath, MediaMuxer.OutputFormat.MUXER_OUTPUT_MPEG_4);
+        encoderTask = new EncoderTask(frameR, parentBmp, workVideoPath, elistn, currentMil, muxer);
     }
 
     public void pauseRecord() {

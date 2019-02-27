@@ -8,10 +8,65 @@ import android.util.Log
 import java.nio.ByteBuffer
 
 
-class AvcVideoEncoder : VideoEncoder {
+class AvcVideoEncoder(val wholeWidth: Int, val wholeHeight: Int, val frameRate:Int, val scale:Int, val muxer: MediaMuxer) : VideoEncoder {
+    // var frameRate = 30
+    val mimeType = MediaFormat.MIMETYPE_VIDEO_AVC
+    val bitRate = 700000
+
+    lateinit var encoder: MediaCodec
+    val bufSize: Int
+        get() = wholeWidth*wholeHeight*(1+1/2)
+
+    var trackIndex = 0
+    val ybuf: ByteArray
+    val uvbuf: ByteArray
+
+    val TIMEOUT_USEC = 10000L
+    var framesIndex = 1
+
+    var colorFormat =  MediaCodecInfo.CodecCapabilities.COLOR_FormatYUV420Planar
+    // val colorFormat = MediaCodecInfo.CodecCapabilities.COLOR_FormatYUV420Flexible
+
+    val supportedColorFormat = arrayOf(
+            MediaCodecInfo.CodecCapabilities.COLOR_FormatYUV420Planar,
+            MediaCodecInfo.CodecCapabilities.COLOR_FormatYUV420PackedPlanar,
+            MediaCodecInfo.CodecCapabilities.COLOR_FormatYUV420SemiPlanar,
+            MediaCodecInfo.CodecCapabilities.COLOR_FormatYUV420PackedSemiPlanar,
+            MediaCodecInfo.CodecCapabilities.COLOR_TI_FormatYUV420PackedSemiPlanar
+    )
+
+    val yuvTempBuf = ByteArray(3)
+    val bufInfo = MediaCodec.BufferInfo()
+
+    // default value.  scale = 1000, frameRate = 30
+    init {
+        val format = MediaFormat.createVideoFormat(mimeType, wholeWidth, wholeHeight)
+        ybuf = ByteArray(wholeWidth*wholeHeight)
+        val halfWidth = wholeWidth/2
+        uvbuf = ByteArray(halfWidth*wholeHeight/2*2)
+        framesIndex = 1
+
+        val mcl = MediaCodecList(MediaCodecList.REGULAR_CODECS)
+        val codec = mcl.findEncoderForFormat(format)
+
+        encoder = MediaCodec.createByCodecName(codec)
+        colorFormat = selectColor(encoder.codecInfo, mimeType)
+
+        format.setInteger(MediaFormat.KEY_COLOR_FORMAT, colorFormat)
+        format.setInteger(MediaFormat.KEY_BIT_RATE, 6000000)
+        format.setInteger(MediaFormat.KEY_FRAME_RATE, 15) // 15 fps
+        format.setInteger(MediaFormat.KEY_I_FRAME_INTERVAL, 10) // 10 sec between I-frame
+        // trackIndex = muxer.addTrack(format)
+        trackIndex = 0
+
+        encoder.configure(format, null, null, MediaCodec.CONFIGURE_FLAG_ENCODE)
+        encoder.start()
+    }
+
     @Synchronized
     override fun doneEncoder(error: java.lang.StringBuilder?): Boolean {
         encoder.stop()
+        finalizeEncoder()
         return true
     }
 
@@ -19,9 +74,6 @@ class AvcVideoEncoder : VideoEncoder {
     override fun finalizeEncoder() {
         encoder.release()
     }
-
-    var colorFormat =  MediaCodecInfo.CodecCapabilities.COLOR_FormatYUV420Planar
-    // val colorFormat = MediaCodecInfo.CodecCapabilities.COLOR_FormatYUV420Flexible
 
 
 
@@ -81,12 +133,11 @@ class AvcVideoEncoder : VideoEncoder {
         val r = Color.red(argb)
         val g = Color.green(argb)
         val b = Color.blue(argb)
-        yuv[0] = (CYR * r + CYG * g + CYB * b shr CSHIFT) as Byte
-        yuv[1] = ((CUR * r + CUG * g + CUB * b shr CSHIFT) + 128) as Byte
-        yuv[2] = ((CVR * r + CVG * g + CVB * b shr CSHIFT) + 128) as Byte
+        yuv[0] = (CYR * r + CYG * g + CYB * b shr CSHIFT).toByte()
+        yuv[1] = ((CUR * r + CUG * g + CUB * b shr CSHIFT) + 128).toByte()
+        yuv[2] = ((CVR * r + CVG * g + CVB * b shr CSHIFT) + 128).toByte()
     }
 
-    val yuvTempBuf = ByteArray(3)
 
     private fun fillY(srcFrame: IntArray, invalRect: Rect, wholeW: Int, wholeH: Int, outBuf: ByteBuffer) {
         var x = invalRect.left
@@ -108,27 +159,6 @@ class AvcVideoEncoder : VideoEncoder {
 
     }
 
-
-    val supportedColorFormat = arrayOf(
-            MediaCodecInfo.CodecCapabilities.COLOR_FormatYUV420Planar,
-            MediaCodecInfo.CodecCapabilities.COLOR_FormatYUV420PackedPlanar,
-            MediaCodecInfo.CodecCapabilities.COLOR_FormatYUV420SemiPlanar,
-            MediaCodecInfo.CodecCapabilities.COLOR_FormatYUV420PackedSemiPlanar,
-            MediaCodecInfo.CodecCapabilities.COLOR_TI_FormatYUV420PackedSemiPlanar
-        )
-
-
-    val mimeType = MediaFormat.MIMETYPE_VIDEO_AVC
-    var frameRate = 30
-    val bitRate = 700000
-
-    lateinit var muxer : MediaMuxer
-    lateinit var codec: MediaCodec
-    lateinit var ybuf: ByteArray
-    lateinit var uvbuf: ByteArray
-    var wholeWidth = 0
-    var wholeHeight = 0
-
     fun selectColor(codecInfo: MediaCodecInfo, mimeType: String) : Int {
         val caps = codecInfo.getCapabilitiesForType(mimeType)
         caps.colorFormats.forEach {
@@ -147,46 +177,7 @@ class AvcVideoEncoder : VideoEncoder {
         }
     }
 
-    lateinit var encoder: MediaCodec
-    val bufSize: Int
-    get() = wholeWidth*wholeHeight*(1+1/2)
 
-    var scale = 1000
-    var trackIndex = 0
-
-    // default value.  scale = 1000, frameRate = 30
-    override fun initEncoder(fileOutputName: String, width:Int, height:Int, inRate:Int, inScale:Int, error: StringBuilder): Boolean
-    {
-        wholeWidth = width
-        wholeHeight = height
-
-        scale = inScale
-        frameRate = inRate
-
-        val format = MediaFormat.createVideoFormat(mimeType, width, height)
-        muxer = MediaMuxer(fileOutputName, MediaMuxer.OutputFormat.MUXER_OUTPUT_MPEG_4)
-        ybuf = ByteArray(width)
-        val halfWidth = width/2
-        uvbuf = ByteArray(halfWidth*height/2*2)
-        framesIndex = 1
-
-        val mcl = MediaCodecList(MediaCodecList.REGULAR_CODECS)
-        val codec = mcl.findEncoderForFormat(format)
-
-        encoder = MediaCodec.createEncoderByType(codec)
-        colorFormat = selectColor(encoder.codecInfo, mimeType)
-
-        format.setInteger(MediaFormat.KEY_COLOR_FORMAT, colorFormat)
-        format.setInteger(MediaFormat.KEY_BIT_RATE, 6000000)
-        format.setInteger(MediaFormat.KEY_FRAME_RATE, 15) // 15 fps
-        format.setInteger(MediaFormat.KEY_I_FRAME_INTERVAL, 10) // 10 sec between I-frame
-        trackIndex = muxer.addTrack(format)
-
-        encoder.configure(format, null, null, MediaCodec.CONFIGURE_FLAG_ENCODE)
-        encoder.start()
-
-        return true
-    }
 
     @Synchronized
     override fun encodeFrames(srcFrame: IntArray, invalRect: Rect, framesToEncode: Int, error: StringBuilder): Boolean {
@@ -197,7 +188,6 @@ class AvcVideoEncoder : VideoEncoder {
         return true
     }
 
-    val bufInfo = MediaCodec.BufferInfo()
 
     // almost the same as MpfaRecorder::drain.
     fun drain() {
@@ -210,14 +200,14 @@ class AvcVideoEncoder : VideoEncoder {
         buf.position(bufInfo.offset)
         buf.limit(bufInfo.offset+bufInfo.size)
 
+        /*
         synchronized(muxer){
             muxer.writeSampleData(trackIndex, buf, bufInfo)
         }
+        */
         encoder.releaseOutputBuffer(bufIndex, false)
     }
 
-    val TIMEOUT_USEC = 10000L
-    var framesIndex = 1
     fun frameToTime(frame: Int) : Long {
         return 132+frame*1000L*scale/frameRate
     }

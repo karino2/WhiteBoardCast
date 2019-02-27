@@ -2,6 +2,7 @@ package com.livejournal.karino2.whiteboardcast;
 
 import android.graphics.Bitmap;
 import android.graphics.Rect;
+import android.media.MediaMuxer;
 
 /**
  * Created by karino on 6/26/13.
@@ -19,29 +20,30 @@ public class EncoderTask implements Runnable {
     Bitmap bitmap;
     FrameRetrieval retrieval;
     int[] pixelBuf;
-    VideoEncoder videoEncoder;
+    AvcVideoEncoder videoEncoder;
     StringBuilder errorBuf;
     int width;
     int height;
-    long beginMillis=0;
+    long beginMillis;
     String workVideoPath;
 
-    public EncoderTask(FrameRetrieval frameR, Bitmap parentBmp, String workVideoPath, ErrorListener elistn) {
+    public EncoderTask(FrameRetrieval frameR, Bitmap parentBmp, String workVideoPath, ErrorListener elistn, long currentMil, MediaMuxer muxer) {
         retrieval = frameR;
         updateBitmap(parentBmp);
         errorBuf = new StringBuilder();
-        videoEncoder = new WebmEncoder();
         this.workVideoPath = workVideoPath;
         errorListener = elistn;
+        beginMillis = currentMil;
+
+        videoEncoder = new AvcVideoEncoder(width, height, FPS_NUM, FPS_DENOM, muxer);
     }
 
     static final int FPS_NUM = 24;
     static final int FPS_DENOM = 1;
 
     public boolean initEncoder(long currentMill) {
-        boolean res = videoEncoder.initEncoder(workVideoPath, width, height, FPS_NUM, FPS_DENOM, errorBuf);
-        beginMillis = currentMill;
-        return res;
+        // TODO: remove
+        return true;
     }
 
 

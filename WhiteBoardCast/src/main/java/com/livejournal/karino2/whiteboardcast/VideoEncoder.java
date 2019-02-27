@@ -18,9 +18,6 @@ public interface VideoEncoder {
     boolean doneEncoder(StringBuilder error);
     void finalizeEncoder();
     boolean encodeFrames(int[] srcFrame, Rect invalRect, int framesToEncode, StringBuilder error);
-    boolean initEncoder(String webmOutputName,
-                               int width, int height, int rate, int scale,
-                               StringBuilder error);
 }
 
 

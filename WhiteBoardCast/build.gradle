@@ -53,7 +53,7 @@ android {
     }
 
     defaultConfig {
-        minSdkVersion 22
+        minSdkVersion 21
         targetSdkVersion 28
         versionCode 25
         versionName "3.5"
