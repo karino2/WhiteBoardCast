@@ -16,16 +16,8 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="bad49647-6dd6-440c-9798-e00037768d8f" name="Default" comment="">
-      <change beforePath="$PROJECT_DIR$/.idea/misc.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/misc.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/WhiteBoardCast/WhiteBoardCast-WhiteBoardCast.iml" beforeDir="false" afterPath="$PROJECT_DIR$/WhiteBoardCast/WhiteBoardCast-WhiteBoardCast.iml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/WhiteBoardCast/build.gradle" beforeDir="false" afterPath="$PROJECT_DIR$/WhiteBoardCast/build.gradle" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/WhiteBoardCast/src/main/java/com/livejournal/karino2/whiteboardcast/AvcVideoEncoder.kt" beforeDir="false" afterPath="$PROJECT_DIR$/WhiteBoardCast/src/main/java/com/livejournal/karino2/whiteboardcast/AvcVideoEncoder.kt" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/WhiteBoardCast/src/main/java/com/livejournal/karino2/whiteboardcast/EncoderTask.java" beforeDir="false" afterPath="$PROJECT_DIR$/WhiteBoardCast/src/main/java/com/livejournal/karino2/whiteboardcast/EncoderTask.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/WhiteBoardCast/src/main/java/com/livejournal/karino2/whiteboardcast/Mp4aRecorder.kt" beforeDir="false" afterPath="$PROJECT_DIR$/WhiteBoardCast/src/main/java/com/livejournal/karino2/whiteboardcast/Mp4aRecorder.kt" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/WhiteBoardCast/src/main/java/com/livejournal/karino2/whiteboardcast/Presentation.java" beforeDir="false" afterPath="$PROJECT_DIR$/WhiteBoardCast/src/main/java/com/livejournal/karino2/whiteboardcast/Presentation.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/WhiteBoardCast/src/main/java/com/livejournal/karino2/whiteboardcast/VideoEncoder.java" beforeDir="false" afterPath="$PROJECT_DIR$/WhiteBoardCast/src/main/java/com/livejournal/karino2/whiteboardcast/VideoEncoder.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/WhiteBoardCast/src/main/java/com/livejournal/karino2/whiteboardcast/WhiteBoardCastActivity.java" beforeDir="false" afterPath="$PROJECT_DIR$/WhiteBoardCast/src/main/java/com/livejournal/karino2/whiteboardcast/WhiteBoardCastActivity.java" afterDir="false" />
     </list>
     <option name="EXCLUDED_CONVERTED_TO_IGNORED" value="true" />
     <option name="SHOW_DIALOG" value="false" />
@@ -61,14 +53,14 @@
         <counts>
           <entry key="gradle" value="26" />
           <entry key="java" value="867" />
-          <entry key="kt" value="8375" />
+          <entry key="kt" value="8569" />
         </counts>
       </usages-collector>
       <usages-collector id="statistics.file.types.edit">
         <counts>
           <entry key="Groovy" value="26" />
           <entry key="JAVA" value="867" />
-          <entry key="Kotlin" value="8375" />
+          <entry key="Kotlin" value="8569" />
         </counts>
       </usages-collector>
       <usages-collector id="statistics.file.extensions.open">
@@ -108,11 +100,11 @@
           </provider>
         </entry>
       </file>
-      <file pinned="false" current-in-tab="true">
+      <file pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/WhiteBoardCast/src/main/java/com/livejournal/karino2/whiteboardcast/Presentation.java">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="102">
-              <caret line="62" selection-start-line="62" selection-end-line="62" />
+            <state relative-caret-position="17">
+              <caret line="55" selection-start-line="55" selection-end-line="55" />
               <folding>
                 <element signature="e#1203#1204#0" expanded="true" />
                 <element signature="e#1248#1249#0" expanded="true" />
@@ -132,11 +124,11 @@
           </provider>
         </entry>
       </file>
-      <file pinned="false" current-in-tab="false">
+      <file pinned="false" current-in-tab="true">
         <entry file="file://$PROJECT_DIR$/WhiteBoardCast/src/main/java/com/livejournal/karino2/whiteboardcast/Mp4aRecorder.kt">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="36">
-              <caret line="196" column="25" selection-start-line="196" selection-start-column="25" selection-end-line="196" selection-end-column="25" />
+            <state relative-caret-position="128">
+              <caret line="172" selection-start-line="172" selection-end-line="172" />
             </state>
           </provider>
         </entry>
@@ -248,13 +240,7 @@
   </component>
   <component name="FindInProjectRecents">
     <findStrings>
-      <find>read(</find>
-      <find>audioRecorder.read</find>
-      <find>buffer</find>
-      <find>writeSampleData</find>
-      <find>recorder.stop</find>
       <find>muxer.stop</find>
-      <find>ensureByteBuffer</find>
       <find>drain</find>
       <find>audioRecorder.start</find>
       <find>Unknown</find>
@@ -276,8 +262,14 @@
       <find>addTrack</find>
       <find>muxer</find>
       <find>trackIndex</find>
-      <find>Muxer</find>
       <find>format</find>
+      <find>Muxer</find>
+      <find>release</find>
+      <find>releaseCurrent</find>
+      <find>ensureByteBuffer</find>
+      <find>buffer</find>
+      <find>handleNewAudio</find>
+      <find>TIMER_INTERVAL</find>
     </findStrings>
   </component>
   <component name="GenerateSignedApkSettings">
@@ -2499,8 +2491,8 @@
         <option value="$PROJECT_DIR$/WhiteBoardCast/src/main/java/com/livejournal/karino2/whiteboardcast/AvcVideoEncoder.kt" />
         <option value="$PROJECT_DIR$/WhiteBoardCast/src/main/java/com/livejournal/karino2/whiteboardcast/WhiteBoardCastActivity.java" />
         <option value="$PROJECT_DIR$/WhiteBoardCast/src/main/java/com/livejournal/karino2/whiteboardcast/EncoderTask.java" />
-        <option value="$PROJECT_DIR$/WhiteBoardCast/src/main/java/com/livejournal/karino2/whiteboardcast/Mp4aRecorder.kt" />
         <option value="$PROJECT_DIR$/WhiteBoardCast/src/main/java/com/livejournal/karino2/whiteboardcast/Presentation.java" />
+        <option value="$PROJECT_DIR$/WhiteBoardCast/src/main/java/com/livejournal/karino2/whiteboardcast/Mp4aRecorder.kt" />
       </list>
     </option>
   </component>
@@ -2730,33 +2722,9 @@
         </line-breakpoint>
         <line-breakpoint enabled="true" type="kotlin-line">
           <url>file://$PROJECT_DIR$/WhiteBoardCast/src/main/java/com/livejournal/karino2/whiteboardcast/Mp4aRecorder.kt</url>
-          <line>209</line>
-          <properties />
-          <option name="timeStamp" value="28" />
-        </line-breakpoint>
-        <line-breakpoint enabled="true" type="kotlin-line">
-          <url>file://$PROJECT_DIR$/WhiteBoardCast/src/main/java/com/livejournal/karino2/whiteboardcast/Mp4aRecorder.kt</url>
-          <line>204</line>
-          <properties />
-          <option name="timeStamp" value="29" />
-        </line-breakpoint>
-        <line-breakpoint enabled="true" type="kotlin-line">
-          <url>file://$PROJECT_DIR$/WhiteBoardCast/src/main/java/com/livejournal/karino2/whiteboardcast/Mp4aRecorder.kt</url>
-          <line>217</line>
-          <properties />
-          <option name="timeStamp" value="34" />
-        </line-breakpoint>
-        <line-breakpoint enabled="true" type="kotlin-line">
-          <url>file://$PROJECT_DIR$/WhiteBoardCast/src/main/java/com/livejournal/karino2/whiteboardcast/Mp4aRecorder.kt</url>
-          <line>36</line>
+          <line>35</line>
           <properties />
           <option name="timeStamp" value="35" />
-        </line-breakpoint>
-        <line-breakpoint enabled="true" type="kotlin-line">
-          <url>file://$PROJECT_DIR$/WhiteBoardCast/src/main/java/com/livejournal/karino2/whiteboardcast/Mp4aRecorder.kt</url>
-          <line>150</line>
-          <properties />
-          <option name="timeStamp" value="36" />
         </line-breakpoint>
       </breakpoints>
     </breakpoint-manager>
@@ -3005,23 +2973,23 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/WhiteBoardCast/src/main/java/com/livejournal/karino2/whiteboardcast/Mp4aRecorder.kt">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="36">
-          <caret line="196" column="25" selection-start-line="196" selection-start-column="25" selection-end-line="196" selection-end-column="25" />
-        </state>
-      </provider>
-    </entry>
     <entry file="file://$PROJECT_DIR$/WhiteBoardCast/src/main/java/com/livejournal/karino2/whiteboardcast/Presentation.java">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="102">
-          <caret line="62" selection-start-line="62" selection-end-line="62" />
+        <state relative-caret-position="17">
+          <caret line="55" selection-start-line="55" selection-end-line="55" />
           <folding>
             <element signature="e#1203#1204#0" expanded="true" />
             <element signature="e#1248#1249#0" expanded="true" />
             <element signature="e#1941#1942#0" expanded="true" />
             <element signature="e#1975#1976#0" expanded="true" />
           </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/WhiteBoardCast/src/main/java/com/livejournal/karino2/whiteboardcast/Mp4aRecorder.kt">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="128">
+          <caret line="172" selection-start-line="172" selection-end-line="172" />
         </state>
       </provider>
     </entry>
