@@ -109,15 +109,23 @@ class Mp4aRecorder(val muxer: AudioVideoMuxer, beginMil: Long) {
 
     val TIMEOUT_USEC = 10000L
 
+    var dequeueFailOutputAlready = false
+
     var currentBufIndex = -1
     var currentBuffer : ByteBuffer? = null
     private fun ensureByteBuffer() : ByteBuffer? {
         if(currentBuffer == null) {
             val bufIndex = encoder.dequeueInputBuffer(TIMEOUT_USEC)
             if(bufIndex < 0) {
-                Log.d("WhiteBoardCast", "audio encoder input buffer not available.")
+                if(!dequeueFailOutputAlready)
+                    Log.d("WhiteBoardCast", "audio encoder input buffer not available. (${bufIndex})")
+                dequeueFailOutputAlready = true
                 return null
             }
+            if(dequeueFailOutputAlready)
+                Log.d("WhiteBoardCast", "audio encoder input buffer becomes available. (${bufIndex})")
+
+            dequeueFailOutputAlready = false
             currentBufIndex = bufIndex
             currentBuffer = encoder.getInputBuffer(bufIndex)
         }

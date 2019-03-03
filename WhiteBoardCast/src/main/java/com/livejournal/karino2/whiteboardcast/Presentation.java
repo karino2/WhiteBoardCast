@@ -25,8 +25,6 @@ public class Presentation {
         recorder.stop();
         recorder.release();
 
-        muxer.stop();
-        muxer.release();
 
         recStats = RecordStatus.DONE;
     }
@@ -39,7 +37,10 @@ public class Presentation {
         if(future != null)
             future.cancel(false);
         future = null;
-        return encoderTask.doneEncoder();
+        boolean encoderFinalizeSuccess =  encoderTask.doneEncoder();
+        muxer.stop();
+        muxer.release();
+        return encoderFinalizeSuccess;
     }
 
 
