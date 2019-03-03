@@ -16,13 +16,9 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="bad49647-6dd6-440c-9798-e00037768d8f" name="Default" comment="">
-      <change afterPath="$PROJECT_DIR$/WhiteBoardCast/src/androidTest/java/com/livejurnal/karino2/whiteboardcast/ArgbToYuvConverterJavaTest.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/WhiteBoardCast/WhiteBoardCast-WhiteBoardCast.iml" beforeDir="false" afterPath="$PROJECT_DIR$/WhiteBoardCast/WhiteBoardCast-WhiteBoardCast.iml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/WhiteBoardCast/src/main/java/com/livejournal/karino2/whiteboardcast/ArgbToYuvConverter.kt" beforeDir="false" afterPath="$PROJECT_DIR$/WhiteBoardCast/src/main/java/com/livejournal/karino2/whiteboardcast/ArgbToYuvConverter.kt" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/WhiteBoardCast/src/main/java/com/livejournal/karino2/whiteboardcast/AvcVideoEncoder.kt" beforeDir="false" afterPath="$PROJECT_DIR$/WhiteBoardCast/src/main/java/com/livejournal/karino2/whiteboardcast/AvcVideoEncoder.kt" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/WhiteBoardCast/src/main/java/com/livejournal/karino2/whiteboardcast/Mp4aRecorder.kt" beforeDir="false" afterPath="$PROJECT_DIR$/WhiteBoardCast/src/main/java/com/livejournal/karino2/whiteboardcast/Mp4aRecorder.kt" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/WhiteBoardCast/src/main/java/com/livejournal/karino2/whiteboardcast/Presentation.java" beforeDir="false" afterPath="$PROJECT_DIR$/WhiteBoardCast/src/main/java/com/livejournal/karino2/whiteboardcast/Presentation.java" afterDir="false" />
     </list>
     <option name="EXCLUDED_CONVERTED_TO_IGNORED" value="true" />
     <option name="SHOW_DIALOG" value="false" />
@@ -59,7 +55,7 @@
         <counts>
           <entry key="gradle" value="26" />
           <entry key="java" value="1270" />
-          <entry key="kt" value="11744" />
+          <entry key="kt" value="11829" />
           <entry key="xml" value="8" />
         </counts>
       </usages-collector>
@@ -67,7 +63,7 @@
         <counts>
           <entry key="Groovy" value="26" />
           <entry key="JAVA" value="1270" />
-          <entry key="Kotlin" value="11744" />
+          <entry key="Kotlin" value="11829" />
           <entry key="XML" value="8" />
         </counts>
       </usages-collector>
@@ -127,8 +123,8 @@
       <file pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/WhiteBoardCast/src/main/java/com/livejournal/karino2/whiteboardcast/AvcVideoEncoder.kt">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="153">
-              <caret line="95" selection-start-line="95" selection-end-line="95" />
+            <state relative-caret-position="119">
+              <caret line="50" column="42" selection-start-line="50" selection-start-column="42" selection-end-line="50" selection-end-column="42" />
             </state>
           </provider>
         </entry>
@@ -160,8 +156,8 @@
       <file pinned="false" current-in-tab="true">
         <entry file="file://$PROJECT_DIR$/WhiteBoardCast/src/main/java/com/livejournal/karino2/whiteboardcast/ArgbToYuvConverter.kt">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="155">
-              <caret line="43" column="35" lean-forward="true" selection-start-line="43" selection-start-column="35" selection-end-line="43" selection-end-column="35" />
+            <state relative-caret-position="248">
+              <caret line="35" column="30" lean-forward="true" selection-start-line="35" selection-start-column="30" selection-end-line="35" selection-end-column="30" />
               <folding>
                 <element signature="e#48#142#0" expanded="true" />
               </folding>
@@ -212,9 +208,6 @@
   </component>
   <component name="FindInProjectRecents">
     <findStrings>
-      <find>argbToYuv</find>
-      <find>future</find>
-      <find>frameToTime</find>
       <find>System.current</find>
       <find>Log.d</find>
       <find>yuv</find>
@@ -229,19 +222,22 @@
       <find>dequeue</find>
       <find>/*</find>
       <find>getInputBuffer</find>
-      <find>writeSample</find>
       <find>afterStop</find>
       <find>yuv =</find>
       <find>println</find>
       <find>flip(</find>
       <find>encoder</find>
       <find>pixelBufs</find>
-      <find>yuvBuf</find>
       <find>pixelBuf</find>
       <find>srcFrame</find>
       <find>fillY</find>
       <find>selectCoor</find>
       <find>dur</find>
+      <find>isSemiPlanar</find>
+      <find>yuvBuf</find>
+      <find>bufSize</find>
+      <find>writeSample</find>
+      <find>colorFormat =</find>
     </findStrings>
   </component>
   <component name="GenerateSignedApkSettings">
@@ -2467,9 +2463,9 @@
         <option value="$PROJECT_DIR$/WhiteBoardCast/src/androidTest/java/com/livejurnal/karino2/whiteboardcast/ExampleInstrumentedTest.kt" />
         <option value="$PROJECT_DIR$/WhiteBoardCast/src/main/java/com/livejournal/karino2/whiteboardcast/Presentation.java" />
         <option value="$PROJECT_DIR$/WhiteBoardCast/src/main/java/com/livejournal/karino2/whiteboardcast/Mp4aRecorder.kt" />
-        <option value="$PROJECT_DIR$/WhiteBoardCast/src/main/java/com/livejournal/karino2/whiteboardcast/AvcVideoEncoder.kt" />
         <option value="$PROJECT_DIR$/WhiteBoardCast/src/androidTest/java/com/livejurnal/karino2/whiteboardcast/ArgbToYuvConverterJavaTest.java" />
         <option value="$PROJECT_DIR$/WhiteBoardCast/src/androidTest/java/com/livejurnal/karino2/whiteboardcast/ArgbToYuvConverterTest.kt" />
+        <option value="$PROJECT_DIR$/WhiteBoardCast/src/main/java/com/livejournal/karino2/whiteboardcast/AvcVideoEncoder.kt" />
         <option value="$PROJECT_DIR$/WhiteBoardCast/src/main/java/com/livejournal/karino2/whiteboardcast/ArgbToYuvConverter.kt" />
       </list>
     </option>
@@ -2963,7 +2959,6 @@
   </component>
   <component name="ToolWindowManager">
     <frame x="-7" y="-7" width="1111" height="659" extended-state="6" />
-    <editor active="true" />
     <layout>
       <window_info content_ui="combo" id="Project" order="0" sideWeight="0.6390532" visible="true" weight="0.24976258" />
       <window_info id="Structure" order="1" side_tool="true" weight="0.25" />
@@ -3004,7 +2999,7 @@
       <breakpoints>
         <line-breakpoint enabled="true" type="kotlin-line">
           <url>file://$PROJECT_DIR$/WhiteBoardCast/src/main/java/com/livejournal/karino2/whiteboardcast/ArgbToYuvConverter.kt</url>
-          <line>58</line>
+          <line>60</line>
           <properties />
           <option name="timeStamp" value="2" />
         </line-breakpoint>
@@ -3287,15 +3282,15 @@
     </entry>
     <entry file="file://$PROJECT_DIR$/WhiteBoardCast/src/main/java/com/livejournal/karino2/whiteboardcast/AvcVideoEncoder.kt">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="153">
-          <caret line="95" selection-start-line="95" selection-end-line="95" />
+        <state relative-caret-position="119">
+          <caret line="50" column="42" selection-start-line="50" selection-start-column="42" selection-end-line="50" selection-end-column="42" />
         </state>
       </provider>
     </entry>
     <entry file="file://$PROJECT_DIR$/WhiteBoardCast/src/main/java/com/livejournal/karino2/whiteboardcast/ArgbToYuvConverter.kt">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="155">
-          <caret line="43" column="35" lean-forward="true" selection-start-line="43" selection-start-column="35" selection-end-line="43" selection-end-column="35" />
+        <state relative-caret-position="248">
+          <caret line="35" column="30" lean-forward="true" selection-start-line="35" selection-start-column="30" selection-end-line="35" selection-end-column="30" />
           <folding>
             <element signature="e#48#142#0" expanded="true" />
           </folding>

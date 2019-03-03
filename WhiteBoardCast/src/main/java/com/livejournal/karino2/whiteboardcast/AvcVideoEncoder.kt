@@ -17,10 +17,6 @@ class AvcVideoEncoder(val wholeWidth: Int, val wholeHeight: Int, val frameRate:I
          get() = (wholeWidth*wholeHeight*3)/2 // 1+1/2
 
     var trackIndex = 0
-    /*
-    val ybuf: ByteArray
-    val uvbuf: ByteArray
-    */
 
     val TIMEOUT_USEC = 10000L
     var framesIndex = 1

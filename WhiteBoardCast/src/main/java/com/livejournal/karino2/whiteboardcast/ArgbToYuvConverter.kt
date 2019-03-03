@@ -26,27 +26,29 @@ class ArgbToYuvConverter(val width: Int, val height: Int, val isSemiPlanar: Bool
 
         var startX = invalRect.left
         val invalW = invalRect.width()
+        val invalH = invalRect.height()
         val startY = invalRect.top
         val yEnd = width*height
 
 
-        for(halfRow in 0 until invalRect.height()/2){
+        for(halfRow in 0 until invalH/2){
             val row = halfRow*2
             val y = startY+row
             val srcStart = y*width+startX
-            val semiDestStart = y*width/2+startX // (y/2)*(2*width/2)+2*(x/2)
-            val planarDestStart = startX/2+y*height/4 // x/2+(y/2)*(height/2)
+            val semiDestStart = (y/2)*width+startX // (y/2)*(2*width/2)+2*(x/2)
+            val planarDestStart = startX/2+(y/2)*(height/2) // x/2+(y/2)*(height/2)
 
-            for(xi in 0 until invalW/2) {
-                oneArgbToYuv(srcFrame[srcStart+xi*2], yuvTempBuf)
+            for(halfDX in 0 until invalW/2) {
+                val dx = halfDX*2
+                oneArgbToYuv(srcFrame[srcStart+dx], yuvTempBuf)
                 if(isSemiPlanar) {
                     // full-size Y, UV pairs at half resolution
-                    yuvBuf[yEnd+semiDestStart+2*xi] = yuvTempBuf[1]
-                    yuvBuf[yEnd+semiDestStart+2*xi+1] = yuvTempBuf[2]
+                    yuvBuf[yEnd+semiDestStart+dx] = yuvTempBuf[1]
+                    yuvBuf[yEnd+semiDestStart+dx+1] = yuvTempBuf[2]
                 } else {
                     // full-size Y, quarter U, quarter V. Not good for cache.
-                    yuvBuf[yEnd+planarDestStart+xi] = yuvTempBuf[1]
-                    yuvBuf[yEnd+planarDestStart+width/2*height/2+xi] = yuvTempBuf[2]
+                    yuvBuf[yEnd+planarDestStart+halfDX] = yuvTempBuf[1]
+                    yuvBuf[yEnd+planarDestStart+width/2*height/2+halfDX] = yuvTempBuf[2]
                 }
             }
         }
