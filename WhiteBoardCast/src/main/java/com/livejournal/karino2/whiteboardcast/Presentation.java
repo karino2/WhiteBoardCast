@@ -19,7 +19,7 @@ import java.util.concurrent.TimeUnit;
  */
 public class Presentation {
     Mp4aRecorder recorder;
-    MediaMuxer muxer;
+    AudioVideoMuxer muxer;
 
     public void stopRecord() {
         recorder.stop();
@@ -105,7 +105,7 @@ public class Presentation {
 
 
     public void newEncoderTask(FrameRetrieval frameR, Bitmap parentBmp, String workVideoPath, EncoderTask.ErrorListener elistn, long currentMil) throws IOException {
-        muxer = new MediaMuxer(workVideoPath, MediaMuxer.OutputFormat.MUXER_OUTPUT_MPEG_4);
+        muxer = new AudioVideoMuxer(new MediaMuxer(workVideoPath, MediaMuxer.OutputFormat.MUXER_OUTPUT_MPEG_4));
         encoderTask = new EncoderTask(frameR, parentBmp, workVideoPath, elistn, currentMil, muxer);
     }
 

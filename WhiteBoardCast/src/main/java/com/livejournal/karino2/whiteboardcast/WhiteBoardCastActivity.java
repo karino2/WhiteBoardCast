@@ -329,7 +329,7 @@ public class WhiteBoardCastActivity extends Activity implements EncoderTask.Erro
     }
 
     private String getWorkVideoPath() throws IOException {
-        return getFileStoreDirectory().getAbsolutePath() + "/temp.m4a";
+        return getFileStoreDirectory().getAbsolutePath() + "/temp.mp4";
     }
 
 

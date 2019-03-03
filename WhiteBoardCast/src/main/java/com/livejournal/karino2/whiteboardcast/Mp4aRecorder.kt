@@ -6,7 +6,7 @@ import java.nio.ByteBuffer
 import android.media.MediaCodec
 
 
-class Mp4aRecorder(val muxer: MediaMuxer, beginMil: Long) {
+class Mp4aRecorder(val muxer: AudioVideoMuxer, beginMil: Long) {
     private val AUDIO_MIME_TYPE = "audio/mp4a-latm"
     private val SAMPLE_RATE = 44100
     private val SAMPLES_PER_FRAME = 1024
@@ -151,12 +151,16 @@ class Mp4aRecorder(val muxer: MediaMuxer, beginMil: Long) {
     }
 
     val bufInfo = MediaCodec.BufferInfo()
+    var requestStart = false
 
     fun drain() {
+        if(requestStart && !muxer.isReady)
+            return
         val bufIndex = encoder.dequeueOutputBuffer(bufInfo, TIMEOUT_USEC)
         if(bufIndex == MediaCodec.INFO_OUTPUT_FORMAT_CHANGED) {
             trackIndex = muxer.addTrack(encoder.outputFormat)
-            muxer.start()
+            muxer.requestStart()
+            requestStart = true
             return
         }
 
@@ -168,9 +172,7 @@ class Mp4aRecorder(val muxer: MediaMuxer, beginMil: Long) {
             val outBuf = encoder.getOutputBuffer(bufIndex)!!
             outBuf.position(bufInfo.offset)
             outBuf.limit(bufInfo.offset+bufInfo.size)
-            synchronized(muxer){
-                muxer.writeSampleData(trackIndex, outBuf, bufInfo)
-            }
+            muxer.writeSampleData(trackIndex, outBuf, bufInfo)
         }
         encoder.releaseOutputBuffer(bufIndex, false)
     }

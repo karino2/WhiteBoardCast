@@ -27,7 +27,7 @@ public class EncoderTask implements Runnable {
     long beginMillis;
     String workVideoPath;
 
-    public EncoderTask(FrameRetrieval frameR, Bitmap parentBmp, String workVideoPath, ErrorListener elistn, long currentMil, MediaMuxer muxer) {
+    public EncoderTask(FrameRetrieval frameR, Bitmap parentBmp, String workVideoPath, ErrorListener elistn, long currentMil, AudioVideoMuxer muxer) {
         retrieval = frameR;
         updateBitmap(parentBmp);
         errorBuf = new StringBuilder();

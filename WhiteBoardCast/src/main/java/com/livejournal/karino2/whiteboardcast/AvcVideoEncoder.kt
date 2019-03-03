@@ -8,7 +8,21 @@ import android.util.Log
 import java.nio.ByteBuffer
 
 
-class AvcVideoEncoder(val wholeWidth: Int, val wholeHeight: Int, val frameRate:Int, val scale:Int, val muxer: MediaMuxer) : VideoEncoder {
+class AvcVideoEncoder(val wholeWidth: Int, val wholeHeight: Int, val frameRate:Int, val scale:Int, val muxer: AudioVideoMuxer) : VideoEncoder {
+    companion object {
+        const val CSHIFT = 16
+        const val CYR = 19595
+        const val CYG = 38470
+        const val CYB = 7471
+        const val CUR = -11059
+        const val CUG = -21709
+        const val CUB = 32768
+        const val CVR = 32768
+        const val CVG = -27439
+        const val CVB = -5329
+
+    }
+
     // var frameRate = 30
     val mimeType = MediaFormat.MIMETYPE_VIDEO_AVC
     val bitRate = 700000
@@ -18,8 +32,11 @@ class AvcVideoEncoder(val wholeWidth: Int, val wholeHeight: Int, val frameRate:I
         get() = wholeWidth*wholeHeight*(1+1/2)
 
     var trackIndex = 0
+    /*
     val ybuf: ByteArray
     val uvbuf: ByteArray
+    */
+    val yuvBuf: ByteArray
 
     val TIMEOUT_USEC = 10000L
     var framesIndex = 1
@@ -41,9 +58,12 @@ class AvcVideoEncoder(val wholeWidth: Int, val wholeHeight: Int, val frameRate:I
     // default value.  scale = 1000, frameRate = 30
     init {
         val format = MediaFormat.createVideoFormat(mimeType, wholeWidth, wholeHeight)
-        ybuf = ByteArray(wholeWidth*wholeHeight)
         val halfWidth = wholeWidth/2
+        /*
+        ybuf = ByteArray(wholeWidth*wholeHeight)
         uvbuf = ByteArray(halfWidth*wholeHeight/2*2)
+        */
+        yuvBuf = ByteArray(wholeWidth*wholeHeight + 2*halfWidth*wholeHeight/2)
         framesIndex = 1
 
         val mcl = MediaCodecList(MediaCodecList.REGULAR_CODECS)
@@ -56,7 +76,6 @@ class AvcVideoEncoder(val wholeWidth: Int, val wholeHeight: Int, val frameRate:I
         format.setInteger(MediaFormat.KEY_BIT_RATE, 6000000)
         format.setInteger(MediaFormat.KEY_FRAME_RATE, 15) // 15 fps
         format.setInteger(MediaFormat.KEY_I_FRAME_INTERVAL, 10) // 10 sec between I-frame
-        // trackIndex = muxer.addTrack(format)
         trackIndex = 0
 
         encoder.configure(format, null, null, MediaCodec.CONFIGURE_FLAG_ENCODE)
@@ -77,8 +96,8 @@ class AvcVideoEncoder(val wholeWidth: Int, val wholeHeight: Int, val frameRate:I
 
 
 
-    fun argbBufToYUVImage(srcFrame: IntArray, invalRect: Rect, wholeW: Int, wholeH: Int, colorFormat: Int, outBuf: ByteBuffer) {
-        fillY(srcFrame, invalRect, wholeW, wholeH, outBuf)
+    fun argbBufToYUVImage(srcFrame: IntArray, invalRect: Rect, wholeW: Int, wholeH: Int, colorFormat: Int) {
+        fillY(srcFrame, invalRect, wholeW, wholeH)
 
         var x = invalRect.left
         val w = invalRect.width()
@@ -93,18 +112,21 @@ class AvcVideoEncoder(val wholeWidth: Int, val wholeHeight: Int, val frameRate:I
             val semiDestStart = x+y*wholeW/2
             val planarDestStart = x/2+y/2*wholeW/2
 
+            val yEnd = wholeWidth*wholeHeight
+
             for(xi in 0 until w/2) {
                 oneArgbToYuv(srcFrame[srcStart+xi*2], yuvTempBuf)
                 if(isSemiPlanar) {
                     // full-size Y, UV pairs at half resolution
-                    uvbuf[semiDestStart+xi] = yuvTempBuf[1]
-                    uvbuf[semiDestStart+xi+1] = yuvTempBuf[2]
+                    yuvBuf[yEnd+semiDestStart+xi] = yuvTempBuf[1]
+                    yuvBuf[yEnd+semiDestStart+xi+1] = yuvTempBuf[2]
                 } else {
                     // full-size Y, quarter U, quarter V. Not good for cache.
-                    uvbuf[planarDestStart+xi] = yuvTempBuf[1]
-                    uvbuf[planarDestStart+wholeW/2*wholeH/2+xi] = yuvTempBuf[2]
+                    yuvBuf[yEnd+planarDestStart+xi] = yuvTempBuf[1]
+                    yuvBuf[yEnd+planarDestStart+wholeW/2*wholeH/2+xi] = yuvTempBuf[2]
                 }
            }
+            /*
             if(isSemiPlanar) {
                 outBuf.position(wholeW*wholeH+semiDestStart)
                 outBuf.put(uvbuf, semiDestStart, w)
@@ -114,22 +136,14 @@ class AvcVideoEncoder(val wholeWidth: Int, val wholeHeight: Int, val frameRate:I
                 outBuf.position(wholeW*wholeH+wholeW/2*wholeH/2+planarDestStart)
                 outBuf.put(uvbuf, wholeW/2*wholeH/2+planarDestStart, w/2)
             }
+            */
         }
+
 
     }
 
-    private val CSHIFT = 16
-    private val CYR = 19595
-    private val CYG = 38470
-    private val CYB = 7471
-    private val CUR = -11059
-    private val CUG = -21709
-    private val CUB = 32768
-    private val CVR = 32768
-    private val CVG = -27439
-    private val CVB = -5329
 
-    private fun oneArgbToYuv(argb: Int, yuv: ByteArray) {
+    private inline fun oneArgbToYuv(argb: Int, yuv: ByteArray) {
         val r = Color.red(argb)
         val g = Color.green(argb)
         val b = Color.blue(argb)
@@ -139,20 +153,22 @@ class AvcVideoEncoder(val wholeWidth: Int, val wholeHeight: Int, val frameRate:I
     }
 
 
-    private fun fillY(srcFrame: IntArray, invalRect: Rect, wholeW: Int, wholeH: Int, outBuf: ByteBuffer) {
+    private inline fun fillY(srcFrame: IntArray, invalRect: Rect, wholeW: Int, wholeH: Int) {
         var x = invalRect.left
 
         val w = invalRect.width()
+
+        val tmpBuf = yuvTempBuf
+        val yuv = yuvBuf
+
         for(row in 0 until invalRect.height()){
             val y = invalRect.top+row
             val srcStart = row*w
             val destStart = x+y*wholeW
             for(xi in 0 until w) {
-                oneArgbToYuv(srcFrame[srcStart+xi], yuvTempBuf)
-                ybuf[destStart+xi] = yuvTempBuf[0]
+                oneArgbToYuv(srcFrame[srcStart+xi], tmpBuf)
+                yuv[destStart+xi] = tmpBuf[0]
             }
-            outBuf.position(destStart)
-            outBuf.put(ybuf, destStart, w)
         }
 
 
@@ -188,10 +204,22 @@ class AvcVideoEncoder(val wholeWidth: Int, val wholeHeight: Int, val frameRate:I
         return true
     }
 
+    var requestStart = false
 
-    // almost the same as MpfaRecorder::drain.
+
+    // almost the same as Mp4aRecorder::drain.
     fun drain() {
+        if(requestStart && !muxer.isReady)
+            return
+
         val bufIndex = encoder.dequeueOutputBuffer(bufInfo, TIMEOUT_USEC)
+        if(bufIndex == MediaCodec.INFO_OUTPUT_FORMAT_CHANGED) {
+            trackIndex = muxer.addTrack(encoder.outputFormat)
+            muxer.requestStart()
+            return
+        }
+
+
         if(bufIndex < 0) {
             Log.d("WhiteBoardCast", "fail to dequeue output buffer of video encoder.")
             return
@@ -199,12 +227,8 @@ class AvcVideoEncoder(val wholeWidth: Int, val wholeHeight: Int, val frameRate:I
         val buf = encoder.getOutputBuffer(bufIndex)
         buf.position(bufInfo.offset)
         buf.limit(bufInfo.offset+bufInfo.size)
+        muxer.writeSampleData(trackIndex, buf, bufInfo)
 
-        /*
-        synchronized(muxer){
-            muxer.writeSampleData(trackIndex, buf, bufInfo)
-        }
-        */
         encoder.releaseOutputBuffer(bufIndex, false)
     }
 
@@ -223,7 +247,9 @@ class AvcVideoEncoder(val wholeWidth: Int, val wholeHeight: Int, val frameRate:I
         }
 
         val inputBuf = encoder.getInputBuffer(inputBufIndex)
-        argbBufToYUVImage(srcFrame, invalRect, wholeWidth, wholeHeight, colorFormat, inputBuf)
+        argbBufToYUVImage(srcFrame, invalRect, wholeWidth, wholeHeight, colorFormat)
+        inputBuf.clear()
+        inputBuf.put(yuvBuf)
 
         // start: framesIndex, end: endFrame.
         val ptsUsec = frameToTime(framesIndex)

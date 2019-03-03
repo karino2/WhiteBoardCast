@@ -16,8 +16,17 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="bad49647-6dd6-440c-9798-e00037768d8f" name="Default" comment="">
+      <change afterPath="$PROJECT_DIR$/WhiteBoardCast/src/debug/res/values/strings.xml" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/WhiteBoardCast/src/main/java/com/livejournal/karino2/whiteboardcast/ArgbToYuvConverter.kt" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/WhiteBoardCast/src/main/java/com/livejournal/karino2/whiteboardcast/AudioVideoMuxer.kt" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/WhiteBoardCast/WhiteBoardCast-WhiteBoardCast.iml" beforeDir="false" afterPath="$PROJECT_DIR$/WhiteBoardCast/WhiteBoardCast-WhiteBoardCast.iml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/WhiteBoardCast/build.gradle" beforeDir="false" afterPath="$PROJECT_DIR$/WhiteBoardCast/build.gradle" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/WhiteBoardCast/src/main/java/com/livejournal/karino2/whiteboardcast/AvcVideoEncoder.kt" beforeDir="false" afterPath="$PROJECT_DIR$/WhiteBoardCast/src/main/java/com/livejournal/karino2/whiteboardcast/AvcVideoEncoder.kt" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/WhiteBoardCast/src/main/java/com/livejournal/karino2/whiteboardcast/EncoderTask.java" beforeDir="false" afterPath="$PROJECT_DIR$/WhiteBoardCast/src/main/java/com/livejournal/karino2/whiteboardcast/EncoderTask.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/WhiteBoardCast/src/main/java/com/livejournal/karino2/whiteboardcast/Mp4aRecorder.kt" beforeDir="false" afterPath="$PROJECT_DIR$/WhiteBoardCast/src/main/java/com/livejournal/karino2/whiteboardcast/Mp4aRecorder.kt" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/WhiteBoardCast/src/main/java/com/livejournal/karino2/whiteboardcast/Presentation.java" beforeDir="false" afterPath="$PROJECT_DIR$/WhiteBoardCast/src/main/java/com/livejournal/karino2/whiteboardcast/Presentation.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/WhiteBoardCast/src/main/java/com/livejournal/karino2/whiteboardcast/WhiteBoardCastActivity.java" beforeDir="false" afterPath="$PROJECT_DIR$/WhiteBoardCast/src/main/java/com/livejournal/karino2/whiteboardcast/WhiteBoardCastActivity.java" afterDir="false" />
     </list>
     <option name="EXCLUDED_CONVERTED_TO_IGNORED" value="true" />
     <option name="SHOW_DIALOG" value="false" />
@@ -41,40 +50,47 @@
     <session id="1546386214">
       <usages-collector id="statistics.lifecycle.project">
         <counts>
-          <entry key="project.closed" value="3" />
+          <entry key="project.closed" value="4" />
           <entry key="project.open.time.10" value="1" />
           <entry key="project.open.time.15" value="1" />
           <entry key="project.open.time.17" value="1" />
+          <entry key="project.open.time.43" value="1" />
           <entry key="project.open.time.8" value="1" />
-          <entry key="project.opened" value="4" />
+          <entry key="project.opened" value="5" />
         </counts>
       </usages-collector>
       <usages-collector id="statistics.file.extensions.edit">
         <counts>
           <entry key="gradle" value="26" />
-          <entry key="java" value="867" />
-          <entry key="kt" value="8569" />
+          <entry key="java" value="911" />
+          <entry key="kt" value="9950" />
+          <entry key="xml" value="8" />
         </counts>
       </usages-collector>
       <usages-collector id="statistics.file.types.edit">
         <counts>
           <entry key="Groovy" value="26" />
-          <entry key="JAVA" value="867" />
-          <entry key="Kotlin" value="8569" />
+          <entry key="JAVA" value="911" />
+          <entry key="Kotlin" value="9950" />
+          <entry key="XML" value="8" />
         </counts>
       </usages-collector>
       <usages-collector id="statistics.file.extensions.open">
         <counts>
-          <entry key="gradle" value="8" />
-          <entry key="java" value="47" />
-          <entry key="kt" value="8" />
+          <entry key="apk" value="3" />
+          <entry key="gradle" value="10" />
+          <entry key="java" value="54" />
+          <entry key="kt" value="12" />
+          <entry key="xml" value="2" />
         </counts>
       </usages-collector>
       <usages-collector id="statistics.file.types.open">
         <counts>
-          <entry key="Groovy" value="8" />
-          <entry key="JAVA" value="47" />
-          <entry key="Kotlin" value="8" />
+          <entry key="APK" value="3" />
+          <entry key="Groovy" value="10" />
+          <entry key="JAVA" value="54" />
+          <entry key="Kotlin" value="12" />
+          <entry key="XML" value="2" />
         </counts>
       </usages-collector>
     </session>
@@ -82,148 +98,87 @@
   <component name="FileEditorManager">
     <leaf SIDE_TABS_SIZE_LIMIT_KEY="300">
       <file pinned="false" current-in-tab="false">
-        <entry file="file://$PROJECT_DIR$/WhiteBoardCast/src/main/java/com/livejournal/karino2/whiteboardcast/EncoderTask.java">
-          <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="85">
-              <caret line="37" column="33" selection-start-line="37" selection-start-column="33" selection-end-line="37" selection-end-column="33" />
-              <folding>
-                <element signature="e#2186#2187#0" expanded="true" />
-                <element signature="e#2243#2244#0" expanded="true" />
-                <element signature="e#2280#2281#0" expanded="true" />
-                <element signature="e#2326#2327#0" expanded="true" />
-                <element signature="e#2967#2968#0" expanded="true" />
-                <element signature="e#2998#2999#0" expanded="true" />
-                <element signature="e#3233#3234#0" expanded="true" />
-                <element signature="e#3271#3272#0" expanded="true" />
-              </folding>
-            </state>
-          </provider>
+        <entry file="file://$PROJECT_DIR$/build.gradle">
+          <provider selected="true" editor-type-id="text-editor" />
         </entry>
       </file>
       <file pinned="false" current-in-tab="false">
-        <entry file="file://$PROJECT_DIR$/WhiteBoardCast/src/main/java/com/livejournal/karino2/whiteboardcast/Presentation.java">
+        <entry file="file://$PROJECT_DIR$/WhiteBoardCast/build.gradle">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="17">
-              <caret line="55" selection-start-line="55" selection-end-line="55" />
-              <folding>
-                <element signature="e#1203#1204#0" expanded="true" />
-                <element signature="e#1248#1249#0" expanded="true" />
-                <element signature="e#1941#1942#0" expanded="true" />
-                <element signature="e#1975#1976#0" expanded="true" />
-              </folding>
-            </state>
-          </provider>
-        </entry>
-      </file>
-      <file pinned="false" current-in-tab="false">
-        <entry file="file://$PROJECT_DIR$/WhiteBoardCast/src/main/java/com/livejournal/karino2/whiteboardcast/VideoEncoder.java">
-          <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="117">
-              <caret line="19" column="12" selection-start-line="19" selection-start-column="12" selection-end-line="19" selection-end-column="12" />
+            <state relative-caret-position="193">
+              <caret line="33" selection-start-line="33" selection-end-line="33" />
             </state>
           </provider>
         </entry>
       </file>
       <file pinned="false" current-in-tab="true">
-        <entry file="file://$PROJECT_DIR$/WhiteBoardCast/src/main/java/com/livejournal/karino2/whiteboardcast/Mp4aRecorder.kt">
-          <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="128">
-              <caret line="172" selection-start-line="172" selection-end-line="172" />
-            </state>
-          </provider>
-        </entry>
-      </file>
-      <file pinned="false" current-in-tab="false">
-        <entry file="file://$USER_HOME$/AppData/Local/Android/Sdk/sources/android-28/java/nio/Buffer.java">
-          <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="218">
-              <caret line="363" column="6" selection-start-line="363" selection-start-column="6" selection-end-line="363" selection-end-column="6" />
-            </state>
-          </provider>
-        </entry>
-      </file>
-      <file pinned="false" current-in-tab="false">
-        <entry file="file://$PROJECT_DIR$/WhiteBoardCast/src/main/java/com/livejournal/karino2/whiteboardcast/VorbisMediaRecorder.java">
-          <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="102">
-              <caret line="66" selection-start-line="65" selection-end-line="66" />
-              <folding>
-                <element signature="imports" expanded="true" />
-              </folding>
-            </state>
-          </provider>
-        </entry>
-      </file>
-      <file pinned="false" current-in-tab="false">
-        <entry file="file://$PROJECT_DIR$/WhiteBoardCast/src/main/java/com/livejournal/karino2/whiteboardcast/WhiteBoardCastActivity.java">
-          <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="153">
-              <caret line="289" column="29" selection-start-line="289" selection-start-column="29" selection-end-line="289" selection-end-column="29" />
-              <folding>
-                <element signature="e#1772#1898#0" expanded="true" />
-                <element signature="e#1897#1898#0" expanded="true" />
-                <element signature="e#4089#4090#0" expanded="true" />
-                <element signature="e#4132#4133#0" expanded="true" />
-                <element signature="e#4591#5210#0" expanded="true" />
-                <element signature="e#5209#5210#0" expanded="true" />
-                <element signature="e#5258#5259#0" expanded="true" />
-                <element signature="e#5303#5304#0" expanded="true" />
-                <element signature="e#5498#5499#0" expanded="true" />
-                <element signature="e#5542#5543#0" expanded="true" />
-                <element signature="e#5820#5821#0" expanded="true" />
-                <element signature="e#5864#5865#0" expanded="true" />
-                <element signature="e#6691#6922#0" expanded="true" />
-                <element signature="e#6921#6922#0" expanded="true" />
-                <element signature="e#7120#7121#0" expanded="true" />
-                <element signature="e#7181#7182#0" expanded="true" />
-                <element signature="e#11191#11883#0" expanded="true" />
-                <element signature="e#11380#11844#0" expanded="true" />
-                <element signature="e#11843#11844#0" expanded="true" />
-                <element signature="e#11882#11883#0" expanded="true" />
-                <element signature="e#14434#14630#0" expanded="true" />
-                <element signature="e#14629#14630#0" expanded="true" />
-                <element signature="e#16288#16289#0" expanded="true" />
-                <element signature="e#16339#16340#0" expanded="true" />
-                <element signature="e#17804#18274#0" expanded="true" />
-                <element signature="e#18273#18274#0" expanded="true" />
-                <element signature="e#19928#20084#0" expanded="true" />
-                <element signature="e#20083#20084#0" expanded="true" />
-                <element signature="e#20161#20323#0" expanded="true" />
-                <element signature="e#20322#20323#0" expanded="true" />
-                <element signature="e#21177#21420#0" expanded="true" />
-                <element signature="e#21419#21420#0" expanded="true" />
-                <element signature="e#22031#22247#0" expanded="true" />
-                <element signature="e#22246#22247#0" expanded="true" />
-                <element signature="e#22424#22425#0" expanded="true" />
-                <element signature="e#22470#22471#0" expanded="true" />
-                <element signature="e#22501#22502#0" expanded="true" />
-                <element signature="e#22550#22551#0" expanded="true" />
-                <element signature="e#22603#22604#0" expanded="true" />
-                <element signature="e#22659#22660#0" expanded="true" />
-                <element signature="e#22729#22730#0" expanded="true" />
-                <element signature="e#22791#22792#0" expanded="true" />
-              </folding>
-            </state>
-          </provider>
-        </entry>
-      </file>
-      <file pinned="false" current-in-tab="false">
-        <entry file="file://$PROJECT_DIR$/WhiteBoardCast/src/main/java/com/livejournal/karino2/whiteboardcast/WebmEncoder.java">
-          <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="223">
-              <caret line="50" selection-start-line="50" selection-end-line="50" />
-            </state>
-          </provider>
-        </entry>
-      </file>
-      <file pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/WhiteBoardCast/src/main/java/com/livejournal/karino2/whiteboardcast/AvcVideoEncoder.kt">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="85">
-              <caret line="58" column="21" selection-start-line="58" selection-start-column="11" selection-end-line="58" selection-end-column="21" />
+            <state relative-caret-position="204">
+              <caret line="17" selection-start-line="17" selection-end-line="17" />
+            </state>
+          </provider>
+        </entry>
+      </file>
+      <file pinned="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/WhiteBoardCast/src/main/java/com/livejournal/karino2/whiteboardcast/ArgbToYuvConverter.kt">
+          <provider selected="true" editor-type-id="text-editor">
+            <state relative-caret-position="51">
+              <caret line="3" selection-start-line="3" selection-end-line="3" />
+            </state>
+          </provider>
+        </entry>
+      </file>
+      <file pinned="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/WhiteBoardCast/src/androidTest/java/com/livejurnal/karino2/whiteboardcast/ExampleInstrumentedTest.kt">
+          <provider selected="true" editor-type-id="text-editor">
+            <state relative-caret-position="154">
+              <caret line="19" column="41" lean-forward="true" selection-start-line="19" selection-start-column="41" selection-end-line="19" selection-end-column="41" />
+            </state>
+          </provider>
+        </entry>
+      </file>
+      <file pinned="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/WhiteBoardCast/build/outputs/apk/debug/WhiteBoardCast-debug.apk">
+          <provider selected="true" editor-type-id="apk-viewer" />
+        </entry>
+      </file>
+      <file pinned="false" current-in-tab="false">
+        <entry file="file://$USER_HOME$/AppData/Local/Android/Sdk/sources/android-28/android/graphics/Color.java">
+          <provider selected="true" editor-type-id="text-editor">
+            <state relative-caret-position="20213">
+              <caret line="1248" column="22" selection-start-line="1248" selection-start-column="22" selection-end-line="1248" selection-end-column="22" />
               <folding>
-                <element signature="e#48#192#0" expanded="true" />
+                <element signature="e#51946#51947#0" expanded="true" />
+                <element signature="e#51989#51990#0" expanded="true" />
               </folding>
+            </state>
+          </provider>
+        </entry>
+      </file>
+      <file pinned="false" current-in-tab="false">
+        <entry file="file://$USER_HOME$/AppData/Local/Android/Sdk/sources/android-28/android/media/MediaCodec.java">
+          <provider selected="true" editor-type-id="text-editor">
+            <state relative-caret-position="49895">
+              <caret line="2991" selection-start-line="2991" selection-end-line="2991" />
+            </state>
+          </provider>
+        </entry>
+      </file>
+      <file pinned="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/WhiteBoardCast/src/main/res/values/strings.xml">
+          <provider selected="true" editor-type-id="text-editor">
+            <state relative-caret-position="68">
+              <caret line="4" selection-start-line="3" selection-end-line="4" />
+            </state>
+          </provider>
+        </entry>
+      </file>
+      <file pinned="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/WhiteBoardCast/src/debug/res/values/strings.xml">
+          <provider selected="true" editor-type-id="text-editor">
+            <state relative-caret-position="34">
+              <caret line="2" column="50" selection-start-line="2" selection-start-column="50" selection-end-line="2" selection-end-column="50" />
             </state>
           </provider>
         </entry>
@@ -234,22 +189,13 @@
     <option name="RECENT_TEMPLATES">
       <list>
         <option value="Class" />
+        <option value="valueResourceFile" />
         <option value="Kotlin File" />
       </list>
     </option>
   </component>
   <component name="FindInProjectRecents">
     <findStrings>
-      <find>muxer.stop</find>
-      <find>drain</find>
-      <find>audioRecorder.start</find>
-      <find>Unknown</find>
-      <find>audioRecorder.startRecording</find>
-      <find>muxer =</find>
-      <find>synchro</find>
-      <find>audioRecorder</find>
-      <find>audioRecorder.</find>
-      <find>updateListener</find>
       <find>audioDurationMil</find>
       <find>muxer.start</find>
       <find>audioRecord</find>
@@ -259,8 +205,6 @@
       <find>write</find>
       <find>framePeriod</find>
       <find>encoderTask.</find>
-      <find>addTrack</find>
-      <find>muxer</find>
       <find>trackIndex</find>
       <find>format</find>
       <find>Muxer</find>
@@ -270,6 +214,18 @@
       <find>buffer</find>
       <find>handleNewAudio</find>
       <find>TIMER_INTERVAL</find>
+      <find>addTrack</find>
+      <find>muxer.</find>
+      <find>muxer =</find>
+      <find>bufIndex ==</find>
+      <find>start</find>
+      <find>muxer</find>
+      <find>ybuf</find>
+      <find>run(</find>
+      <find>argbBuf</find>
+      <find>argb</find>
+      <find>fillY</find>
+      <find>oneArgbToYuv</find>
     </findStrings>
   </component>
   <component name="GenerateSignedApkSettings">
@@ -2486,20 +2442,23 @@
         <option value="$PROJECT_DIR$/WhiteBoardCast/src/main/java/com/livejournal/karino2/whiteboardcast/CodecEncoder.kt" />
         <option value="$PROJECT_DIR$/WhiteBoardCast/src/main/java/com/livejournal/karino2/whiteboardcast/Encoder.java" />
         <option value="$PROJECT_DIR$/WhiteBoardCast/src/main/java/com/livejournal/karino2/whiteboardcast/VideoEncoder.java" />
-        <option value="$PROJECT_DIR$/WhiteBoardCast/build.gradle" />
         <option value="$PROJECT_DIR$/WhiteBoardCast/src/main/java/com/livejournal/karino2/whiteboardcast/VorbisMediaRecorder.java" />
-        <option value="$PROJECT_DIR$/WhiteBoardCast/src/main/java/com/livejournal/karino2/whiteboardcast/AvcVideoEncoder.kt" />
-        <option value="$PROJECT_DIR$/WhiteBoardCast/src/main/java/com/livejournal/karino2/whiteboardcast/WhiteBoardCastActivity.java" />
-        <option value="$PROJECT_DIR$/WhiteBoardCast/src/main/java/com/livejournal/karino2/whiteboardcast/EncoderTask.java" />
         <option value="$PROJECT_DIR$/WhiteBoardCast/src/main/java/com/livejournal/karino2/whiteboardcast/Presentation.java" />
+        <option value="$PROJECT_DIR$/WhiteBoardCast/src/main/java/com/livejournal/karino2/whiteboardcast/EncoderTask.java" />
+        <option value="$PROJECT_DIR$/WhiteBoardCast/src/main/java/com/livejournal/karino2/whiteboardcast/WhiteBoardCastActivity.java" />
+        <option value="$PROJECT_DIR$/WhiteBoardCast/src/main/java/com/livejournal/karino2/whiteboardcast/AudioVideoMuxer.kt" />
         <option value="$PROJECT_DIR$/WhiteBoardCast/src/main/java/com/livejournal/karino2/whiteboardcast/Mp4aRecorder.kt" />
+        <option value="$PROJECT_DIR$/WhiteBoardCast/src/debug/res/values/strings.xml" />
+        <option value="$PROJECT_DIR$/WhiteBoardCast/src/main/java/com/livejournal/karino2/whiteboardcast/AvcVideoEncoder.kt" />
+        <option value="$PROJECT_DIR$/WhiteBoardCast/build.gradle" />
+        <option value="$PROJECT_DIR$/WhiteBoardCast/src/main/java/com/livejournal/karino2/whiteboardcast/ArgbToYuvConverter.kt" />
       </list>
     </option>
   </component>
   <component name="ProjectFrameBounds" extendedState="6">
     <option name="x" value="259" />
     <option name="y" value="70" />
-    <option name="width" value="1414" />
+    <option name="width" value="1416" />
     <option name="height" value="1001" />
   </component>
   <component name="ProjectView">
@@ -2507,7 +2466,8 @@
       <foldersAlwaysOnTop value="true" />
     </navigator>
     <panes>
-      <pane id="ProjectPane" />
+      <pane id="Scope" />
+      <pane id="PackagesPane" />
       <pane id="AndroidView">
         <subPane>
           <expand>
@@ -2543,18 +2503,24 @@
             </path>
             <path>
               <item name="WhiteBoardCast" type="1abcf292:AndroidViewProjectNode" />
+              <item name="WhiteBoardCast-WhiteBoardCast" type="feadf853:AndroidModuleNode" />
+              <item name="java" type="edd41e36:AndroidSourceTypeNode" />
+              <item name="whiteboardcast" type="cbb59c9e:AndroidPsiDirectoryNode" />
+            </path>
+            <path>
+              <item name="WhiteBoardCast" type="1abcf292:AndroidViewProjectNode" />
               <item name="Gradle Scripts" type="ae0cef3a:AndroidBuildScriptsGroupNode" />
             </path>
           </expand>
           <select />
         </subPane>
       </pane>
-      <pane id="PackagesPane" />
-      <pane id="Scope" />
+      <pane id="ProjectPane" />
     </panes>
   </component>
   <component name="PropertiesComponent">
-    <property name="DEBUGGABLE_DEVICE" value="samsung-sc_01f-4d9537b8" />
+    <property name="AnalyzeApkAction.lastApkPath" value="$PROJECT_DIR$/WhiteBoardCast/build/outputs/apk/debug/WhiteBoardCast-debug.apk" />
+    <property name="DEBUGGABLE_DEVICE" value="samsung-sm_p355-1194f462" />
     <property name="DEBUGGABLE_PROCESS" value="com.livejournal.karino2.whiteboardcast" />
     <property name="DEBUGGER_ID" value="Auto" />
     <property name="ExportApk.ApkPath" value="C:\Users\CF-RZ4\Documents\WhiteBoardCast\WhiteBoardCast" />
@@ -2565,7 +2531,7 @@
     <property name="SHOW_ALL_PROCESSES" value="false" />
     <property name="android.sdk.path" value="$USER_HOME$/AppData/Local/Android/Sdk" />
     <property name="device.picker.selection" value="4d9537b8" />
-    <property name="last_opened_file_path" value="$PROJECT_DIR$/../photoride/android" />
+    <property name="last_opened_file_path" value="$PROJECT_DIR$/WhiteBoardCast/build/outputs/apk/debug/WhiteBoardCast-debug.apk" />
     <property name="not.eligible.for.single.variant.sync" value="true" />
     <property name="settings.editor.selected.configurable" value="android.sdk-updates" />
   </component>
@@ -2635,9 +2601,9 @@
         <option name="SHOW_OPTIMIZED_WARNING" value="true" />
       </Native>
       <Profilers>
-        <option name="ADVANCED_PROFILING_ENABLED" value="false" />
+        <option name="ADVANCED_PROFILING_ENABLED" value="true" />
         <option name="STARTUP_CPU_PROFILING_ENABLED" value="false" />
-        <option name="STARTUP_CPU_PROFILING_CONFIGURATION_NAME" value="Sampled (Java)" />
+        <option name="STARTUP_CPU_PROFILING_CONFIGURATION_NAME" value="Sample Java Methods" />
       </Profilers>
       <option name="DEEP_LINK" value="" />
       <option name="ACTIVITY_CLASS" value="" />
@@ -2677,11 +2643,11 @@
     <frame x="-7" y="-7" width="1111" height="659" extended-state="6" />
     <editor active="true" />
     <layout>
-      <window_info content_ui="combo" id="Project" order="0" visible="true" weight="0.24976258" />
+      <window_info active="true" content_ui="combo" id="Project" order="0" sideWeight="0.640118" visible="true" weight="0.24976258" />
       <window_info id="Structure" order="1" side_tool="true" weight="0.25" />
       <window_info id="Captures" order="2" side_tool="true" weight="0.25" />
       <window_info id="Favorites" order="3" side_tool="true" />
-      <window_info id="Build Variants" order="4" side_tool="true" />
+      <window_info id="Build Variants" order="4" sideWeight="0.359882" side_tool="true" visible="true" weight="0.24976258" />
       <window_info id="Image Layers" order="5" />
       <window_info id="Designer" order="6" />
       <window_info id="Capture Tool" order="7" />
@@ -2693,11 +2659,11 @@
       <window_info anchor="bottom" id="Inspection" order="5" weight="0.4" />
       <window_info anchor="bottom" id="TODO" order="6" />
       <window_info anchor="bottom" id="Version Control" order="7" />
-      <window_info active="true" anchor="bottom" id="Logcat" order="8" visible="true" weight="0.32936507" />
+      <window_info anchor="bottom" id="Logcat" order="8" weight="0.32936507" />
       <window_info anchor="bottom" id="Terminal" order="9" />
       <window_info anchor="bottom" id="Event Log" order="10" sideWeight="0.5014245" side_tool="true" weight="0.32806325" />
-      <window_info anchor="bottom" id="Build" order="11" sideWeight="0.4985755" weight="0.32738096" />
-      <window_info anchor="bottom" id="Android Profiler" order="12" />
+      <window_info anchor="bottom" id="Build" order="11" sideWeight="0.4985755" visible="true" weight="0.32738096" />
+      <window_info anchor="bottom" id="Android Profiler" order="12" show_stripe_button="false" weight="0.90873015" />
       <window_info anchor="right" id="Commander" order="0" weight="0.4" />
       <window_info anchor="right" id="Ant Build" order="1" weight="0.25" />
       <window_info anchor="right" content_ui="combo" id="Hierarchy" order="2" weight="0.25" />
@@ -2711,24 +2677,6 @@
   <component name="VcsContentAnnotationSettings">
     <option name="myLimit" value="2678400000" />
   </component>
-  <component name="XDebuggerManager">
-    <breakpoint-manager>
-      <breakpoints>
-        <line-breakpoint enabled="true" type="java-line">
-          <url>file://$PROJECT_DIR$/WhiteBoardCast/src/main/java/com/livejournal/karino2/whiteboardcast/EncoderTask.java</url>
-          <line>86</line>
-          <properties />
-          <option name="timeStamp" value="12" />
-        </line-breakpoint>
-        <line-breakpoint enabled="true" type="kotlin-line">
-          <url>file://$PROJECT_DIR$/WhiteBoardCast/src/main/java/com/livejournal/karino2/whiteboardcast/Mp4aRecorder.kt</url>
-          <line>35</line>
-          <properties />
-          <option name="timeStamp" value="35" />
-        </line-breakpoint>
-      </breakpoints>
-    </breakpoint-manager>
-  </component>
   <component name="editorHistoryManager">
     <entry file="file://$PROJECT_DIR$/jni/Application.mk" />
     <entry file="file://$PROJECT_DIR$/jni/Android.mk" />
@@ -2739,12 +2687,12 @@
       <provider selected="true" editor-type-id="text-editor" />
     </entry>
     <entry file="file://$PROJECT_DIR$/WhiteBoardCast/src/main/AndroidManifest.xml">
+      <provider editor-type-id="android-manifest" />
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="17">
           <caret line="1" selection-start-line="1" selection-end-line="1" />
         </state>
       </provider>
-      <provider editor-type-id="android-manifest" />
     </entry>
     <entry file="file://$PROJECT_DIR$/gradle/wrapper/gradle-wrapper.properties">
       <provider selected="true" editor-type-id="text-editor" />
@@ -2783,21 +2731,10 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/build.gradle">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="340">
-          <caret line="20" column="6" selection-start-line="20" selection-start-column="6" selection-end-line="20" selection-end-column="6" />
-        </state>
-      </provider>
-    </entry>
     <entry file="file://$USER_HOME$/AppData/Local/Android/Sdk/sources/android-28/android/graphics/Rect.java">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="3502">
           <caret line="237" column="21" selection-start-line="237" selection-start-column="21" selection-end-line="237" selection-end-column="21" />
-          <folding>
-            <element signature="e#7977#7978#0" expanded="true" />
-            <element signature="e#8012#8013#0" expanded="true" />
-          </folding>
         </state>
       </provider>
     </entry>
@@ -2812,13 +2749,6 @@
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="136">
           <caret line="1672" column="13" selection-start-line="1672" selection-start-column="13" selection-end-line="1672" selection-end-column="13" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/WhiteBoardCast/build.gradle">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="201">
-          <caret line="58" column="21" selection-start-line="58" selection-start-column="21" selection-end-line="58" selection-end-column="21" />
         </state>
       </provider>
     </entry>
@@ -2850,13 +2780,6 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/WhiteBoardCast/src/main/java/com/livejournal/karino2/whiteboardcast/VideoEncoder.java">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="117">
-          <caret line="19" column="12" selection-start-line="19" selection-start-column="12" selection-end-line="19" selection-end-column="12" />
-        </state>
-      </provider>
-    </entry>
     <entry file="file://$USER_HOME$/AppData/Local/Android/Sdk/sources/android-28/android/media/MediaCodecInfo.java">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="-13">
@@ -2864,68 +2787,10 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$USER_HOME$/AppData/Local/Android/Sdk/sources/android-28/android/media/MediaCodec.java">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="74">
-          <caret line="2658" column="54" selection-start-line="2658" selection-start-column="28" selection-end-line="2658" selection-end-column="54" />
-        </state>
-      </provider>
-    </entry>
     <entry file="file://$USER_HOME$/AppData/Local/Android/Sdk/sources/android-28/java/nio/Buffer.java">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="218">
           <caret line="363" column="6" selection-start-line="363" selection-start-column="6" selection-end-line="363" selection-end-column="6" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/WhiteBoardCast/src/main/java/com/livejournal/karino2/whiteboardcast/WhiteBoardCastActivity.java">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="153">
-          <caret line="289" column="29" selection-start-line="289" selection-start-column="29" selection-end-line="289" selection-end-column="29" />
-          <folding>
-            <element signature="e#1772#1898#0" expanded="true" />
-            <element signature="e#1897#1898#0" expanded="true" />
-            <element signature="e#4089#4090#0" expanded="true" />
-            <element signature="e#4132#4133#0" expanded="true" />
-            <element signature="e#4591#5210#0" expanded="true" />
-            <element signature="e#5209#5210#0" expanded="true" />
-            <element signature="e#5258#5259#0" expanded="true" />
-            <element signature="e#5303#5304#0" expanded="true" />
-            <element signature="e#5498#5499#0" expanded="true" />
-            <element signature="e#5542#5543#0" expanded="true" />
-            <element signature="e#5820#5821#0" expanded="true" />
-            <element signature="e#5864#5865#0" expanded="true" />
-            <element signature="e#6691#6922#0" expanded="true" />
-            <element signature="e#6921#6922#0" expanded="true" />
-            <element signature="e#7120#7121#0" expanded="true" />
-            <element signature="e#7181#7182#0" expanded="true" />
-            <element signature="e#11191#11883#0" expanded="true" />
-            <element signature="e#11380#11844#0" expanded="true" />
-            <element signature="e#11843#11844#0" expanded="true" />
-            <element signature="e#11882#11883#0" expanded="true" />
-            <element signature="e#14434#14630#0" expanded="true" />
-            <element signature="e#14629#14630#0" expanded="true" />
-            <element signature="e#16288#16289#0" expanded="true" />
-            <element signature="e#16339#16340#0" expanded="true" />
-            <element signature="e#17804#18274#0" expanded="true" />
-            <element signature="e#18273#18274#0" expanded="true" />
-            <element signature="e#19928#20084#0" expanded="true" />
-            <element signature="e#20083#20084#0" expanded="true" />
-            <element signature="e#20161#20323#0" expanded="true" />
-            <element signature="e#20322#20323#0" expanded="true" />
-            <element signature="e#21177#21420#0" expanded="true" />
-            <element signature="e#21419#21420#0" expanded="true" />
-            <element signature="e#22031#22247#0" expanded="true" />
-            <element signature="e#22246#22247#0" expanded="true" />
-            <element signature="e#22424#22425#0" expanded="true" />
-            <element signature="e#22470#22471#0" expanded="true" />
-            <element signature="e#22501#22502#0" expanded="true" />
-            <element signature="e#22550#22551#0" expanded="true" />
-            <element signature="e#22603#22604#0" expanded="true" />
-            <element signature="e#22659#22660#0" expanded="true" />
-            <element signature="e#22729#22730#0" expanded="true" />
-            <element signature="e#22791#22792#0" expanded="true" />
-          </folding>
         </state>
       </provider>
     </entry>
@@ -2941,55 +2806,135 @@
     </entry>
     <entry file="file://$USER_HOME$/AppData/Local/Android/Sdk/sources/android-28/android/media/MediaMuxer.java">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="103">
-          <caret line="224" selection-start-line="224" selection-end-line="224" />
+        <state relative-caret-position="112">
+          <caret line="654" selection-start-line="654" selection-end-line="654" />
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/WhiteBoardCast/src/main/java/com/livejournal/karino2/whiteboardcast/EncoderTask.java">
+    <entry file="file://$PROJECT_DIR$/WhiteBoardCast/src/main/java/com/livejournal/karino2/whiteboardcast/AudioVideoMuxer.kt">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="85">
-          <caret line="37" column="33" selection-start-line="37" selection-start-column="33" selection-end-line="37" selection-end-column="33" />
+        <state>
           <folding>
-            <element signature="e#2186#2187#0" expanded="true" />
-            <element signature="e#2243#2244#0" expanded="true" />
-            <element signature="e#2280#2281#0" expanded="true" />
-            <element signature="e#2326#2327#0" expanded="true" />
-            <element signature="e#2967#2968#0" expanded="true" />
-            <element signature="e#2998#2999#0" expanded="true" />
-            <element signature="e#3233#3234#0" expanded="true" />
-            <element signature="e#3271#3272#0" expanded="true" />
-          </folding>
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/WhiteBoardCast/src/main/java/com/livejournal/karino2/whiteboardcast/AvcVideoEncoder.kt">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="85">
-          <caret line="58" column="21" selection-start-line="58" selection-start-column="11" selection-end-line="58" selection-end-column="21" />
-          <folding>
-            <element signature="e#48#192#0" expanded="true" />
-          </folding>
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/WhiteBoardCast/src/main/java/com/livejournal/karino2/whiteboardcast/Presentation.java">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="17">
-          <caret line="55" selection-start-line="55" selection-end-line="55" />
-          <folding>
-            <element signature="e#1203#1204#0" expanded="true" />
-            <element signature="e#1248#1249#0" expanded="true" />
-            <element signature="e#1941#1942#0" expanded="true" />
-            <element signature="e#1975#1976#0" expanded="true" />
+            <element signature="e#48#171#0" expanded="true" />
           </folding>
         </state>
       </provider>
     </entry>
     <entry file="file://$PROJECT_DIR$/WhiteBoardCast/src/main/java/com/livejournal/karino2/whiteboardcast/Mp4aRecorder.kt">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="128">
-          <caret line="172" selection-start-line="172" selection-end-line="172" />
+        <state relative-caret-position="74">
+          <caret line="35" selection-start-line="35" selection-end-line="35" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/WhiteBoardCast/src/main/java/com/livejournal/karino2/whiteboardcast/Presentation.java">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="102">
+          <caret line="138" selection-start-line="138" selection-end-line="138" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/WhiteBoardCast/src/main/java/com/livejournal/karino2/whiteboardcast/VideoEncoder.java">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="117">
+          <caret line="19" column="12" selection-start-line="19" selection-start-column="12" selection-end-line="19" selection-end-column="12" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$USER_HOME$/AppData/Local/Android/Sdk/sources/android-28/java/lang/reflect/Method.java">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="5">
+          <caret line="417" column="25" selection-start-line="417" selection-start-column="25" selection-end-line="417" selection-end-column="25" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/WhiteBoardCast/src/main/java/com/livejournal/karino2/whiteboardcast/WhiteBoardCastActivity.java">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="1">
+          <caret line="250" column="11" selection-start-line="250" selection-start-column="11" selection-end-line="250" selection-end-column="11" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="jar://$USER_HOME$/.gradle/caches/modules-2/files-2.1/org.jetbrains.kotlin/kotlin-stdlib/1.3.11/d46e00faac79f8ec6bb956154ecde4282871a6bf/kotlin-stdlib-1.3.11-sources.jar!/kotlin/Primitives.kt">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="246">
+          <caret line="579" column="24" selection-start-line="579" selection-start-column="24" selection-end-line="579" selection-end-column="24" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$USER_HOME$/AppData/Local/Android/Sdk/sources/android-28/android/os/MessageQueue.java">
+      <provider selected="true" editor-type-id="text-editor" />
+    </entry>
+    <entry file="file://$PROJECT_DIR$/WhiteBoardCast/src/main/java/com/livejournal/karino2/whiteboardcast/EncoderTask.java">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="1105">
+          <caret line="67" column="32" selection-start-line="67" selection-start-column="32" selection-end-line="67" selection-end-column="32" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/WhiteBoardCast/build/outputs/apk/debug/WhiteBoardCast-debug.apk">
+      <provider selected="true" editor-type-id="apk-viewer" />
+    </entry>
+    <entry file="file://$USER_HOME$/AppData/Local/Android/Sdk/sources/android-28/android/graphics/Color.java">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="20213">
+          <caret line="1248" column="22" selection-start-line="1248" selection-start-column="22" selection-end-line="1248" selection-end-column="22" />
+          <folding>
+            <element signature="e#51946#51947#0" expanded="true" />
+            <element signature="e#51989#51990#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$USER_HOME$/AppData/Local/Android/Sdk/sources/android-28/android/media/MediaCodec.java">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="49895">
+          <caret line="2991" selection-start-line="2991" selection-end-line="2991" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/WhiteBoardCast/src/main/res/values/strings.xml">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="68">
+          <caret line="4" selection-start-line="3" selection-end-line="4" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/WhiteBoardCast/src/debug/res/values/strings.xml">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="34">
+          <caret line="2" column="50" selection-start-line="2" selection-start-column="50" selection-end-line="2" selection-end-column="50" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/build.gradle">
+      <provider selected="true" editor-type-id="text-editor" />
+    </entry>
+    <entry file="file://$PROJECT_DIR$/WhiteBoardCast/build.gradle">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="193">
+          <caret line="33" selection-start-line="33" selection-end-line="33" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/WhiteBoardCast/src/androidTest/java/com/livejurnal/karino2/whiteboardcast/ExampleInstrumentedTest.kt">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="154">
+          <caret line="19" column="41" lean-forward="true" selection-start-line="19" selection-start-column="41" selection-end-line="19" selection-end-column="41" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/WhiteBoardCast/src/main/java/com/livejournal/karino2/whiteboardcast/ArgbToYuvConverter.kt">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="51">
+          <caret line="3" selection-start-line="3" selection-end-line="3" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/WhiteBoardCast/src/main/java/com/livejournal/karino2/whiteboardcast/AvcVideoEncoder.kt">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="204">
+          <caret line="17" selection-start-line="17" selection-end-line="17" />
         </state>
       </provider>
     </entry>

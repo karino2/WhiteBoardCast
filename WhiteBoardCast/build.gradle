@@ -30,6 +30,9 @@ dependencies {
 	// The Support Repository (separate from the corresponding library) can be found in the Extras category.
 	implementation 'com.android.support:appcompat-v7:+'
     implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk7:$kotlin_version"
+    testImplementation 'junit:junit:4.12'
+    androidTestImplementation 'com.android.support.test:runner:1.0.2'
+    androidTestImplementation 'com.android.support.test.espresso:espresso-core:3.0.2'
 }
 
 
@@ -57,6 +60,7 @@ android {
         targetSdkVersion 28
         versionCode 25
         versionName "3.5"
+        testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
 
     }
 }
