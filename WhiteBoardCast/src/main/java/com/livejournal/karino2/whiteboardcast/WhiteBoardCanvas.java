@@ -151,7 +151,11 @@ public class WhiteBoardCanvas extends View implements FrameRetrieval, PageScroll
         overlay.onSize(w, h);
     }
 
+    public long lastResetCanvas = -1;
+
     public void resetCanvas(int w, int h) {
+        lastResetCanvas = System.currentTimeMillis();
+
         penCanvasBmp = Bitmap.createBitmap(w, h, Bitmap.Config.ARGB_8888);
         penCanvasBmp.eraseColor(Color.TRANSPARENT);
         viewBmp = Bitmap.createBitmap(w, h, Bitmap.Config.ARGB_8888);

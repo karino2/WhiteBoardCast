@@ -75,6 +75,10 @@ public class Presentation {
         getSlideList().deleteAll();
     }
 
+    public void setBeginMillToEncoder(long newMill) {
+        encoderTask.setBeginMill(newMill);
+    }
+
     public enum RecordStatus {
         DORMANT, SETUP, RECORDING, PAUSE, DONE_PROCESS, DONE
     }
@@ -105,9 +109,9 @@ public class Presentation {
 
 
 
-    public void newEncoderTask(FrameRetrieval frameR, Bitmap parentBmp, String workVideoPath, EncoderTask.ErrorListener elistn, long currentMil) throws IOException {
+    public void newEncoderTask(FrameRetrieval frameR, Bitmap parentBmp, String workVideoPath, EncoderTask.ErrorListener elistn) throws IOException {
         muxer = new AudioVideoMuxer(new MediaMuxer(workVideoPath, MediaMuxer.OutputFormat.MUXER_OUTPUT_MPEG_4));
-        encoderTask = new EncoderTask(frameR, parentBmp, workVideoPath, elistn, currentMil, muxer);
+        encoderTask = new EncoderTask(frameR, parentBmp, workVideoPath, elistn, muxer);
     }
 
     public void pauseRecord() {

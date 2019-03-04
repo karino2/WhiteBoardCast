@@ -78,6 +78,7 @@ public class WhiteBoardCastActivity extends Activity implements EncoderTask.Erro
 
     }
 
+    boolean encoderInitDone = false;
 
     Handler handler = new Handler();
 
@@ -88,8 +89,6 @@ public class WhiteBoardCastActivity extends Activity implements EncoderTask.Erro
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
-
-
         setContentView(R.layout.activity_whiteboardcast);
         readDebuggableSetting();
         getWhiteBoardCanvas().enableDebug(debuggable);
@@ -99,6 +98,48 @@ public class WhiteBoardCastActivity extends Activity implements EncoderTask.Erro
             showDialog(DIALOG_ID_QUERY_MERGE_AGAIN);
         }
 
+        checkCanvasReady();
+    }
+
+    Runnable checkCanvasReadyCallback = new Runnable() {
+
+        @Override
+        public void run() {
+            checkCanvasReady();
+        }
+    };
+
+
+    private boolean checkCanvasReady() {
+        if(encoderInitDone)
+            return true;
+
+        WhiteBoardCanvas wb = getWhiteBoardCanvas();
+        long lastResetTime = wb.lastResetCanvas;
+        if(lastResetTime == -1) {
+            handler.postDelayed(checkCanvasReadyCallback, 100);
+            return false;
+        }
+
+
+        long dur = System.currentTimeMillis() - lastResetTime;
+        if(dur <= 50) {
+            // still canvas size might be changed. wait a little more.
+            handler.postDelayed(checkCanvasReadyCallback, 100);
+            return false;
+        }
+
+
+        try {
+            // This takes some milsec. Block UI thread...
+            presen.newEncoderTask(wb, wb.getBitmap(), getWorkVideoPath(), this);
+            encoderInitDone = true;
+            wb.changeRecStatus();
+            return true;
+        } catch (IOException e) {
+            showError("Fail to get workVideoPath: " + e.getMessage());
+            return false;
+        }
     }
 
     private boolean workingFileExists() {
@@ -211,6 +252,8 @@ public class WhiteBoardCastActivity extends Activity implements EncoderTask.Erro
     }
 
     public Presentation.RecordStatus getRecStats() {
+        if(!encoderInitDone)
+            return Presentation.RecordStatus.SETUP;
         return presen.recordStatus();
     }
 
@@ -268,15 +311,12 @@ public class WhiteBoardCastActivity extends Activity implements EncoderTask.Erro
         WhiteBoardCanvas wb = getWhiteBoardCanvas();
         wb.invalWholeRegionForEncoder(); // for restart. make it a little heavy.
         long currentMill = System.currentTimeMillis();
-        try {
-            presen.newEncoderTask(wb, wb.getBitmap(), getWorkVideoPath(), this, currentMill);
+        // TODO: set current mill here
+        presen.setBeginMillToEncoder(currentMill);
+        // presen.newEncoderTask(wb, wb.getBitmap(), getWorkVideoPath(), this);
 
-            if(debuggable)
-                presen.getEncoderTask().setFpsListener(getWhiteBoardCanvas().getEncoderFpsCounter());
-        } catch (IOException e) {
-            showError("Fail to get workVideoPath: " + e.getMessage());
-            return;
-        }
+        if(debuggable)
+            presen.getEncoderTask().setFpsListener(getWhiteBoardCanvas().getEncoderFpsCounter());
 
         presen.newRecorder(currentMill);
         wb.notifyBeginMillChanged(currentMill);

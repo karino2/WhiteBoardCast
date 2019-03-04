@@ -8,6 +8,10 @@ import android.media.MediaMuxer;
  * Created by karino on 6/26/13.
  */
 public class EncoderTask implements Runnable {
+    public void setBeginMill(long newMill) {
+        beginMillis = newMill;
+    }
+
     public interface FpsListener {
         void push(long currentFrameMill);
     }
@@ -24,16 +28,15 @@ public class EncoderTask implements Runnable {
     StringBuilder errorBuf;
     int width;
     int height;
-    long beginMillis;
+    long beginMillis = 0;
     String workVideoPath;
 
-    public EncoderTask(FrameRetrieval frameR, Bitmap parentBmp, String workVideoPath, ErrorListener elistn, long currentMil, AudioVideoMuxer muxer) {
+    public EncoderTask(FrameRetrieval frameR, Bitmap parentBmp, String workVideoPath, ErrorListener elistn, AudioVideoMuxer muxer) {
         retrieval = frameR;
         updateBitmap(parentBmp);
         errorBuf = new StringBuilder();
         this.workVideoPath = workVideoPath;
         errorListener = elistn;
-        beginMillis = currentMil;
 
         videoEncoder = new AvcVideoEncoder(width, height, FPS_NUM, FPS_DENOM, muxer);
     }
