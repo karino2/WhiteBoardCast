@@ -62,6 +62,8 @@ class AvcVideoEncoder(val wholeWidth: Int, val wholeHeight: Int, val frameRate:I
 
     @Synchronized
     override fun doneEncoder(error: java.lang.StringBuilder?): Boolean {
+        writeEndOfStream()
+        drain()
         encoder.stop()
         finalizeEncoder()
         return true
@@ -139,6 +141,19 @@ class AvcVideoEncoder(val wholeWidth: Int, val wholeHeight: Int, val frameRate:I
 
 
     val tempBegin = System.currentTimeMillis()
+
+    private fun writeEndOfStream() {
+        val inputBufIndex = encoder.dequeueInputBuffer(TIMEOUT_USEC)
+        if(inputBufIndex < 0) {
+            return
+        }
+
+        val inputBuf = encoder.getInputBuffer(inputBufIndex)
+        val ptsUsec = (System.currentTimeMillis()-tempBegin)*1000
+
+        encoder.queueInputBuffer(inputBufIndex, 0, 0, ptsUsec, MediaCodec.BUFFER_FLAG_END_OF_STREAM)
+
+    }
 
     private fun encodeOneFrame(srcFrame: IntArray, invalRect: Rect, endFrame: Int,
                                error: StringBuilder): Boolean {
