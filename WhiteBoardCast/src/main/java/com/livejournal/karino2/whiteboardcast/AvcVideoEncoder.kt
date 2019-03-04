@@ -140,25 +140,30 @@ class AvcVideoEncoder(val wholeWidth: Int, val wholeHeight: Int, val frameRate:I
     }
 
 
-    val tempBegin = System.currentTimeMillis()
+    var beginMill = System.currentTimeMillis()
 
-    private fun writeEndOfStream() {
+    private fun writeEmptyFrame(flags: Int = 0) {
         val inputBufIndex = encoder.dequeueInputBuffer(TIMEOUT_USEC)
         if(inputBufIndex < 0) {
             return
         }
 
         val inputBuf = encoder.getInputBuffer(inputBufIndex)
-        val ptsUsec = (System.currentTimeMillis()-tempBegin)*1000
+        val ptsUsec = (System.currentTimeMillis()-beginMill)*1000
 
-        encoder.queueInputBuffer(inputBufIndex, 0, 0, ptsUsec, MediaCodec.BUFFER_FLAG_END_OF_STREAM)
+        encoder.queueInputBuffer(inputBufIndex, 0, 0, ptsUsec, flags)
+    }
 
+    private fun writeEndOfStream() {
+        writeEmptyFrame(MediaCodec.BUFFER_FLAG_END_OF_STREAM)
     }
 
     private fun encodeOneFrame(srcFrame: IntArray, invalRect: Rect, endFrame: Int,
                                error: StringBuilder): Boolean {
-        if(invalRect.isEmpty())
+        if(invalRect.isEmpty) {
+            writeEmptyFrame()
             return true
+        }
 
 
         val inputBufIndex = encoder.dequeueInputBuffer(TIMEOUT_USEC)
@@ -178,7 +183,7 @@ class AvcVideoEncoder(val wholeWidth: Int, val wholeHeight: Int, val frameRate:I
         // start: framesIndex, end: endFrame.
 //        val ptsUsec = frameToTime(framesIndex)
 
-        val ptsUsec = (System.currentTimeMillis()-tempBegin)*1000
+        val ptsUsec = (System.currentTimeMillis()-beginMill)*1000
 
         encoder.queueInputBuffer(inputBufIndex, 0, bufSize, ptsUsec, 0)
 

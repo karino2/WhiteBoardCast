@@ -10,6 +10,7 @@ import android.media.MediaMuxer;
 public class EncoderTask implements Runnable {
     public void setBeginMill(long newMill) {
         beginMillis = newMill;
+        videoEncoder.setBeginMill(newMill);
     }
 
     public interface FpsListener {
