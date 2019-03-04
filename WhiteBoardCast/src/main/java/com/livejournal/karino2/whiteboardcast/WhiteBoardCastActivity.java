@@ -370,7 +370,7 @@ public class WhiteBoardCastActivity extends Activity implements EncoderTask.Erro
         content.put(MediaStore.Video.VideoColumns.TITLE, title);
         content.put(MediaStore.Video.VideoColumns.DATE_ADDED,
                 System.currentTimeMillis() / 1000);
-        content.put(MediaStore.Video.Media.MIME_TYPE, "video/webm");
+        content.put(MediaStore.Video.Media.MIME_TYPE, "video/mp4");
         content.put(MediaStore.Video.Media.DATA, presen.getResultFile().getAbsolutePath());
         ContentResolver resolver = getBaseContext().getContentResolver();
         return resolver.insert(MediaStore.Video.Media.EXTERNAL_CONTENT_URI, content);
