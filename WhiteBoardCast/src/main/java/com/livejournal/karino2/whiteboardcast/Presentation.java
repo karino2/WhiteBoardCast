@@ -47,14 +47,8 @@ public class Presentation {
 
     public void newRecorder(long currentMill) {
         recorder = new Mp4aRecorder(muxer, currentMill);
-        // recorder = new VorbisMediaRecorder();
-        // recorder.setBeginMill(currentMill);
     }
 
-    public void setAudioFileName(String fileName) {
-        // TODO: remove this.
-        // recorder.setOutputFile(fileName);
-    }
 
     public void prepareAudioRecorder() throws IOException, VorbisException {
         recorder.prepare();
@@ -79,6 +73,10 @@ public class Presentation {
 
     public void setBeginMillToEncoder(long newMill) {
         encoderTask.setBeginMill(newMill);
+    }
+
+    public void startEncoder() {
+        encoderTask.startEncoder();
     }
 
     public enum RecordStatus {
@@ -156,13 +154,12 @@ public class Presentation {
 
     private final int FPS = 12;
     //    private final int FPS = 6;
-//    private final int FPS = 30;
+    //    private final int FPS = 30;
     public void scheduleEncodeTask() {
         videoEncodeFuture = getScheduleExecutor().scheduleAtFixedRate(encoderTask, 0, 1000 / FPS, TimeUnit.MILLISECONDS);
     }
 
     public void scheduleAudioRecordTask() {
-//        recorderThread = getScheduleExecutor().scheduleAtFixedRate(recorder, 0, 40, TimeUnit.MILLISECONDS);
         recorderThread = new Thread(recorder);
         recorderThread.start();
     }

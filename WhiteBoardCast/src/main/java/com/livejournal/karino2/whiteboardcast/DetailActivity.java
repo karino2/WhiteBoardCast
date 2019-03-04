@@ -32,12 +32,12 @@ import java.nio.channels.FileChannel;
 public class DetailActivity extends Activity {
     final int DIALOG_ID_FILE_RENAME = 1;
 
-    // only support ".webm" for a while.
+    // only support ".mp4" for a while.
     String baseName(File file) {
         String name = file.getName();
-        if(!name.endsWith(".webm"))
-            throw new IllegalArgumentException("Not .webm extension: " + name);
-        return name.substring(0, name.length()-5);
+        if(!name.endsWith(".mp4"))
+            throw new IllegalArgumentException("Not .mp4 extension: " + name);
+        return name.substring(0, name.length()-4);
     }
 
     @Override
@@ -240,7 +240,7 @@ public class DetailActivity extends Activity {
 
     private void shareVideoIntent() {
         Intent i = new Intent(Intent.ACTION_SEND);
-        i.setType("video/webm");
+        i.setType("video/mp4");
 
         i.putExtra(Intent.EXTRA_STREAM, videoUri);
         startActivity(Intent.createChooser(i, "Share video"));
@@ -270,7 +270,7 @@ public class DetailActivity extends Activity {
             @Override
             public void onClick(View v) {
                 EditText et = (EditText)fileRenameDialog.findViewById(R.id.edit_filename);
-                boolean success = renameFileNameTo(et.getText().toString() + ".webm");
+                boolean success = renameFileNameTo(et.getText().toString() + ".mp4");
                 if(success) {
                     setLabelToNameButton(baseName(videoFile));
                     fileRenameDialog.dismiss();

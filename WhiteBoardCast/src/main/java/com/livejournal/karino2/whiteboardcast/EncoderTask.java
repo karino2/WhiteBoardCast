@@ -13,6 +13,10 @@ public class EncoderTask implements Runnable {
         videoEncoder.setBeginMill(newMill);
     }
 
+    public void startEncoder() {
+        videoEncoder.start();
+    }
+
     public interface FpsListener {
         void push(long currentFrameMill);
     }

@@ -10,7 +10,7 @@ class Mp4aRecorder(val muxer: AudioVideoMuxer, beginMil: Long) : Runnable {
 
     private val AUDIO_MIME_TYPE = "audio/mp4a-latm"
     private val SAMPLE_RATE = 44100
-    private val SAMPLES_PER_FRAME =  1024 // 44100 // 20240 // 4*10240
+    private val SAMPLES_PER_FRAME =  1024
     private val CHANNEL_CONFIG = AudioFormat.CHANNEL_IN_MONO
     private val AUDIO_FORMAT = AudioFormat.ENCODING_PCM_16BIT
     var audioDurationMill = 0L
@@ -35,11 +35,6 @@ class Mp4aRecorder(val muxer: AudioVideoMuxer, beginMil: Long) : Runnable {
         if (state == State.READY || state == State.STOPPED) {
             state = State.RECORDING
             audioRecorder.startRecording()
-            /*
-            val buf = ensureByteBuffer() ?: return // fatal situation. how to recover?
-            buf.clear()
-            audioRecorder.read(buf, buf.remaining())
-            */
         }
     }
 
@@ -62,8 +57,6 @@ class Mp4aRecorder(val muxer: AudioVideoMuxer, beginMil: Long) : Runnable {
         if (state == State.RECORDING) {
             stop()
         }
-        // may be we should queueInputBuffer if exist.
-        // releaseCurrentBuffer()
         encoder.stop()
         encoder.release()
         audioRecorder.release()
@@ -79,40 +72,20 @@ class Mp4aRecorder(val muxer: AudioVideoMuxer, beginMil: Long) : Runnable {
     var trackIndex: Int = 0
     val encoder: MediaCodec
 
-    //     var framePeriod = 0
-
 
     init {
         val min_buffer_size = AudioRecord.getMinBufferSize(SAMPLE_RATE, CHANNEL_CONFIG, AUDIO_FORMAT)
-//        var buffer_size = SAMPLES_PER_FRAME * 2* 10 * 16
-//        var buffer_size = SAMPLES_PER_FRAME * 2* 10 * 8 OK
-//        var buffer_size = SAMPLES_PER_FRAME * 2* 10 NG
-//        var buffer_size = SAMPLES_PER_FRAME * 2* 10*4 NG
-        // 44100Hz
-        // framePeriod 640
 
-//        var buffer_size = SAMPLES_PER_FRAME * 2* 10 * 8
-        var buffer_size = SAMPLES_PER_FRAME * 2*4
+        var buffer_size = SAMPLES_PER_FRAME * 2
         if (buffer_size < min_buffer_size) {
             buffer_size = (min_buffer_size / SAMPLES_PER_FRAME + 1) * SAMPLES_PER_FRAME * 2
         }
-
-        // val channel = 1
-        // framePeriod = buffer_size / (2 * SAMPLES_PER_FRAME * channel / 8)
-        // framePeriod = 10240/2
-        // framePeriod = SAMPLES_PER_FRAME
-//        framePeriod = 320
-
-        // framePeriod = 4000 // 320
-        // Log.d("WhiteBoardCast", "framePeriod=${framePeriod}")
 
         audioRecorder = AudioRecord(MediaRecorder.AudioSource.MIC,
                 SAMPLE_RATE,
                 CHANNEL_CONFIG,
                 AUDIO_FORMAT,
                 buffer_size)
-
-        // Log.d("WhiteBoardCast", "getSampled rate. ${audioRecorder.sampleRate}, getBufferSizeInFrames=${audioRecorder.bufferSizeInFrames}")
 
         val format = MediaFormat()
         format.setString(MediaFormat.KEY_MIME, AUDIO_MIME_TYPE)
@@ -125,68 +98,6 @@ class Mp4aRecorder(val muxer: AudioVideoMuxer, beginMil: Long) : Runnable {
         encoder = MediaCodec.createEncoderByType(AUDIO_MIME_TYPE)
         encoder.configure(format, null, null, MediaCodec.CONFIGURE_FLAG_ENCODE)
     }
-
-    val TIMEOUT_USEC = 10000L
-
-
-    /*
-    var dequeueFailOutputAlready = false
-
-    var currentBufIndex = -1
-    var currentBuffer : ByteBuffer? = null
-    private fun ensureByteBuffer() : ByteBuffer? {
-        if(currentBuffer == null) {
-            val bufIndex = encoder.dequeueInputBuffer(TIMEOUT_USEC)
-            if(bufIndex < 0) {
-                if(!dequeueFailOutputAlready)
-                    Log.d("WhiteBoardCast", "audio encoder input buffer not available. (${bufIndex})")
-                dequeueFailOutputAlready = true
-                return null
-            }
-            if(dequeueFailOutputAlready)
-                Log.d("WhiteBoardCast", "audio encoder input buffer becomes available. (${bufIndex})")
-
-            dequeueFailOutputAlready = false
-            currentBufIndex = bufIndex
-            currentBuffer = encoder.getInputBuffer(bufIndex)
-        }
-        return currentBuffer
-    }
-
-    private fun releaseCurrentBuffer() {
-        currentBuffer = null
-        currentBufIndex = -1
-    }
-
-
-*/
-    /*
-    private fun handleNewAudioData(audioRecord: AudioRecord, endOfStream: Boolean) {
-        Log.d("WhiteBoardCast", "audio clbk. ${System.currentTimeMillis()}")
-
-        if (state != State.RECORDING)
-            return
-        drain()
-
-        val curBuf = ensureByteBuffer()
-                ?: return // no avaiable encode input buffer. just ignore this frame.
-
-        curBuf.clear()
-        val readLen = audioRecord.read(curBuf, SAMPLES_PER_FRAME*2)
-        if (readLen > 0) {
-            Log.d("WhiteBoardCast", "audio clbk2. ${System.currentTimeMillis()}")
-            val currentMil = System.currentTimeMillis()
-            audioDurationMill = currentMil - beginMill
-
-            val flag = if(endOfStream) MediaCodec.BUFFER_FLAG_END_OF_STREAM else 0
-            encoder.queueInputBuffer(currentBufIndex, 0, readLen, audioDurationMill * 1000, flag)
-            releaseCurrentBuffer()
-
-            drain()
-            Log.d("WhiteBoardCast", "audio clbk3. ${System.currentTimeMillis()}")
-        }
-    }
-    */
 
     val bufInfo = MediaCodec.BufferInfo()
     var requestStart = false
@@ -216,8 +127,6 @@ class Mp4aRecorder(val muxer: AudioVideoMuxer, beginMil: Long) : Runnable {
     }
 
     fun readAndEncode(endOfStream: Boolean) {
-        Log.d("WhiteBoardCast", "audio clbk. ${System.currentTimeMillis()}")
-
         if (state != State.RECORDING)
             return
         drain()
@@ -231,7 +140,6 @@ class Mp4aRecorder(val muxer: AudioVideoMuxer, beginMil: Long) : Runnable {
         curBuf.clear()
         val readLen = audioRecorder.read(curBuf, SAMPLES_PER_FRAME*2)
         if (readLen > 0) {
-            Log.d("WhiteBoardCast", "audio clbk2. ${System.currentTimeMillis()}")
             val currentMil = System.currentTimeMillis()
             audioDurationMill = currentMil - beginMill
 
@@ -239,7 +147,6 @@ class Mp4aRecorder(val muxer: AudioVideoMuxer, beginMil: Long) : Runnable {
             encoder.queueInputBuffer(bufIndex, 0, readLen, audioDurationMill * 1000, flag)
 
             drain()
-            Log.d("WhiteBoardCast", "audio clbk3. ${System.currentTimeMillis()}")
         }
 
     }
@@ -264,21 +171,6 @@ class Mp4aRecorder(val muxer: AudioVideoMuxer, beginMil: Long) : Runnable {
             if (audioRecorder.state != AudioRecord.STATE_INITIALIZED)
                 throw RuntimeException("AudioRecord initialization failed")
             encoder.start()
-
-
-            /*
-            audioRecorder.setRecordPositionUpdateListener(object : AudioRecord.OnRecordPositionUpdateListener {
-
-                override fun onMarkerReached(audioRecord: AudioRecord) {
-                    // do nothing.
-                }
-
-                override fun onPeriodicNotification(audioRecord: AudioRecord) {
-                    handleNewAudioData(audioRecord, false)
-                }
-            })
-            audioRecorder.positionNotificationPeriod = framePeriod
-            */
 
             state = State.READY
         }

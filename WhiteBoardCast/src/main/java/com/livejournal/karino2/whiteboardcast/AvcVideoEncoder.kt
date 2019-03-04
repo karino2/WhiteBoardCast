@@ -56,6 +56,9 @@ class AvcVideoEncoder(val wholeWidth: Int, val wholeHeight: Int, val frameRate:I
         trackIndex = 0
 
         encoder.configure(format, null, null, MediaCodec.CONFIGURE_FLAG_ENCODE)
+    }
+
+    fun start() {
         encoder.start()
     }
 

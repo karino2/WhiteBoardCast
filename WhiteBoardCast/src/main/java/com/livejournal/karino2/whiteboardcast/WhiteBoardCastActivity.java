@@ -44,8 +44,6 @@ public class WhiteBoardCastActivity extends Activity implements EncoderTask.Erro
 
     static final int REQUEST_PICK_IMAGE = 10;
 
-    private static final String AUDIO_FNAME = "temp.mkv";
-
     private Presentation presen = new Presentation();
 
     public void postErrorMessage(final String msg) {
@@ -211,15 +209,13 @@ public class WhiteBoardCastActivity extends Activity implements EncoderTask.Erro
                 }
 
                 postShowMessage("post process done.");
-                /*
                 handler.post(new Runnable(){
                     @Override
                     public void run() {
-                        beginAudioVideoMergeTask();
+                        afterEncodeDone();
                     }
                 }
                 );
-                */
 
             }
         }).start();
@@ -314,6 +310,7 @@ public class WhiteBoardCastActivity extends Activity implements EncoderTask.Erro
         long currentMill = System.currentTimeMillis();
         // TODO: set current mill here
         presen.setBeginMillToEncoder(currentMill);
+        presen.startEncoder();
         // presen.newEncoderTask(wb, wb.getBitmap(), getWorkVideoPath(), this);
 
         if(debuggable)
@@ -321,12 +318,6 @@ public class WhiteBoardCastActivity extends Activity implements EncoderTask.Erro
 
         presen.newRecorder(currentMill);
         wb.notifyBeginMillChanged(currentMill);
-        try {
-            presen.setAudioFileName(getWorkAudioPath());
-        } catch (IOException e) {
-            showError("IOException: Create WhiteBoardCast folder fail: " + e.getMessage());
-            return;
-        }
         try {
             presen.prepareAudioRecorder();
         } catch (IOException e) {
@@ -361,13 +352,7 @@ public class WhiteBoardCastActivity extends Activity implements EncoderTask.Erro
     }
 
 
-    public String getResultPath() throws IOException {
-        return getFileStoreDirectory().getAbsolutePath() + "/result.webm";
-    }
 
-    private String getWorkAudioPath() throws IOException {
-        return getFileStoreDirectory().getAbsolutePath() + "/" + AUDIO_FNAME;
-    }
 
     private String getWorkVideoPath() throws IOException {
         return getFileStoreDirectory().getAbsolutePath() + "/temp.mp4";
@@ -409,28 +394,19 @@ public class WhiteBoardCastActivity extends Activity implements EncoderTask.Erro
         }
     }
 
-    private void beginAudioVideoMergeTask() {
-        try {
-            new AudioVideoMergeTask(this, new AudioVideoMergeTask.NotifyFinishListener() {
-                @Override
-                public void onFinish() {
-                    exportPDF();
-                    handler.postDelayed(new Runnable(){
-                        @Override
-                        public void run() {
-                            try {
-                                renameAndDeleteWorkFiles();
-                                startDetailActivity();
-                            } catch (IOException e) {
-                                showError("Rename encoded file fail: " + e.getMessage());
-                            }
-                        }
-                    }, 500);
+    private void afterEncodeDone() {
+        exportPDF();
+        handler.postDelayed(new Runnable(){
+            @Override
+            public void run() {
+                try {
+                    renameAndDeleteWorkFiles();
+                    startDetailActivity();
+                } catch (IOException e) {
+                    showError("Rename encoded file fail: " + e.getMessage());
                 }
-            }).execute(getWorkVideoPath(), getWorkAudioPath(), getResultPath());
-        } catch (IOException e) {
-            showError("Fail to create WhiteBoardCast folder(2). " + e.getMessage());
-        }
+            }
+        }, 500);
     }
 
     void startDetailActivity()
@@ -443,16 +419,10 @@ public class WhiteBoardCastActivity extends Activity implements EncoderTask.Erro
     }
 
     private void renameAndDeleteWorkFiles() throws IOException {
-        File result = new File(getResultPath());
         File workVideo = new File(getWorkVideoPath());
-        File workAudio = new File(getWorkAudioPath());
-        if(!result.exists())
-            throw new IOException("no encoded file exists.");
 
-        presen.setResult(getDateNameFile(".webm"));
-        result.renameTo(presen.getResultFile());
-        workVideo.delete();
-        workAudio.delete();
+        presen.setResult(getDateNameFile(".mp4"));
+        workVideo.renameTo(presen.getResultFile());
 
         presen.setResultUri(insertLastResultToContentResolver());
 
@@ -697,7 +667,7 @@ public class WhiteBoardCastActivity extends Activity implements EncoderTask.Erro
                 .setPositiveButton(android.R.string.ok, new DialogInterface.OnClickListener() {
                     @Override
                     public void onClick(DialogInterface dialogInterface, int i) {
-                        beginAudioVideoMergeTask();
+                        afterEncodeDone();
                     }
                 })
                 .setNegativeButton(android.R.string.cancel, new DialogInterface.OnClickListener() {
