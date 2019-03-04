@@ -39,7 +39,6 @@ class AvcVideoEncoder(val wholeWidth: Int, val wholeHeight: Int, val frameRate:I
     // default value.  scale = 1000, frameRate = 30
     init {
         val format = MediaFormat.createVideoFormat(mimeType, wholeWidth, wholeHeight)
-        val halfWidth = wholeWidth/2
         framesIndex = 1
 
         val mcl = MediaCodecList(MediaCodecList.REGULAR_CODECS)
@@ -63,7 +62,7 @@ class AvcVideoEncoder(val wholeWidth: Int, val wholeHeight: Int, val frameRate:I
     @Synchronized
     override fun doneEncoder(error: java.lang.StringBuilder?): Boolean {
         writeEndOfStream()
-        drain()
+        drain(100000)
         encoder.stop()
         finalizeEncoder()
         return true
@@ -111,11 +110,11 @@ class AvcVideoEncoder(val wholeWidth: Int, val wholeHeight: Int, val frameRate:I
 
 
     // almost the same as Mp4aRecorder::drain.
-    fun drain() {
+    fun drain(timeoutUs: Long = 0L) {
         if(requestStart && !muxer.isReady)
             return
 
-        val bufIndex = encoder.dequeueOutputBuffer(bufInfo, TIMEOUT_USEC)
+        val bufIndex = encoder.dequeueOutputBuffer(bufInfo, timeoutUs)
         if(bufIndex == MediaCodec.INFO_OUTPUT_FORMAT_CHANGED) {
             trackIndex = muxer.addTrack(encoder.outputFormat)
             muxer.requestStart()
@@ -124,7 +123,8 @@ class AvcVideoEncoder(val wholeWidth: Int, val wholeHeight: Int, val frameRate:I
 
 
         if(bufIndex < 0) {
-            Log.d("WhiteBoardCast", "fail to dequeue output buffer of video encoder.")
+            // This is not a problem if there is not enough data.
+            // Log.d("WhiteBoardCast", "fail to dequeue output buffer of video encoder.")
             return
         }
         val buf = encoder.getOutputBuffer(bufIndex)
