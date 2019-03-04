@@ -24,7 +24,6 @@ apply plugin: 'kotlin-android-extensions'
 apply plugin: 'kotlin-android'
 
 dependencies {
-    implementation fileTree(dir: 'libs', include: '*.jar')
 
 	// You must install or update the Support Repository through the SDK manager to use this dependency.
 	// The Support Repository (separate from the corresponding library) can be found in the Extras category.
@@ -48,11 +47,6 @@ android {
             debuggable false
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.txt'
         }
-    }
-
-    sourceSets.main {
-        jni.srcDirs = []
-        jniLibs.srcDir 'libs'
     }
 
     defaultConfig {

@@ -6,7 +6,7 @@ import android.media.MediaCodecInfo
 import android.util.Log
 
 
-class AvcVideoEncoder(val wholeWidth: Int, val wholeHeight: Int, val frameRate:Int, val scale:Int, val muxer: AudioVideoMuxer) : VideoEncoder {
+class AvcVideoEncoder(val wholeWidth: Int, val wholeHeight: Int, val frameRate:Int, val scale:Int, val muxer: AudioVideoMuxer) {
 
     // var frameRate = 30
     val mimeType = MediaFormat.MIMETYPE_VIDEO_AVC
@@ -63,7 +63,7 @@ class AvcVideoEncoder(val wholeWidth: Int, val wholeHeight: Int, val frameRate:I
     }
 
     @Synchronized
-    override fun doneEncoder(error: java.lang.StringBuilder?): Boolean {
+    fun doneEncoder(error: java.lang.StringBuilder?): Boolean {
         writeEndOfStream()
         drain(100000)
         encoder.stop()
@@ -72,7 +72,7 @@ class AvcVideoEncoder(val wholeWidth: Int, val wholeHeight: Int, val frameRate:I
     }
 
     @Synchronized
-    override fun finalizeEncoder() {
+    fun finalizeEncoder() {
         encoder.release()
     }
 
@@ -101,7 +101,7 @@ class AvcVideoEncoder(val wholeWidth: Int, val wholeHeight: Int, val frameRate:I
 
 
     @Synchronized
-    override fun encodeFrames(srcFrame: IntArray, invalRect: Rect, framesToEncode: Int, error: StringBuilder): Boolean {
+    fun encodeFrames(srcFrame: IntArray, invalRect: Rect, framesToEncode: Int, error: StringBuilder): Boolean {
         if (!encodeOneFrame(srcFrame, invalRect, framesToEncode, error))
             return false
         drain()
