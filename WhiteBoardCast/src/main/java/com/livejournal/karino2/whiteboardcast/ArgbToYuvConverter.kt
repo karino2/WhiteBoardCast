@@ -24,8 +24,9 @@ class ArgbToYuvConverter(val width: Int, val height: Int, val isSemiPlanar: Bool
     fun toYUV(srcFrame: IntArray, invalRect: Rect) {
         fillY(srcFrame, invalRect)
 
-        var startX = invalRect.left
-        val invalW = invalRect.width()
+        val xodd = invalRect.left %2
+        val startX = invalRect.left-xodd
+        val invalW = Math.min(width, invalRect.width()+xodd)
         val invalH = invalRect.height()
         val startY = invalRect.top
         val yEnd = width*height

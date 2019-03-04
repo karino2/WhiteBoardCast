@@ -18,7 +18,6 @@
     <list default="true" id="bad49647-6dd6-440c-9798-e00037768d8f" name="Default" comment="">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/WhiteBoardCast/src/main/java/com/livejournal/karino2/whiteboardcast/ArgbToYuvConverter.kt" beforeDir="false" afterPath="$PROJECT_DIR$/WhiteBoardCast/src/main/java/com/livejournal/karino2/whiteboardcast/ArgbToYuvConverter.kt" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/WhiteBoardCast/src/main/java/com/livejournal/karino2/whiteboardcast/AvcVideoEncoder.kt" beforeDir="false" afterPath="$PROJECT_DIR$/WhiteBoardCast/src/main/java/com/livejournal/karino2/whiteboardcast/AvcVideoEncoder.kt" afterDir="false" />
     </list>
     <option name="EXCLUDED_CONVERTED_TO_IGNORED" value="true" />
     <option name="SHOW_DIALOG" value="false" />
@@ -55,7 +54,7 @@
         <counts>
           <entry key="gradle" value="26" />
           <entry key="java" value="1270" />
-          <entry key="kt" value="11829" />
+          <entry key="kt" value="11887" />
           <entry key="xml" value="8" />
         </counts>
       </usages-collector>
@@ -63,7 +62,7 @@
         <counts>
           <entry key="Groovy" value="26" />
           <entry key="JAVA" value="1270" />
-          <entry key="Kotlin" value="11829" />
+          <entry key="Kotlin" value="11887" />
           <entry key="XML" value="8" />
         </counts>
       </usages-collector>
@@ -156,8 +155,8 @@
       <file pinned="false" current-in-tab="true">
         <entry file="file://$PROJECT_DIR$/WhiteBoardCast/src/main/java/com/livejournal/karino2/whiteboardcast/ArgbToYuvConverter.kt">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="248">
-              <caret line="35" column="30" lean-forward="true" selection-start-line="35" selection-start-column="30" selection-end-line="35" selection-end-column="30" />
+            <state relative-caret-position="34">
+              <caret line="29" selection-start-line="29" selection-end-line="29" />
               <folding>
                 <element signature="e#48#142#0" expanded="true" />
               </folding>
@@ -208,7 +207,6 @@
   </component>
   <component name="FindInProjectRecents">
     <findStrings>
-      <find>System.current</find>
       <find>Log.d</find>
       <find>yuv</find>
       <find>Log.d(</find>
@@ -238,6 +236,7 @@
       <find>bufSize</find>
       <find>writeSample</find>
       <find>colorFormat =</find>
+      <find>startX</find>
     </findStrings>
   </component>
   <component name="GenerateSignedApkSettings">
@@ -2999,7 +2998,7 @@
       <breakpoints>
         <line-breakpoint enabled="true" type="kotlin-line">
           <url>file://$PROJECT_DIR$/WhiteBoardCast/src/main/java/com/livejournal/karino2/whiteboardcast/ArgbToYuvConverter.kt</url>
-          <line>60</line>
+          <line>61</line>
           <properties />
           <option name="timeStamp" value="2" />
         </line-breakpoint>
@@ -3289,8 +3288,8 @@
     </entry>
     <entry file="file://$PROJECT_DIR$/WhiteBoardCast/src/main/java/com/livejournal/karino2/whiteboardcast/ArgbToYuvConverter.kt">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="248">
-          <caret line="35" column="30" lean-forward="true" selection-start-line="35" selection-start-column="30" selection-end-line="35" selection-end-column="30" />
+        <state relative-caret-position="34">
+          <caret line="29" selection-start-line="29" selection-end-line="29" />
           <folding>
             <element signature="e#48#142#0" expanded="true" />
           </folding>
