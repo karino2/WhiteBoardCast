@@ -20,7 +20,6 @@ class ArgbToYuvConverter(val width: Int, val height: Int, val isSemiPlanar: Bool
 
     val yuvTempBuf = ByteArray(3)
 
-
     fun toYUV(srcFrame: IntArray, invalRect: Rect) {
         fillY(srcFrame, invalRect)
 
@@ -55,10 +54,22 @@ class ArgbToYuvConverter(val width: Int, val height: Int, val isSemiPlanar: Bool
         }
     }
 
-    private /* inline */ fun oneArgbToYuv(argb: Int, outBuf: ByteArray) {
-        val r = Color.red(argb)
-        val g = Color.green(argb)
-        val b = Color.blue(argb)
+    inline fun red(color: Int): Int {
+        return color shr 16 and 0xFF
+    }
+
+    inline fun green(color: Int): Int {
+        return color shr 8 and 0xFF
+    }
+
+    inline fun blue(color: Int): Int {
+        return color and 0xFF
+    }
+
+    private inline fun oneArgbToYuv(argb: Int, outBuf: ByteArray) {
+        val r = red(argb)
+        val g = green(argb)
+        val b = blue(argb)
         outBuf[0] = (CYR * r + CYG * g + CYB * b shr CSHIFT).toByte()
         outBuf[1] = ((CUR * r + CUG * g + CUB * b shr CSHIFT) + 128).toByte()
         outBuf[2] = ((CVR * r + CVG * g + CVB * b shr CSHIFT) + 128).toByte()
