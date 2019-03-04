@@ -151,9 +151,7 @@ class AvcVideoEncoder(val wholeWidth: Int, val wholeHeight: Int, val frameRate:I
             return
         }
 
-        val inputBuf = encoder.getInputBuffer(inputBufIndex)
         val ptsUsec = (System.currentTimeMillis()-beginMill)*1000
-
         encoder.queueInputBuffer(inputBufIndex, 0, 0, ptsUsec, flags)
     }
 
@@ -176,10 +174,7 @@ class AvcVideoEncoder(val wholeWidth: Int, val wholeHeight: Int, val frameRate:I
 
         val inputBuf = encoder.getInputBuffer(inputBufIndex)
 
-        Log.d("WhiteBoardCast", "yuv convert begin.")
-
         argbToYuvConverter.toYUV(srcFrame, invalRect)
-        Log.d("WhiteBoardCast", "yuv convert end, " + argbToYuvConverter.yuvBuf[1280*30+30])
         inputBuf.clear()
         inputBuf.put(argbToYuvConverter.yuvBuf)
 
