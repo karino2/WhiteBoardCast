@@ -6,10 +6,11 @@ import java.nio.ByteBuffer
 import android.media.MediaCodec
 
 
-class Mp4aRecorder(val muxer: AudioVideoMuxer, beginMil: Long) {
+class Mp4aRecorder(val muxer: AudioVideoMuxer, beginMil: Long) : Runnable {
+
     private val AUDIO_MIME_TYPE = "audio/mp4a-latm"
     private val SAMPLE_RATE = 44100
-    private val SAMPLES_PER_FRAME =  3*44100/2// 44100 // 20240 // 4*10240
+    private val SAMPLES_PER_FRAME =  1024 // 44100 // 20240 // 4*10240
     private val CHANNEL_CONFIG = AudioFormat.CHANNEL_IN_MONO
     private val AUDIO_FORMAT = AudioFormat.ENCODING_PCM_16BIT
     var audioDurationMill = 0L
@@ -44,7 +45,8 @@ class Mp4aRecorder(val muxer: AudioVideoMuxer, beginMil: Long) {
 
     fun stop() {
         if (state == State.RECORDING) {
-            handleNewAudioData(audioRecorder, true)
+            // handleNewAudioData(audioRecorder, true)
+            readAndEncode(true)
 
             // drain again to consume all unflushed encoder data.
             encoder.flush()
@@ -61,7 +63,7 @@ class Mp4aRecorder(val muxer: AudioVideoMuxer, beginMil: Long) {
             stop()
         }
         // may be we should queueInputBuffer if exist.
-        releaseCurrentBuffer()
+        // releaseCurrentBuffer()
         encoder.stop()
         encoder.release()
         audioRecorder.release()
@@ -77,7 +79,7 @@ class Mp4aRecorder(val muxer: AudioVideoMuxer, beginMil: Long) {
     var trackIndex: Int = 0
     val encoder: MediaCodec
 
-    var framePeriod = 0
+    //     var framePeriod = 0
 
 
     init {
@@ -95,13 +97,14 @@ class Mp4aRecorder(val muxer: AudioVideoMuxer, beginMil: Long) {
             buffer_size = (min_buffer_size / SAMPLES_PER_FRAME + 1) * SAMPLES_PER_FRAME * 2
         }
 
-        val channel = 1
+        // val channel = 1
         // framePeriod = buffer_size / (2 * SAMPLES_PER_FRAME * channel / 8)
         // framePeriod = 10240/2
         // framePeriod = SAMPLES_PER_FRAME
 //        framePeriod = 320
-        framePeriod = 4000 // 320
-        Log.d("WhiteBoardCast", "framePeriod=${framePeriod}")
+
+        // framePeriod = 4000 // 320
+        // Log.d("WhiteBoardCast", "framePeriod=${framePeriod}")
 
         audioRecorder = AudioRecord(MediaRecorder.AudioSource.MIC,
                 SAMPLE_RATE,
@@ -109,7 +112,7 @@ class Mp4aRecorder(val muxer: AudioVideoMuxer, beginMil: Long) {
                 AUDIO_FORMAT,
                 buffer_size)
 
-        Log.d("WhiteBoardCast", "getSampled rate. ${audioRecorder.sampleRate}, getBufferSizeInFrames=${audioRecorder.bufferSizeInFrames}")
+        // Log.d("WhiteBoardCast", "getSampled rate. ${audioRecorder.sampleRate}, getBufferSizeInFrames=${audioRecorder.bufferSizeInFrames}")
 
         val format = MediaFormat()
         format.setString(MediaFormat.KEY_MIME, AUDIO_MIME_TYPE)
@@ -125,6 +128,8 @@ class Mp4aRecorder(val muxer: AudioVideoMuxer, beginMil: Long) {
 
     val TIMEOUT_USEC = 10000L
 
+
+    /*
     var dequeueFailOutputAlready = false
 
     var currentBufIndex = -1
@@ -154,7 +159,8 @@ class Mp4aRecorder(val muxer: AudioVideoMuxer, beginMil: Long) {
     }
 
 
-
+*/
+    /*
     private fun handleNewAudioData(audioRecord: AudioRecord, endOfStream: Boolean) {
         Log.d("WhiteBoardCast", "audio clbk. ${System.currentTimeMillis()}")
 
@@ -180,6 +186,7 @@ class Mp4aRecorder(val muxer: AudioVideoMuxer, beginMil: Long) {
             Log.d("WhiteBoardCast", "audio clbk3. ${System.currentTimeMillis()}")
         }
     }
+    */
 
     val bufInfo = MediaCodec.BufferInfo()
     var requestStart = false
@@ -208,6 +215,50 @@ class Mp4aRecorder(val muxer: AudioVideoMuxer, beginMil: Long) {
         encoder.releaseOutputBuffer(bufIndex, false)
     }
 
+    fun readAndEncode(endOfStream: Boolean) {
+        Log.d("WhiteBoardCast", "audio clbk. ${System.currentTimeMillis()}")
+
+        if (state != State.RECORDING)
+            return
+        drain()
+
+        val bufIndex = encoder.dequeueInputBuffer(0)
+        if(bufIndex < 0)
+            return
+
+        val curBuf = encoder.getInputBuffer(bufIndex)
+
+        curBuf.clear()
+        val readLen = audioRecorder.read(curBuf, SAMPLES_PER_FRAME*2)
+        if (readLen > 0) {
+            Log.d("WhiteBoardCast", "audio clbk2. ${System.currentTimeMillis()}")
+            val currentMil = System.currentTimeMillis()
+            audioDurationMill = currentMil - beginMill
+
+            val flag = if(endOfStream) MediaCodec.BUFFER_FLAG_END_OF_STREAM else 0
+            encoder.queueInputBuffer(bufIndex, 0, readLen, audioDurationMill * 1000, flag)
+
+            drain()
+            Log.d("WhiteBoardCast", "audio clbk3. ${System.currentTimeMillis()}")
+        }
+
+    }
+
+    private var requestCancel = false
+    fun cancel() {
+        requestCancel = true
+    }
+
+    override fun run() {
+        requestCancel = false
+
+        while(!requestCancel) {
+            readAndEncode(false)
+        }
+    }
+
+
+
     fun prepare() {
         if(state == State.INITIALIZING) {
             if (audioRecorder.state != AudioRecord.STATE_INITIALIZED)
@@ -215,6 +266,7 @@ class Mp4aRecorder(val muxer: AudioVideoMuxer, beginMil: Long) {
             encoder.start()
 
 
+            /*
             audioRecorder.setRecordPositionUpdateListener(object : AudioRecord.OnRecordPositionUpdateListener {
 
                 override fun onMarkerReached(audioRecord: AudioRecord) {
@@ -226,6 +278,7 @@ class Mp4aRecorder(val muxer: AudioVideoMuxer, beginMil: Long) {
                 }
             })
             audioRecorder.positionNotificationPeriod = framePeriod
+            */
 
             state = State.READY
         }

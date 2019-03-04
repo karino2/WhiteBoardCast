@@ -270,6 +270,7 @@ public class WhiteBoardCastActivity extends Activity implements EncoderTask.Erro
         presen.resumeRecord();
 
         presen.scheduleEncodeTask();
+        presen.scheduleAudioRecordTask();
         WhiteBoardCanvas wb = getWhiteBoardCanvas();
         wb.notifyBeginMillChanged(presen.getBeginMill());
         wb.changeRecStatus();

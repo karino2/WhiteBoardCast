@@ -22,10 +22,6 @@ public class Presentation {
     AudioVideoMuxer muxer;
 
     public void stopRecord() {
-        recorder.stop();
-        recorder.release();
-
-
         recStats = RecordStatus.DONE;
     }
 
@@ -34,9 +30,14 @@ public class Presentation {
     }
 
     public boolean afterStop() {
-        if(future != null)
-            future.cancel(false);
-        future = null;
+        if(videoEncodeFuture != null)
+            videoEncodeFuture.cancel(false);
+        videoEncodeFuture = null;
+        stopAudioEncoderTask();
+
+        recorder.stop();
+        recorder.release();
+
         boolean encoderFinalizeSuccess =  encoderTask.doneEncoder();
         muxer.stop();
         muxer.release();
@@ -64,6 +65,7 @@ public class Presentation {
         recorder.start();
 
         scheduleEncodeTask();
+        scheduleAudioRecordTask();
         recStats = RecordStatus.RECORDING;
     }
 
@@ -105,7 +107,8 @@ public class Presentation {
         return encoderTask;
     }
 
-    Future<?> future = null;
+    Future<?> videoEncodeFuture = null;
+    Thread recorderThread = null;
 
 
 
@@ -117,11 +120,25 @@ public class Presentation {
     public void pauseRecord() {
         recStats = RecordStatus.PAUSE;
 
-        future.cancel(false);
-        future = null;
+        videoEncodeFuture.cancel(false);
+        videoEncodeFuture = null;
+        stopAudioEncoderTask();
+
         recorder.stop();
         encoderTask.stop();
 
+    }
+
+    private void stopAudioEncoderTask() {
+        recorder.cancel();
+        if(recorderThread != null) {
+            try {
+                recorderThread.join();
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+        }
+        recorderThread = null;
     }
 
     public long getBeginMill() {
@@ -141,8 +158,13 @@ public class Presentation {
     //    private final int FPS = 6;
 //    private final int FPS = 30;
     public void scheduleEncodeTask() {
-        future = getScheduleExecutor().scheduleAtFixedRate(encoderTask, 0, 1000 / FPS, TimeUnit.MILLISECONDS);
+        videoEncodeFuture = getScheduleExecutor().scheduleAtFixedRate(encoderTask, 0, 1000 / FPS, TimeUnit.MILLISECONDS);
+    }
 
+    public void scheduleAudioRecordTask() {
+//        recorderThread = getScheduleExecutor().scheduleAtFixedRate(recorder, 0, 40, TimeUnit.MILLISECONDS);
+        recorderThread = new Thread(recorder);
+        recorderThread.start();
     }
 
     ScheduledExecutorService scheduleExecuter = null;
