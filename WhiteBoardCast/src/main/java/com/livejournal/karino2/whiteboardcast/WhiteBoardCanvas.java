@@ -252,6 +252,7 @@ public class WhiteBoardCanvas extends View implements FrameRetrieval, PageScroll
     }
 
     long beginMill = 0;
+    long lastDrawnDuration = 0;
 
     public void notifyBeginMillChanged(long newBeginMill) {
         beginMill = newBeginMill;
@@ -262,11 +263,14 @@ public class WhiteBoardCanvas extends View implements FrameRetrieval, PageScroll
         long minutes = 0;
         long tensecs = 0;
 
-        if(beginMill != 0) {
-            long dur = System.currentTimeMillis() - beginMill;
-            hours = dur/(60*60*1000);
-            minutes = (dur%(60*60*1000))/(60*1000);
-            long secs = (dur%(60*1000))/1000;
+        if(!stopTimeInvalChecker && beginMill != 0) {
+            lastDrawnDuration = System.currentTimeMillis() - beginMill;
+        }
+
+        if(lastDrawnDuration != 0) {
+            hours = lastDrawnDuration/(60*60*1000);
+            minutes = (lastDrawnDuration%(60*60*1000))/(60*1000);
+            long secs = (lastDrawnDuration%(60*1000))/1000;
             tensecs = 10*(secs/10);
         }
 
