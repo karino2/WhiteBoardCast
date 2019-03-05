@@ -35,19 +35,24 @@ public class EncoderTask implements Runnable {
     int height;
     long beginMillis = 0;
     String workVideoPath;
+    AudioVideoMuxer muxer;
 
-    public EncoderTask(FrameRetrieval frameR, Bitmap parentBmp, String workVideoPath, ErrorListener elistn, AudioVideoMuxer muxer) {
+    public EncoderTask(FrameRetrieval frameR, Bitmap parentBmp, String workVideoPath, ErrorListener elistn, AudioVideoMuxer in_muxer) {
+        muxer = in_muxer;
         retrieval = frameR;
         updateBitmap(parentBmp);
         errorBuf = new StringBuilder();
         this.workVideoPath = workVideoPath;
         errorListener = elistn;
 
-        videoEncoder = new AvcVideoEncoder(width, height, FPS_NUM, FPS_DENOM, muxer);
+        createEncoder();
+    }
+
+    private void createEncoder() {
+        videoEncoder = AvcVideoEncoder.Companion.createInstance(width, height, muxer);
     }
 
     static final int FPS_NUM = 24;
-    static final int FPS_DENOM = 1;
 
     public boolean initEncoder(long currentMill) {
         // TODO: remove
@@ -73,18 +78,15 @@ public class EncoderTask implements Runnable {
     public boolean encodeFrame(int[] frame, Rect invalRect) {
         long curr = System.currentTimeMillis();
         long diff = curr-beginMillis;
-        return videoEncoder.encodeFrames(frame,  invalRect, (int)(diff*FPS_NUM/1000), errorBuf);
+        return videoEncoder.encodeFrames(frame,  invalRect, errorBuf);
     }
 
 
     // when call doneEncoder, you do not need to call finalizeEncoder()
-    public synchronized boolean doneEncoder() {
-        return videoEncoder.doneEncoder(errorBuf);
+    public synchronized void doneEncoder() {
+        videoEncoder.doneEncoder(errorBuf);
     }
 
-    public void finalizeEncoder() {
-        videoEncoder.finalizeEncoder();
-    }
 
     Rect invalRect = new Rect();
     @Override
@@ -111,6 +113,10 @@ public class EncoderTask implements Runnable {
 
     public StringBuilder getErrorBuf() {
         return errorBuf;
+    }
+
+    public void pause() {
+        // do nothing.
     }
 
     public void stop() {

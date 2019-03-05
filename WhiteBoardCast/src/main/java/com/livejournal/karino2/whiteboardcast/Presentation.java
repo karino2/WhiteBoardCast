@@ -27,7 +27,7 @@ public class Presentation {
         recStats = RecordStatus.DONE_PROCESS;
     }
 
-    public boolean afterStop() {
+    public void afterStop() {
         if(videoEncodeFuture != null)
             videoEncodeFuture.cancel(false);
         videoEncodeFuture = null;
@@ -35,10 +35,11 @@ public class Presentation {
 
         recorder.finalize();
 
-        boolean encoderFinalizeSuccess =  encoderTask.doneEncoder();
+        encoderTask.doneEncoder();
         muxer.stop();
         muxer.release();
-        return encoderFinalizeSuccess;
+        encoderTask = null;
+        muxer = null;
     }
 
 
@@ -68,11 +69,9 @@ public class Presentation {
         getSlideList().deleteAll();
     }
 
-    public void setBeginMillToEncoder(long newMill) {
-        encoderTask.setBeginMill(newMill);
-    }
 
-    public void startEncoder() {
+    public void startEncoder(long newMill) {
+        encoderTask.setBeginMill(newMill);
         encoderTask.startEncoder();
     }
 
@@ -112,6 +111,15 @@ public class Presentation {
         encoderTask = new EncoderTask(frameR, parentBmp, workVideoPath, elistn, muxer);
     }
 
+    // second time recording.
+    // creating encoder here harm user experience, but second time, codec enumeratoin is not necessary.
+    // So I guess second time might be acceptable.
+    public void ensureEncoderTask(FrameRetrieval frameR, Bitmap parentBmp, String workVideoPath, EncoderTask.ErrorListener elistn) throws IOException {
+        if(muxer == null) {
+            newEncoderTask(frameR, parentBmp, workVideoPath, elistn);
+        }
+    }
+
     public void pauseRecord() {
         recStats = RecordStatus.PAUSE;
 
@@ -120,7 +128,7 @@ public class Presentation {
         stopAudioEncoderTask();
 
         recorder.pause();
-        encoderTask.stop();
+        encoderTask.pause();
 
     }
 

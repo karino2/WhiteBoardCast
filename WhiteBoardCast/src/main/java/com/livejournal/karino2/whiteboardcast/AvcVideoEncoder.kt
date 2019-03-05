@@ -6,57 +6,87 @@ import android.media.MediaCodecInfo
 import android.util.Log
 
 
-class AvcVideoEncoder(val wholeWidth: Int, val wholeHeight: Int, val frameRate:Int, val scale:Int, val muxer: AudioVideoMuxer) {
+class AvcVideoEncoder(val wholeWidth: Int, val wholeHeight: Int, val muxer: AudioVideoMuxer, val colorFormat: Int, val encoder: MediaCodec) {
 
-    // var frameRate = 30
-    val mimeType = MediaFormat.MIMETYPE_VIDEO_AVC
-    val bitRate = 700000
+    companion object {
+        val mimeType = MediaFormat.MIMETYPE_VIDEO_AVC
+        val supportedColorFormat = arrayOf(
+                MediaCodecInfo.CodecCapabilities.COLOR_FormatYUV420Planar,
+                MediaCodecInfo.CodecCapabilities.COLOR_FormatYUV420PackedPlanar,
+                MediaCodecInfo.CodecCapabilities.COLOR_FormatYUV420SemiPlanar,
+                MediaCodecInfo.CodecCapabilities.COLOR_FormatYUV420PackedSemiPlanar,
+                MediaCodecInfo.CodecCapabilities.COLOR_TI_FormatYUV420PackedSemiPlanar
+        )
+        var colorFormat =  MediaCodecInfo.CodecCapabilities.COLOR_FormatYUV420Planar
+        // val colorFormat = MediaCodecInfo.CodecCapabilities.COLOR_FormatYUV420Flexible
+        var format: MediaFormat? = null
+        var codecName: String = ""
 
-    var encoder: MediaCodec
+        fun selectColor(codecInfo: MediaCodecInfo, mimeType: String) : Int {
+            val caps = codecInfo.getCapabilitiesForType(mimeType)
+            caps.colorFormats.forEach {
+                if(it in supportedColorFormat) {
+                    return it
+                }
+            }
+            throw IllegalArgumentException("No supported format. It's cts violation!")
+        }
+
+        fun createInstance(wholeWidth: Int, wholeHeight: Int, muxer: AudioVideoMuxer) : AvcVideoEncoder {
+            val (encoder, colorFormat) = createEncoder(wholeWidth, wholeHeight)
+            return AvcVideoEncoder(wholeWidth, wholeHeight, muxer, colorFormat, encoder)
+        }
+
+        // Enumerate codec takes some times. We need to cache result.
+        // I decide to cache in companion object.
+        private fun createEncoder(screenWidth: Int, screenHeight: Int) : Pair<MediaCodec, Int> {
+            if(format == null) {
+                format = MediaFormat.createVideoFormat(mimeType, screenWidth, screenHeight)
+
+                val mcl = MediaCodecList(MediaCodecList.REGULAR_CODECS)
+                codecName = mcl.findEncoderForFormat(format)
+
+                val encoder = MediaCodec.createByCodecName(codecName)
+                colorFormat = selectColor(encoder.codecInfo, mimeType)
+
+                format!!.setInteger(MediaFormat.KEY_COLOR_FORMAT, colorFormat)
+                format!!.setInteger(MediaFormat.KEY_BIT_RATE, 6000000)
+                format!!.setInteger(MediaFormat.KEY_FRAME_RATE, 15) // 15 fps
+                format!!.setInteger(MediaFormat.KEY_I_FRAME_INTERVAL, 10) // 10 sec between I-frame
+                encoder.configure(format, null, null, MediaCodec.CONFIGURE_FLAG_ENCODE)
+                return Pair(encoder, colorFormat)
+            } else {
+                val encoder = MediaCodec.createByCodecName(codecName)
+                encoder.configure(format, null, null, MediaCodec.CONFIGURE_FLAG_ENCODE)
+                return Pair(encoder, colorFormat)
+            }
+
+
+
+        }
+    }
+
     val bufSize: Int
          get() = (wholeWidth*wholeHeight*3)/2 // 1+1/2
 
     var trackIndex = 0
 
     val TIMEOUT_USEC = 10000L
-    var framesIndex = 1
 
-    var colorFormat =  MediaCodecInfo.CodecCapabilities.COLOR_FormatYUV420Planar
-    // val colorFormat = MediaCodecInfo.CodecCapabilities.COLOR_FormatYUV420Flexible
 
-    val supportedColorFormat = arrayOf(
-            MediaCodecInfo.CodecCapabilities.COLOR_FormatYUV420Planar,
-            MediaCodecInfo.CodecCapabilities.COLOR_FormatYUV420PackedPlanar,
-            MediaCodecInfo.CodecCapabilities.COLOR_FormatYUV420SemiPlanar,
-            MediaCodecInfo.CodecCapabilities.COLOR_FormatYUV420PackedSemiPlanar,
-            MediaCodecInfo.CodecCapabilities.COLOR_TI_FormatYUV420PackedSemiPlanar
-    )
 
     val bufInfo = MediaCodec.BufferInfo()
 
     val argbToYuvConverter: ArgbToYuvConverter
 
-    // default value.  scale = 1000, frameRate = 30
     init {
-        val format = MediaFormat.createVideoFormat(mimeType, wholeWidth, wholeHeight)
-        framesIndex = 1
-
-        val mcl = MediaCodecList(MediaCodecList.REGULAR_CODECS)
-        val codec = mcl.findEncoderForFormat(format)
-
-        encoder = MediaCodec.createByCodecName(codec)
-        colorFormat = selectColor(encoder.codecInfo, mimeType)
         // Log.d("WhiteBoardCast", "color format ${colorFormat}, w=${wholeWidth}, h=${wholeHeight}")
         argbToYuvConverter = ArgbToYuvConverter(wholeWidth, wholeHeight, isSemiPlanarYUV(colorFormat))
-
-        format.setInteger(MediaFormat.KEY_COLOR_FORMAT, colorFormat)
-        format.setInteger(MediaFormat.KEY_BIT_RATE, 6000000)
-        format.setInteger(MediaFormat.KEY_FRAME_RATE, 15) // 15 fps
-        format.setInteger(MediaFormat.KEY_I_FRAME_INTERVAL, 10) // 10 sec between I-frame
         trackIndex = 0
-
-        encoder.configure(format, null, null, MediaCodec.CONFIGURE_FLAG_ENCODE)
     }
+
+
+
 
     fun start() {
         encoder.start()
@@ -79,15 +109,6 @@ class AvcVideoEncoder(val wholeWidth: Int, val wholeHeight: Int, val frameRate:I
 
 
 
-    fun selectColor(codecInfo: MediaCodecInfo, mimeType: String) : Int {
-        val caps = codecInfo.getCapabilitiesForType(mimeType)
-        caps.colorFormats.forEach {
-            if(it in supportedColorFormat) {
-                return it
-            }
-        }
-        throw IllegalArgumentException("No supported format. It's cts violation!")
-    }
 
     fun isSemiPlanarYUV(colorFormat: Int) : Boolean {
         return when (colorFormat) {
@@ -97,20 +118,15 @@ class AvcVideoEncoder(val wholeWidth: Int, val wholeHeight: Int, val frameRate:I
         }
     }
 
-
-
-
     @Synchronized
-    fun encodeFrames(srcFrame: IntArray, invalRect: Rect, framesToEncode: Int, error: StringBuilder): Boolean {
-        if (!encodeOneFrame(srcFrame, invalRect, framesToEncode, error))
+    fun encodeFrames(srcFrame: IntArray, invalRect: Rect, error: StringBuilder): Boolean {
+        if (!encodeOneFrame(srcFrame, invalRect, error))
             return false
         drain()
-        framesIndex = framesToEncode
         return true
     }
 
     var requestStart = false
-
 
     // almost the same as Mp4aRecorder::drain.
     fun drain(timeoutUs: Long = 0L) {
@@ -138,10 +154,6 @@ class AvcVideoEncoder(val wholeWidth: Int, val wholeHeight: Int, val frameRate:I
         encoder.releaseOutputBuffer(bufIndex, false)
     }
 
-    fun frameToTime(frame: Int) : Long {
-        return 132+frame*1000L*scale/frameRate
-    }
-
 
     var beginMill = System.currentTimeMillis()
 
@@ -159,7 +171,7 @@ class AvcVideoEncoder(val wholeWidth: Int, val wholeHeight: Int, val frameRate:I
         writeEmptyFrame(MediaCodec.BUFFER_FLAG_END_OF_STREAM)
     }
 
-    private fun encodeOneFrame(srcFrame: IntArray, invalRect: Rect, endFrame: Int,
+    private fun encodeOneFrame(srcFrame: IntArray, invalRect: Rect,
                                error: StringBuilder): Boolean {
         if(invalRect.isEmpty) {
             writeEmptyFrame()
@@ -178,15 +190,10 @@ class AvcVideoEncoder(val wholeWidth: Int, val wholeHeight: Int, val frameRate:I
         inputBuf.clear()
         inputBuf.put(argbToYuvConverter.yuvBuf)
 
-        // start: framesIndex, end: endFrame.
-//        val ptsUsec = frameToTime(framesIndex)
-
         val ptsUsec = (System.currentTimeMillis()-beginMill)*1000
 
         encoder.queueInputBuffer(inputBufIndex, 0, bufSize, ptsUsec, 0)
 
         return true
     }
-
-
 }

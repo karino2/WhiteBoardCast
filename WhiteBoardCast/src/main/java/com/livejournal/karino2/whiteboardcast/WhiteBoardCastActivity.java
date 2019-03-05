@@ -204,12 +204,7 @@ public class WhiteBoardCastActivity extends Activity implements EncoderTask.Erro
         new Thread(new Runnable() {
             @Override
             public void run() {
-                if(!presen.afterStop()) {
-                    postErrorMessage("fail finalize encode: " + presen.getEncoderTask().getErrorBuf().toString());
-                    return;
-
-                }
-
+                presen.afterStop();
                 postShowMessage("post process done.");
                 handler.post(new Runnable(){
                     @Override
@@ -307,11 +302,16 @@ public class WhiteBoardCastActivity extends Activity implements EncoderTask.Erro
     private void startRecordSecondPhase() {
         WhiteBoardCanvas wb = getWhiteBoardCanvas();
         wb.invalWholeRegionForEncoder(); // for restart. make it a little heavy.
+
+
+        try {
+            presen.ensureEncoderTask(wb, wb.getBitmap(), getWorkVideoPath(), this);
+        } catch (IOException e) {
+            showError("Can't create working folder.");
+            return;
+        }
         long currentMill = System.currentTimeMillis();
-        // TODO: set current mill here
-        presen.setBeginMillToEncoder(currentMill);
-        presen.startEncoder();
-        // presen.newEncoderTask(wb, wb.getBitmap(), getWorkVideoPath(), this);
+        presen.startEncoder(currentMill);
 
         if(debuggable)
             presen.getEncoderTask().setFpsListener(getWhiteBoardCanvas().getEncoderFpsCounter());
