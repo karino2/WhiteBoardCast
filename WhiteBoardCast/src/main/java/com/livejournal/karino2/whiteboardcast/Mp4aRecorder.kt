@@ -2,7 +2,6 @@ package com.livejournal.karino2.whiteboardcast
 
 import android.media.*
 import android.util.Log
-import java.nio.ByteBuffer
 import android.media.MediaCodec
 
 
@@ -14,6 +13,7 @@ class Mp4aRecorder(val muxer: AudioVideoMuxer, beginMil: Long) : Runnable {
     private val CHANNEL_CONFIG = AudioFormat.CHANNEL_IN_MONO
     private val AUDIO_FORMAT = AudioFormat.ENCODING_PCM_16BIT
     var audioDurationMill = 0L
+    private val TIMEOUT_US=1000L
 
     var beginMill: Long = beginMil
     set(value) {
@@ -27,7 +27,7 @@ class Mp4aRecorder(val muxer: AudioVideoMuxer, beginMil: Long) : Runnable {
             beginMill += pasuedMil
             start()
         } else {
-            Log.d("WhiteBoardCast", "VorbisRec: resume call but state is not stopped: $state")
+            Log.d("WhiteBoardCast", "AudioRec: resume call but state is not stopped: $state")
         }
     }
 
@@ -38,10 +38,14 @@ class Mp4aRecorder(val muxer: AudioVideoMuxer, beginMil: Long) : Runnable {
         }
     }
 
-    fun stop() {
+    fun pause() {
+        stop(false)
+    }
+
+    fun stop(forFinalize: Boolean) {
         if (state == State.RECORDING) {
-            // handleNewAudioData(audioRecorder, true)
-            readAndEncode(true)
+            if(forFinalize)
+                readAndEncode(true)
 
             // drain again to consume all unflushed encoder data.
             encoder.flush()
@@ -53,9 +57,13 @@ class Mp4aRecorder(val muxer: AudioVideoMuxer, beginMil: Long) : Runnable {
         }
     }
 
-    fun release() {
+    fun stopForFinalize() {
+        stop(true)
+    }
+
+    fun finalize() {
         if (state == State.RECORDING) {
-            stop()
+            stopForFinalize()
         }
         encoder.stop()
         encoder.release()
@@ -116,7 +124,6 @@ class Mp4aRecorder(val muxer: AudioVideoMuxer, beginMil: Long) : Runnable {
         if(bufIndex < 0)
             return
 
-
         if(bufInfo.size != 0) {
             val outBuf = encoder.getOutputBuffer(bufIndex)!!
             outBuf.position(bufInfo.offset)
@@ -131,7 +138,7 @@ class Mp4aRecorder(val muxer: AudioVideoMuxer, beginMil: Long) : Runnable {
             return
         drain()
 
-        val bufIndex = encoder.dequeueInputBuffer(0)
+        val bufIndex = encoder.dequeueInputBuffer(TIMEOUT_US)
         if(bufIndex < 0)
             return
 
@@ -155,6 +162,7 @@ class Mp4aRecorder(val muxer: AudioVideoMuxer, beginMil: Long) : Runnable {
     fun cancel() {
         requestCancel = true
     }
+
 
     override fun run() {
         requestCancel = false

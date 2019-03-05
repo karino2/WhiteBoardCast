@@ -33,8 +33,7 @@ public class Presentation {
         videoEncodeFuture = null;
         stopAudioEncoderTask();
 
-        recorder.stop();
-        recorder.release();
+        recorder.finalize();
 
         boolean encoderFinalizeSuccess =  encoderTask.doneEncoder();
         muxer.stop();
@@ -120,7 +119,7 @@ public class Presentation {
         videoEncodeFuture = null;
         stopAudioEncoderTask();
 
-        recorder.stop();
+        recorder.pause();
         encoderTask.stop();
 
     }
@@ -148,6 +147,8 @@ public class Presentation {
         recorder.resume(suspendedDur);
         encoderTask.resume(suspendedDur);
 
+        scheduleEncodeTask();
+        scheduleAudioRecordTask();
     }
 
     private final int FPS = 12;

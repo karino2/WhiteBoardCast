@@ -190,7 +190,7 @@ public class WhiteBoardCastActivity extends Activity implements EncoderTask.Erro
 
     public void stopRecord() {
         if(!canStop()) {
-            Log.d("WhiteBoardCast", "stop record called but not recording. " + presen.recordStatus());
+            Log.d("WhiteBoardCast", "stopForFinalize record called but not recording. " + presen.recordStatus());
             return;
         }
         // under processing.
@@ -267,8 +267,6 @@ public class WhiteBoardCastActivity extends Activity implements EncoderTask.Erro
     public void resumeRecord() {
         presen.resumeRecord();
 
-        presen.scheduleEncodeTask();
-        presen.scheduleAudioRecordTask();
         WhiteBoardCanvas wb = getWhiteBoardCanvas();
         wb.notifyBeginMillChanged(presen.getBeginMill());
         wb.changeRecStatus();

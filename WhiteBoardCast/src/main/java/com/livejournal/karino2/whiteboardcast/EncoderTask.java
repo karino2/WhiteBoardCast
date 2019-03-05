@@ -119,7 +119,7 @@ public class EncoderTask implements Runnable {
 
     public void resume(long suspendedDurMil) {
         beginMillis += suspendedDurMil;
-
+        videoEncoder.setBeginMill(beginMillis);
     }
 
     FpsListener fpsListener;
