@@ -136,6 +136,9 @@ public class WhiteBoardCastActivity extends Activity implements EncoderTask.Erro
         } catch (IOException e) {
             showError("Fail to get workVideoPath: " + e.getMessage());
             return false;
+        } catch(IllegalArgumentException e2) {
+            showError("No codec found. Unsupported device. sorry...");
+            return false;
         }
     }
 
