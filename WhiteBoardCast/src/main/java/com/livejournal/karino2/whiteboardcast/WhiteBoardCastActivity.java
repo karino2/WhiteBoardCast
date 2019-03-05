@@ -2,6 +2,8 @@ package com.livejournal.karino2.whiteboardcast;
 
 import com.livejournal.karino2.multigallery.MultiGalleryActivity;
 
+import android.Manifest;
+import android.annotation.TargetApi;
 import android.app.Activity;
 import android.app.AlertDialog;
 import android.app.Dialog;
@@ -14,11 +16,13 @@ import android.content.pm.ApplicationInfo;
 import android.content.pm.PackageManager;
 import android.content.res.Configuration;
 import android.net.Uri;
+import android.os.Build;
 import android.os.Bundle;
 import android.os.Environment;
 import android.os.Handler;
 import android.preference.PreferenceManager;
 import android.provider.MediaStore;
+import android.support.annotation.NonNull;
 import android.util.Log;
 import android.view.KeyEvent;
 import android.view.Menu;
@@ -42,6 +46,7 @@ public class WhiteBoardCastActivity extends Activity implements EncoderTask.Erro
     static final int DIALOG_ID_COPYING = 6;
 
     static final int REQUEST_PICK_IMAGE = 10;
+    static final int REQUEST_PERMISSION = 11;
 
     private Presentation presen = new Presentation();
 
@@ -76,11 +81,55 @@ public class WhiteBoardCastActivity extends Activity implements EncoderTask.Erro
     }
 
     boolean encoderInitDone = false;
-
     Handler handler = new Handler();
-
     PageScrollAnimator animator;
 
+    void afterPermissionGranted() {
+        if(workingFileExists()) {
+            showDialog(DIALOG_ID_QUERY_MERGE_AGAIN);
+        }
+
+        checkCanvasReady();
+    }
+
+    void checkPermissionAndStart() {
+        if(Build.VERSION.SDK_INT < 23) {
+            afterPermissionGranted();
+            return;
+        }
+        if(this.checkSelfPermission(Manifest.permission.RECORD_AUDIO) == PackageManager.PERMISSION_GRANTED &&
+                this.checkSelfPermission(Manifest.permission.WRITE_EXTERNAL_STORAGE) == PackageManager.PERMISSION_GRANTED) {
+            afterPermissionGranted();
+            return;
+        } else {
+            requestPermissions(new String[]{Manifest.permission.RECORD_AUDIO, Manifest.permission.WRITE_EXTERNAL_STORAGE}, REQUEST_PERMISSION);
+        }
+    }
+
+    @TargetApi(23)
+    @Override
+    public void onRequestPermissionsResult(int requestCode,String[] permissions, int[] grantResults) {
+        switch(requestCode) {
+            case REQUEST_PERMISSION: {
+                if(grantResults.length == 2) {
+                    if(grantResults[0] == PackageManager.PERMISSION_GRANTED &&
+                            grantResults[1] ==PackageManager.PERMISSION_GRANTED) {
+                        afterPermissionGranted();
+                        return;
+                    }
+                }
+                showMessage("Not enough permission to run. Finish app.");
+                handler.postDelayed(
+                        new Runnable() {
+                            @Override
+                            public void run() {
+                                finish();
+                            }
+                        }, 200);
+            }
+        }
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults);
+    }
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -91,11 +140,7 @@ public class WhiteBoardCastActivity extends Activity implements EncoderTask.Erro
         getWhiteBoardCanvas().enableDebug(debuggable);
         animator = new PageScrollAnimator(presen.getScheduleExecutor(), getWhiteBoardCanvas());
 
-        if(workingFileExists()) {
-            showDialog(DIALOG_ID_QUERY_MERGE_AGAIN);
-        }
-
-        checkCanvasReady();
+        checkPermissionAndStart();
     }
 
     Runnable checkCanvasReadyCallback = new Runnable() {
