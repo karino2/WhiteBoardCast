@@ -61,7 +61,7 @@ class Mp4aRecorder(val muxer: AudioVideoMuxer, beginMil: Long) : Runnable {
         stop(true)
     }
 
-    fun finalize() {
+    fun finalizeAndRelease() {
         if (state == State.RECORDING) {
             stopForFinalize()
         }

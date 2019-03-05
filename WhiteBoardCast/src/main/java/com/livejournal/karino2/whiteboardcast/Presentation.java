@@ -33,7 +33,7 @@ public class Presentation {
         videoEncodeFuture = null;
         stopAudioEncoderTask();
 
-        recorder.finalize();
+        recorder.finalizeAndRelease();
 
         encoderTask.doneEncoder();
         muxer.stop();
