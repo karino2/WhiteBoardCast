@@ -251,14 +251,7 @@ public class WhiteBoardCastActivity extends Activity implements EncoderTask.Erro
             public void run() {
                 presen.afterStop();
                 postShowMessage("post process done.");
-                handler.post(new Runnable(){
-                    @Override
-                    public void run() {
-                        afterEncodeDone();
-                    }
-                }
-                );
-
+                afterEncodeDone();
             }
         }).start();
     }
