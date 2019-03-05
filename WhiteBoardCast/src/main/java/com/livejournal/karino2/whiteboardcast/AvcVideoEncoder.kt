@@ -46,7 +46,7 @@ class AvcVideoEncoder(val wholeWidth: Int, val wholeHeight: Int, val frameRate:I
 
         encoder = MediaCodec.createByCodecName(codec)
         colorFormat = selectColor(encoder.codecInfo, mimeType)
-        Log.d("WhiteBoardCast", "color format ${colorFormat}, w=${wholeWidth}, h=${wholeHeight}")
+        // Log.d("WhiteBoardCast", "color format ${colorFormat}, w=${wholeWidth}, h=${wholeHeight}")
         argbToYuvConverter = ArgbToYuvConverter(wholeWidth, wholeHeight, isSemiPlanarYUV(colorFormat))
 
         format.setInteger(MediaFormat.KEY_COLOR_FORMAT, colorFormat)
