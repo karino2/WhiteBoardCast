@@ -1,6 +1,5 @@
 package com.livejournal.karino2.whiteboardcast;
 
-import com.google.libvorbis.VorbisException;
 import com.livejournal.karino2.multigallery.MultiGalleryActivity;
 
 import android.app.Activity;
@@ -322,9 +321,6 @@ public class WhiteBoardCastActivity extends Activity implements EncoderTask.Erro
             presen.prepareAudioRecorder();
         } catch (IOException e) {
             showError("IOException: MediaRecoder prepare fail: " + e.getMessage());
-            return;
-        } catch (VorbisException e) {
-            showError("VorbisException: MediaRecoder prepare fail: " + e.getMessage());
             return;
         }
 

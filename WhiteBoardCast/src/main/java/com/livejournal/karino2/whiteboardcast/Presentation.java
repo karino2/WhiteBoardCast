@@ -4,8 +4,6 @@ import android.graphics.Bitmap;
 import android.media.MediaMuxer;
 import android.net.Uri;
 
-import com.google.libvorbis.VorbisException;
-
 import java.io.File;
 import java.io.IOException;
 import java.util.List;
@@ -50,7 +48,7 @@ public class Presentation {
     }
 
 
-    public void prepareAudioRecorder() throws IOException, VorbisException {
+    public void prepareAudioRecorder() throws IOException {
         recorder.prepare();
     }
 
