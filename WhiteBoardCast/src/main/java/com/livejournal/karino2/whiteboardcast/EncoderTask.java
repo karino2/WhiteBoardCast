@@ -17,6 +17,10 @@ public class EncoderTask implements Runnable {
         videoEncoder.start();
     }
 
+    public void firstEncodeOnceBlocking() {
+        doWholeTask();
+    }
+
     public interface FpsListener {
         void push(long currentFrameMill);
     }

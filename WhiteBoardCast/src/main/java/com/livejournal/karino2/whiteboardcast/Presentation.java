@@ -53,9 +53,13 @@ public class Presentation {
     }
 
     public void startRecord() {
-        // muxer.start();
-        recorder.start();
+        // to ensure muxer addTrack, first input something to inputBuffer.
+        // In release build, it takes about 60msec. Not noticeable to user.
+        // But in debug buid, it takes 2 sec. It's confusing if we skip this code and wait 2 sec after start recording.
+        // It's better wait UI if it didn't start actually.
+        firstEncodeOnce();
 
+        recorder.start();
         scheduleEncodeTask();
         scheduleAudioRecordTask();
         recStats = RecordStatus.RECORDING;
@@ -159,6 +163,11 @@ public class Presentation {
         scheduleAudioRecordTask();
     }
 
+    public void firstEncodeOnce() {
+        // to make muxer ready.
+        encoderTask.firstEncodeOnceBlocking();
+    }
+
     private final int FPS = 12;
     //    private final int FPS = 6;
     //    private final int FPS = 30;
@@ -167,6 +176,8 @@ public class Presentation {
     }
 
     public void scheduleAudioRecordTask() {
+        // to make muxer ready.
+        recorder.drain();
         recorderThread = new Thread(recorder);
         recorderThread.start();
     }

@@ -24,10 +24,9 @@ apply plugin: 'kotlin-android-extensions'
 apply plugin: 'kotlin-android'
 
 dependencies {
-
-	// You must install or update the Support Repository through the SDK manager to use this dependency.
-	// The Support Repository (separate from the corresponding library) can be found in the Extras category.
-	implementation 'com.android.support:appcompat-v7:+'
+    // You must install or update the Support Repository through the SDK manager to use this dependency.
+    // The Support Repository (separate from the corresponding library) can be found in the Extras category.
+    implementation 'com.android.support:appcompat-v7:+'
     implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk7:$kotlin_version"
     testImplementation 'junit:junit:4.12'
     androidTestImplementation 'com.android.support.test:runner:1.0.2'
@@ -37,18 +36,24 @@ dependencies {
 
 android {
     compileSdkVersion 28
-
     lintOptions {
         checkReleaseBuilds false
     }
-
     buildTypes {
         release {
             debuggable false
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.txt'
         }
+        debug {
+            applicationIdSuffix ".debug"
+        }
+        debugrealease {
+            // initWith(buildTypes.debug)
+            debuggable false
+            signingConfig signingConfigs.debug
+            applicationIdSuffix ".debugrelease"
+        }
     }
-
     defaultConfig {
         minSdkVersion 21
         targetSdkVersion 28
