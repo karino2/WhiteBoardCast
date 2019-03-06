@@ -52,6 +52,10 @@ class ArgbToYuvConverterTest {
     }
     @Test
     fun convert10times() {
+        /*
+        val width = 1920
+        val height = 1088
+        */
         val width = 1280
         val height = 800
 
