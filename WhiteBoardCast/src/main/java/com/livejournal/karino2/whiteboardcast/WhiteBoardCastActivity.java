@@ -190,8 +190,9 @@ public class WhiteBoardCastActivity extends Activity implements EncoderTask.Erro
     private boolean workingFileExists() {
         try {
             File workVideo = new File(getWorkVideoPath());
-            if(workVideo.exists())
-                return true;
+            if(workVideo.exists()) {
+                return 0 != workVideo.length();
+            }
             return false;
         } catch (IOException e) {
             showError("IO Exception while working file check: " + e.getMessage());
