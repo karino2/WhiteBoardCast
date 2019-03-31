@@ -36,6 +36,7 @@ import android.widget.Toast;
 import java.io.File;
 import java.io.IOException;
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
 import java.util.Date;
 
 public class WhiteBoardCastActivity extends Activity implements EncoderTask.ErrorListener, PanelColor.ColorListener {
@@ -43,7 +44,6 @@ public class WhiteBoardCastActivity extends Activity implements EncoderTask.Erro
     static final int DIALOG_ID_ABOUT = 1;
     static final int DIALOG_ID_QUERY_MERGE_AGAIN = 3;
     static final int DIALOG_ID_NEW = 5;
-    static final int DIALOG_ID_COPYING = 6;
 
     static final int REQUEST_PICK_IMAGE = 10;
     static final int REQUEST_PERMISSION = 11;
@@ -593,25 +593,33 @@ public class WhiteBoardCastActivity extends Activity implements EncoderTask.Erro
         return super.onCreateDialog(id);
     }
 
-    @Override
-    protected Dialog onCreateDialog(int id, Bundle args) {
-        switch(id) {
-            case DIALOG_ID_COPYING:
-                ImportDialog imp = new ImportDialog(this);
-                imp.prepareCopy(getContentResolver(), getWhiteBoardCanvas().getStoredWidth(),
-                        getWhiteBoardCanvas().getStoredHeight(), args.getStringArrayList("all_path"), new ImportDialog.FinishListener() {
-                            @Override
-                            public void onFinish() {
-                                try {
-                                    setupSlidePresentation();
-                                } catch (IOException e) {
-                                    showError("Fail to setup presentation: " + e.getMessage());
-                                }
-                            }
-                        });
-                return imp;
-        }
-        return super.onCreateDialog(id, args);
+    private void startImportTask(ArrayList<String> imagePaths) {
+        ImportDialog imp = new ImportDialog(this);
+        imp.prepareCopy(getContentResolver(), getCanvasWidth(),
+                getCanvasHeight(), imagePaths, new ImportDialog.FinishListener() {
+                    @Override
+                    public void onFinish() {
+                        try {
+                            setupSlidePresentation();
+                        } catch (IOException e) {
+                            showError("Fail to setup presentation: " + e.getMessage());
+                        }
+                    }
+                });
+    }
+
+    private int getCanvasHeight() {
+        int height = getWhiteBoardCanvas().getStoredHeight();
+        if(height == 0)
+            return mLastCanvasHeight;
+        return height;
+    }
+
+    private int getCanvasWidth() {
+        int width = getWhiteBoardCanvas().getStoredWidth();
+        if(width == 0)
+            return mLastCanvasWidth;
+        return width;
     }
 
     private void startNewPresentation(){
@@ -642,9 +650,7 @@ public class WhiteBoardCastActivity extends Activity implements EncoderTask.Erro
                         data.getStringArrayListExtra("all_path").size() != 0){
                     try {
                         presen.clearSlides();
-                        Bundle bundle = new Bundle();
-                        bundle.putStringArrayList("all_path", data.getStringArrayListExtra("all_path"));
-                        showDialog(DIALOG_ID_COPYING, bundle);
+                        startImportTask(data.getStringArrayListExtra("all_path"));
                     } catch (IOException e) {
                         showMessage("Fail to clear slides: " + e.getMessage());
                     }
@@ -652,6 +658,31 @@ public class WhiteBoardCastActivity extends Activity implements EncoderTask.Erro
         }
     }
 
+
+    /*
+        We need size for import time.
+        But mWidth and mHeight might not yet init-ed.
+
+        (This is happen when activity is killed when backing from slide selection.)
+
+        It's better use size of WBCanvas if available.
+         */
+    int mLastCanvasWidth;
+    int mLastCanvasHeight;
+
+    @Override
+    protected void onSaveInstanceState(Bundle outState) {
+        outState.putInt("LAST_WIDTH", getWhiteBoardCanvas().getStoredWidth());
+        outState.putInt("LAST_HEIGHT", getWhiteBoardCanvas().getStoredHeight());
+        super.onSaveInstanceState(outState);
+    }
+
+    @Override
+    protected void onRestoreInstanceState(Bundle savedInstanceState) {
+        super.onRestoreInstanceState(savedInstanceState);
+        mLastCanvasWidth = savedInstanceState.getInt("LAST_WIDTH");
+        mLastCanvasHeight = savedInstanceState.getInt("LAST_HEIGHT");
+    }
 
     Dialog newDialog;
 
