@@ -3,7 +3,6 @@ package com.livejournal.karino2.whiteboardcast
 import android.graphics.Rect
 import android.media.*
 import android.media.MediaCodecInfo
-import android.util.Log
 
 
 class AvcVideoEncoder(val wholeWidth: Int, val wholeHeight: Int, val muxer: AudioVideoMuxer, val colorFormat: Int, val encoder: MediaCodec) {
@@ -146,10 +145,18 @@ class AvcVideoEncoder(val wholeWidth: Int, val wholeHeight: Int, val muxer: Audi
             // Log.d("WhiteBoardCast", "fail to dequeue output buffer of video encoder.")
             return
         }
-        val buf = encoder.getOutputBuffer(bufIndex)
-        buf.position(bufInfo.offset)
-        buf.limit(bufInfo.offset+bufInfo.size)
-        muxer.writeSampleData(trackIndex, buf, bufInfo)
+
+        // Pixel 3 crash for EndOfStream origin writeSampleData.
+        // I don't know whether this last frame is necessary or not.
+        // But the result seems no problem.
+        try {
+            val buf = encoder.getOutputBuffer(bufIndex)
+            buf.position(bufInfo.offset)
+            buf.limit(bufInfo.offset + bufInfo.size)
+            muxer.writeSampleData(trackIndex, buf, bufInfo)
+        }catch(e : IllegalArgumentException) {
+
+        }
 
         encoder.releaseOutputBuffer(bufIndex, false)
     }
