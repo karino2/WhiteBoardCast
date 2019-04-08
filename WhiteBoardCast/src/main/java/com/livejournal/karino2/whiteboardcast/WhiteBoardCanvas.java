@@ -13,6 +13,7 @@ import android.graphics.Rect;
 import android.graphics.RectF;
 import android.os.Handler;
 import android.util.AttributeSet;
+import android.util.Log;
 import android.util.TypedValue;
 import android.view.LayoutInflater;
 import android.view.MotionEvent;
@@ -134,7 +135,9 @@ public class WhiteBoardCanvas extends View implements FrameRetrieval, PageScroll
     int mX1, mX2, mY1, mY2;
     protected void onSizeChanged(int w, int h, int oldw, int oldh) {
         super.onSizeChanged(w, h, oldw, oldh);
-        // align for livbpx.
+        timeMeasured = false;
+
+        // align for livbpx. May be we donot need this anymore.
         // Log.d("WBCast", "before, w,h=" + w+ "," + h);
         w = (w+15) & ~15;
         h = (h+15) & ~15;
@@ -171,9 +174,9 @@ public class WhiteBoardCanvas extends View implements FrameRetrieval, PageScroll
 
     long lastDrawn = 0;
 
-    // every 5 seconds
-    final long TIME_CHECK_INTERVAL = 5000;
-    final long TIME_DRAW_INTERVAL = 4000;
+    // every 1 seconds
+    final long TIME_CHECK_INTERVAL = 500;
+    final long TIME_DRAW_INTERVAL = 1000;
 
     boolean stopTimeInvalChecker = false;
     Runnable timeInvalChecker = new Runnable() {
@@ -183,13 +186,30 @@ public class WhiteBoardCanvas extends View implements FrameRetrieval, PageScroll
             if(stopTimeInvalChecker)
                 return;
 
-            long dur = System.currentTimeMillis() - lastDrawn;
-            if(lastDrawn == 0 || dur > TIME_DRAW_INTERVAL) {
-                invalidate();
+            long dur = System.currentTimeMillis() - beginMill;
+            if(lastDrawn == 0 || dur >= nextDrawnDuration) {
+                invalidateTime();
             }
-            handler.postDelayed(timeInvalChecker, TIME_CHECK_INTERVAL);
+            handler.postDelayed(timeInvalChecker, Math.max(100, nextDrawnDuration-dur));
         }
     };
+
+
+    RectF timeRegion = new RectF(0f, 0f, 0f, 0f);
+    boolean timeMeasured = false;
+    void ensureTimeRect() {
+        if(!timeMeasured) {
+            float w = viewCanvas.getWidth();
+            float textWidth = timePaint.measureText("88:88:88");
+            timeRegion.set(w-(textWidth+toolUnit*1.2f), 0, w, timePaint.getTextSize());
+            timeMeasured = true;
+        }
+    }
+
+    void invalidateTime() {
+        ensureTimeRect();
+        invalidate((int)timeRegion.left, (int)timeRegion.top, (int)timeRegion.right, (int)timeRegion.bottom);
+    }
 
     public void startTimeDraw() {
         stopTimeInvalChecker = false;
@@ -253,6 +273,7 @@ public class WhiteBoardCanvas extends View implements FrameRetrieval, PageScroll
 
     long beginMill = 0;
     long lastDrawnDuration = 0;
+    long nextDrawnDuration = 0;
 
     public void notifyBeginMillChanged(long newBeginMill) {
         beginMill = newBeginMill;
@@ -261,7 +282,7 @@ public class WhiteBoardCanvas extends View implements FrameRetrieval, PageScroll
     void drawTime(Canvas canvas) {
         long hours = 0;
         long minutes = 0;
-        long tensecs = 0;
+        long secs = 0;
 
         if(!stopTimeInvalChecker && beginMill != 0) {
             lastDrawnDuration = System.currentTimeMillis() - beginMill;
@@ -270,14 +291,14 @@ public class WhiteBoardCanvas extends View implements FrameRetrieval, PageScroll
         if(lastDrawnDuration != 0) {
             hours = lastDrawnDuration/(60*60*1000);
             minutes = (lastDrawnDuration%(60*60*1000))/(60*1000);
-            long secs = (lastDrawnDuration%(60*1000))/1000;
-            tensecs = 10*(secs/10);
+            secs = (lastDrawnDuration%(60*1000))/1000;
+
+            // I assume draw time interval is now 1 sec.
+            nextDrawnDuration = lastDrawnDuration- lastDrawnDuration%TIME_DRAW_INTERVAL+TIME_DRAW_INTERVAL;
         }
 
 
-        String result = String.format("%02d:%02d:%02d", hours, minutes, tensecs);
-        // String result = String.format("%02d:%02d", hours, minutes);
-
+        String result = String.format("%02d:%02d:%02d", hours, minutes, secs);
 
         float w = canvas.getWidth();
         float textWidth = timePaint.measureText(result);
