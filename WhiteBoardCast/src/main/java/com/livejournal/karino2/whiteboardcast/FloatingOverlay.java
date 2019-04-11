@@ -60,13 +60,14 @@ public class FloatingOverlay {
 
     final int TOOLBAR_HANDLE = 0;
     final int TOOLBAR_PEN = 1;
-    final int TOOLBAR_UNDO = 2;
-    final int TOOLBAR_REDO = 3;
-    final int TOOLBAR_DONE = 4;
-    final int TOOLBAR_CLEAR = 5;
-    final int TOOLBAR_POP = 6;
-    final int TOOLBAR_MENU = 7;
-    final int TOOLBAR_RECORD = 8;
+    final int TOOLBAR_POINTER = 2;
+    final int TOOLBAR_UNDO = 3;
+    final int TOOLBAR_REDO = 4;
+    final int TOOLBAR_DONE = 5;
+    final int TOOLBAR_CLEAR = 6;
+    final int TOOLBAR_POP = 7;
+    final int TOOLBAR_MENU = 8;
+    final int TOOLBAR_RECORD = 9;
     final int TOOLBAR_BUTTON_NUM = TOOLBAR_RECORD+1;
 
     static final int REC_NORMAL = 0;
@@ -83,6 +84,7 @@ public class FloatingOverlay {
     Bitmap undoButton;
     Bitmap redoButton;
     Bitmap doneButton;
+    Bitmap pointerButton;
     Bitmap clearButton;
     Bitmap popButton;
     Bitmap menuButton;
@@ -102,6 +104,7 @@ public class FloatingOverlay {
         toolBar = Bitmap.createBitmap(toolHeight *TOOLBAR_BUTTON_NUM, toolHeight, Config.ARGB_8888);
         toolBarPanel = floatResource(R.drawable.float_base, toolHeight *TOOLBAR_BUTTON_NUM, toolHeight);
 
+        pointerButton = floatResource(R.drawable.pointer_button, toolHeight, toolHeight);
         undoButton = floatResource(R.drawable.undo_button, toolHeight, toolHeight);
         redoButton = floatResource(R.drawable.redo_button, toolHeight, toolHeight);
         doneButton = floatResource(R.drawable.done_button, toolHeight, toolHeight);
@@ -145,7 +148,11 @@ public class FloatingOverlay {
 
 
         updateToolPen();
-        canvas.drawBitmap(toolPen, toolHeight * TOOLBAR_PEN, 0, null);
+
+        Paint penPaint = !activity.isPointerMode()? null: disablePaint;
+        canvas.drawBitmap(toolPen, toolHeight * TOOLBAR_PEN, 0, penPaint);
+
+        canvas.drawBitmap(pointerButton, toolHeight * TOOLBAR_POINTER, 0, null);
 
         Paint undoPaint = activity.canUndo()? null: disablePaint;
         Paint redoPaint = activity.canRedo()? null: disablePaint;
@@ -356,7 +363,14 @@ public class FloatingOverlay {
             }
         } else if (idx == TOOLBAR_CLEAR) {
             activity.clearCanvas();
-        } else if (idx == TOOLBAR_PEN) {
+        } else if (idx == TOOLBAR_POINTER) {
+            activity.togglePointerMode();
+            // close picker if pointer mode begin.
+            if(activity.isPointerMode()) {
+                pickerVisible = false;
+            }
+            updateToolbarImage();
+        } else if (idx == TOOLBAR_PEN && !activity.isPointerMode()) {
             pickerVisible = !pickerVisible;
         } else if (idx == TOOLBAR_UNDO) {
             if(activity.canUndo()) {

@@ -217,6 +217,13 @@ public class WhiteBoardCastActivity extends Activity implements EncoderTask.Erro
          return presen.slideAvailable();
     }
 
+    public boolean isPointerMode() {
+        WhiteBoardCanvas wb = getWhiteBoardCanvas();
+        if(wb == null)
+            return false;
+        return wb.isPointerMode();
+    }
+
     public boolean canUndo() {
         WhiteBoardCanvas wb = getWhiteBoardCanvas();
         if(wb == null)
@@ -782,5 +789,9 @@ public class WhiteBoardCastActivity extends Activity implements EncoderTask.Erro
     // size: 0 to 100
     public void setPenOeEraserSize(int size) {
         getWhiteBoardCanvas().setPenOrEraserSize(size);
+    }
+
+    public void togglePointerMode() {
+        getWhiteBoardCanvas().togglePointerMode();
     }
 }

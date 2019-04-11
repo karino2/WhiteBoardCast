@@ -48,6 +48,7 @@ public class WhiteBoardCanvas extends View implements FrameRetrieval, PageScroll
     private Paint       mPaint;
     private Paint overwritePaint;
     private Paint mCursorPaint;
+    private Paint mPointerPaint;
     private Paint fillPaint;
     private Rect invalRegion;
 
@@ -112,6 +113,13 @@ public class WhiteBoardCanvas extends View implements FrameRetrieval, PageScroll
         mCursorPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
         mCursorPaint.setStyle(Paint.Style.STROKE);
         mCursorPaint.setPathEffect(new DashPathEffect(new float[]{5, 2}, 0));
+
+        mPointerPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
+        mPointerPaint.setStrokeWidth(4);
+        mPointerPaint.setStyle(Paint.Style.STROKE);
+        mPointerPaint.setColor(Color.argb(0xff, 0xff, 0x80, 0x80));
+
+
 
         boardList = new BoardList(this);
 
@@ -321,9 +329,9 @@ public class WhiteBoardCanvas extends View implements FrameRetrieval, PageScroll
     }
 
     private final int CROSS_SIZE = 20;
-    private void drawCross(Canvas canvas, float x, float y) {
-        canvas.drawLine(x-CROSS_SIZE, y, x+CROSS_SIZE, y, mCursorPaint);
-        canvas.drawLine(x, y-CROSS_SIZE, x, y+CROSS_SIZE, mCursorPaint);
+    private void drawPointer(Canvas canvas, float x, float y) {
+        canvas.drawLine(x-CROSS_SIZE, y, x+CROSS_SIZE, y, mPointerPaint);
+        canvas.drawLine(x, y-CROSS_SIZE, x, y+CROSS_SIZE, mPointerPaint);
     }
 
     private float mX, mY;
@@ -357,7 +365,13 @@ public class WhiteBoardCanvas extends View implements FrameRetrieval, PageScroll
                 */
         Rect dest = new Rect(0, 0, lastBrushCursorRegion.width(), lastBrushCursorRegion.height());
         // TODO: too slow?
-        // cursorBackupBmp.eraseColor(Color.TRANSPARENT);
+        /*
+        If we draw red cross brush cursor, the garbage appear if we do not erase here.
+        I guess this is because drawBitmap of transparent color does not overwrite red area
+        (though I specify poter duff to overwrite).
+        Anyway, I try erase color every time.
+         */
+        cursorBackupBmp.eraseColor(Color.TRANSPARENT);
         cursorBackupCanvas.drawBitmap(penCanvasBmp, lastBrushCursorRegion, dest, overwritePaint);
     }
 
@@ -411,7 +425,11 @@ public class WhiteBoardCanvas extends View implements FrameRetrieval, PageScroll
 
         if(isRectFValid(mBrushCursorRegion)) {
             backupCursorRegion(mBrushCursorRegion);
-            penCanvas.drawOval(mBrushCursorRegion, mCursorPaint);
+            if(isPointerMode()) {
+                drawPointer(penCanvas, mBrushCursorRegion.centerX(), mBrushCursorRegion.centerY());
+            } else {
+                penCanvas.drawOval(mBrushCursorRegion, mCursorPaint);
+            }
 
             Rect region = new Rect();
             mBrushCursorRegion.roundOut(region);
@@ -422,14 +440,17 @@ public class WhiteBoardCanvas extends View implements FrameRetrieval, PageScroll
     }
 
     private float getCursorSize() {
-        return (float) currentPenOrEraserSize;
+        if(isPointerMode()) {
+            return (float)(CROSS_SIZE*2+8);
+        } else {
+            return (float) currentPenOrEraserSize;
+        }
     }
 
     private void setBrushCursorPos(float x, float y)
     {
-        mBrushCursorRegion.set(x-getCursorSize()/2, y-getCursorSize()/2,
-                x+getCursorSize()/2, y+getCursorSize()/2);
-
+        mBrushCursorRegion.set(x - getCursorSize() / 2, y - getCursorSize() / 2,
+                x + getCursorSize() / 2, y + getCursorSize() / 2);
     }
 
     void makeRegionInvalid(Rect region)
@@ -488,8 +509,8 @@ public class WhiteBoardCanvas extends View implements FrameRetrieval, PageScroll
 
         float x = event.getX();
         float y = event.getY();
-        setBrushCursorPos(x, y);
         revertBrushDrawnRegionIfNecessary();
+        setBrushCursorPos(x, y);
         onTouchWithoutCursor(event, x, y);
         drawBrushCursorIfNecessary();
         return true;
@@ -503,9 +524,20 @@ public class WhiteBoardCanvas extends View implements FrameRetrieval, PageScroll
                     return;
 
                 if(overlay.onTouchDown(x, y)) {
+                    /*
+                        Overlay operation might cause pen size change.
+                        Then we need to update mBrushCursorRegion.
+                        But most of the time, during overlay operation, we do not need brush cursor.
+                        So just erase here.
+                     */
+                    eraseBrushCursor();
                     invalidate();
                     break;
                 }
+                if(isPointerMode()) {
+                    break;
+                }
+
                 mDownHandled = true;
                 mPath.reset();
                 mPath.moveTo(x, y);
@@ -519,7 +551,12 @@ public class WhiteBoardCanvas extends View implements FrameRetrieval, PageScroll
 
                 paintFpsCounter.push(System.currentTimeMillis());
                 if(overlay.onTouchMove(x, y)) {
+                    // See action down comment.
+                    eraseBrushCursor();
                     invalidate();
+                    break;
+                }
+                if(isPointerMode()) {
                     break;
                 }
                 if(!mDownHandled)
@@ -562,6 +599,12 @@ public class WhiteBoardCanvas extends View implements FrameRetrieval, PageScroll
                 if(disableTouch && isFinger(event))
                     return;
                 if(overlay.onTouchUp(x, y)) {
+                    // See action down comment.
+                    eraseBrushCursor();
+                    invalidate();
+                    break;
+                }
+                if(isPointerMode()) {
                     invalidate();
                     break;
                 }
@@ -623,6 +666,16 @@ public class WhiteBoardCanvas extends View implements FrameRetrieval, PageScroll
 
     public Bitmap getBitmap() { return viewBmp;}
 
+    boolean mIsPointerMode = false;
+    public boolean isPointerMode() {
+        return mIsPointerMode;
+    }
+
+    public void togglePointerMode() {
+        mIsPointerMode = !mIsPointerMode;
+        ensureCursorBackupSize((int)getCursorSize());
+        invalidate();
+    }
 
     public boolean canUndo() {
         return getUndoList().canUndo();
@@ -884,7 +937,11 @@ public class WhiteBoardCanvas extends View implements FrameRetrieval, PageScroll
     }
 
     public void ensureCursorBackupSize(int size) {
-        if(cursorBackupBmp.getWidth() < size*2) {
+        /*
+        Now we call erase color every time brush cursor drawn.
+        So we shrink cursorBackupBmp here if it's too large compare to current requirement.
+         */
+        if(cursorBackupBmp.getWidth() < size || cursorBackupBmp.getWidth() > 2*(size*2)) {
             setupCursorBackupStore(size*2);
         }
     }
