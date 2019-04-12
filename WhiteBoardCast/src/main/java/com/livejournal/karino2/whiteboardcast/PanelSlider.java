@@ -36,7 +36,7 @@ public class PanelSlider {
     public Bitmap view() { return mView; }
 
 
-    // 0 to 100.
+    // 1 to 100.
     int pos = WhiteBoardCanvas.DEFAULT_PEN_WIDTH;
     public int getSize() {
         return pos;
@@ -60,7 +60,7 @@ public class PanelSlider {
             return;
 
         int deltaX = 100*(ix-beginX)/width();
-        pos = Math.min(100, Math.max(0, beginPos+deltaX));
+        pos = Math.min(100, Math.max(1, beginPos+deltaX));
         updatePanel();
     }
 
