@@ -441,10 +441,14 @@ public class WhiteBoardCanvas extends View implements FrameRetrieval, PageScroll
 
     private float getCursorSize() {
         if(isPointerMode()) {
-            return (float)(CROSS_SIZE*2+8);
+            return (float) getPointerCursorSize();
         } else {
             return (float) currentPenOrEraserSize;
         }
+    }
+
+    private int getPointerCursorSize() {
+        return CROSS_SIZE*2+8;
     }
 
     private void setBrushCursorPos(float x, float y)
@@ -941,8 +945,9 @@ public class WhiteBoardCanvas extends View implements FrameRetrieval, PageScroll
         Now we call erase color every time brush cursor drawn.
         So we shrink cursorBackupBmp here if it's too large compare to current requirement.
          */
-        if(cursorBackupBmp.getWidth() < size || cursorBackupBmp.getWidth() > 2*(size*2)) {
-            setupCursorBackupStore(size*2);
+        if(cursorBackupBmp.getWidth() < size || cursorBackupBmp.getWidth() > Math.max(getPointerCursorSize(), 2*(size*2))) {
+            // avoid smaller than pointer cursor size..
+            setupCursorBackupStore(Math.max(getPointerCursorSize(), size*2));
         }
     }
 
