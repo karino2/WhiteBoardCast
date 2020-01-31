@@ -750,12 +750,14 @@ public class WhiteBoardCanvas extends View implements FrameRetrieval, PageScroll
     }
 
     public void setPen() {
+        ensureCursorBackupSize(penSize);
         mPaint.setXfermode(null);
         setCurrentPenOrEraserSizeInternal(penSize);
         overlay.setSliderPos(penSize);
     }
 
     public void setEraser() {
+        ensureCursorBackupSize(eraserSize);
         mPaint.setXfermode(new PorterDuffXfermode(
                 PorterDuff.Mode.CLEAR));
         setCurrentPenOrEraserSizeInternal(eraserSize);
