@@ -22,7 +22,6 @@ import android.os.Environment;
 import android.os.Handler;
 import android.preference.PreferenceManager;
 import android.provider.MediaStore;
-import android.support.annotation.NonNull;
 import android.util.Log;
 import android.view.KeyEvent;
 import android.view.Menu;
@@ -569,20 +568,22 @@ public class WhiteBoardCastActivity extends Activity implements EncoderTask.Erro
 
     @Override
     public boolean onMenuItemSelected(int featureId, MenuItem item) {
-        switch(item.getItemId()) {
-            case R.id.menu_id_about:
-                showDialog(DIALOG_ID_ABOUT);
-                return true;
-            case R.id.menu_id_quit:
-                finish();
-                return true;
-            case R.id.menu_id_new:
-                showDialog(DIALOG_ID_NEW);
-                return true;
-            case R.id.menu_id_settings:
-                Intent intent = new Intent(this, SettingsActivity.class);
-                startActivity(intent);
-                return true;
+        int itemId = item.getItemId();
+        if (itemId == R.id.menu_id_about) {
+            showDialog(DIALOG_ID_ABOUT);
+            return true;
+        } else if(itemId == R.id.menu_id_quit) {
+            finish();
+            return true;
+        }
+        else if(itemId == R.id.menu_id_new) {
+            showDialog(DIALOG_ID_NEW);
+            return true;
+        }
+        else if(itemId == R.id.menu_id_settings) {
+            Intent intent = new Intent(this, SettingsActivity.class);
+            startActivity(intent);
+            return true;
         }
         return super.onMenuItemSelected(featureId, item);
     }

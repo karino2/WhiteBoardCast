@@ -150,7 +150,7 @@ class AvcVideoEncoder(val wholeWidth: Int, val wholeHeight: Int, val muxer: Audi
         // I don't know whether this last frame is necessary or not.
         // But the result seems no problem.
         try {
-            val buf = encoder.getOutputBuffer(bufIndex)
+            val buf = encoder.getOutputBuffer(bufIndex)!!
             buf.position(bufInfo.offset)
             buf.limit(bufInfo.offset + bufInfo.size)
             muxer.writeSampleData(trackIndex, buf, bufInfo)
@@ -191,7 +191,7 @@ class AvcVideoEncoder(val wholeWidth: Int, val wholeHeight: Int, val muxer: Audi
             return false
         }
 
-        val inputBuf = encoder.getInputBuffer(inputBufIndex)
+        val inputBuf = encoder.getInputBuffer(inputBufIndex)!!
 
         argbToYuvConverter.toYUV(srcFrame, invalRect)
         inputBuf.clear()

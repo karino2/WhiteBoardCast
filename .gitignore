@@ -7,5 +7,6 @@ WhiteBoardCast/release/
 .idea/libraries/
 .idea/caches/
 .idea/workspace.xml
+/local.properties
 WhiteBoardCast/WhiteBoardCast-WhiteBoardCast.iml
 WhiteBoardCast.iml

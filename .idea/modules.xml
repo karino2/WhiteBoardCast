@@ -2,8 +2,11 @@
 <project version="4">
   <component name="ProjectModuleManager">
     <modules>
-      <module fileurl="file://$PROJECT_DIR$/WhiteBoardCast.iml" filepath="$PROJECT_DIR$/WhiteBoardCast.iml" />
-      <module fileurl="file://$PROJECT_DIR$/WhiteBoardCast/WhiteBoardCast-WhiteBoardCast.iml" filepath="$PROJECT_DIR$/WhiteBoardCast/WhiteBoardCast-WhiteBoardCast.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/WhiteBoardCast.iml" filepath="$PROJECT_DIR$/.idea/modules/WhiteBoardCast.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/WhiteBoardCast/WhiteBoardCast.WhiteBoardCast.iml" filepath="$PROJECT_DIR$/.idea/modules/WhiteBoardCast/WhiteBoardCast.WhiteBoardCast.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/WhiteBoardCast/WhiteBoardCast.WhiteBoardCast.androidTest.iml" filepath="$PROJECT_DIR$/.idea/modules/WhiteBoardCast/WhiteBoardCast.WhiteBoardCast.androidTest.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/WhiteBoardCast/WhiteBoardCast.WhiteBoardCast.main.iml" filepath="$PROJECT_DIR$/.idea/modules/WhiteBoardCast/WhiteBoardCast.WhiteBoardCast.main.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/WhiteBoardCast/WhiteBoardCast.WhiteBoardCast.unitTest.iml" filepath="$PROJECT_DIR$/.idea/modules/WhiteBoardCast/WhiteBoardCast.WhiteBoardCast.unitTest.iml" />
     </modules>
   </component>
 </project>

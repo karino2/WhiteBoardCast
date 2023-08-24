@@ -134,20 +134,19 @@ public class DetailActivity extends Activity {
     public boolean onOptionsItemSelected(MenuItem item) {
         int id = item.getItemId();
 
-        switch(id) {
-            case R.id.action_send:
-                shareVideoIntent();
-                return true;
-            case R.id.action_export:
-                try {
-                    copyPdf();
-                } catch (IOException e) {
-                    showMessage("Fail to copy pdf file: " + e.getMessage());
-                }
-                return true;
-            case android.R.id.home:
-                finish();
-                return true;
+        if (id == R.id.action_send) {
+            shareVideoIntent();
+            return true;
+        } else if (id == R.id.action_export) {
+            try {
+                copyPdf();
+            } catch (IOException e) {
+                showMessage("Fail to copy pdf file: " + e.getMessage());
+            }
+            return true;
+        } else if (id == android.R.id.home) {
+            finish();
+            return true;
         }
 
         return super.onOptionsItemSelected(item);

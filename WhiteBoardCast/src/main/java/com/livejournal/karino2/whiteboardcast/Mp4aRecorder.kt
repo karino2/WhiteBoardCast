@@ -142,7 +142,7 @@ class Mp4aRecorder(val muxer: AudioVideoMuxer, beginMil: Long) : Runnable {
         if(bufIndex < 0)
             return
 
-        val curBuf = encoder.getInputBuffer(bufIndex)
+        val curBuf = encoder.getInputBuffer(bufIndex)!!
 
         curBuf.clear()
         val readLen = audioRecorder.read(curBuf, SAMPLES_PER_FRAME*2)
