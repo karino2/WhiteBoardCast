@@ -19,6 +19,12 @@ public class Presentation {
     Mp4aRecorder recorder;
     AudioVideoMuxer muxer;
 
+    WorkFileStore fileStore;
+
+    Presentation(WorkFileStore fstore) {
+        fileStore = fstore;
+    }
+
     public void stopRecord() {
         recStats = RecordStatus.DONE;
     }
@@ -193,7 +199,7 @@ public class Presentation {
     SlideList slideList;
     SlideList getSlideList() throws IOException {
         if(slideList == null) {
-            slideList = SlideList.createSlideListWithDefaultFolder();
+            slideList = new SlideList(fileStore);
         }
         return slideList;
     }

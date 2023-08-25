@@ -1021,7 +1021,7 @@ public class WhiteBoardCanvas extends View implements FrameRetrieval, PageScroll
             popup.setAnchorView(this);
             popup.setHorizontalOffset(mWidth - mWidth / 6);
             popup.setVerticalOffset(-mHeight);
-            slideAdapter = new FileImageAdapter(LayoutInflater.from(getContext()), slides, mWidth / 6, mHeight / 6);
+            slideAdapter = new FileImageAdapter(new WorkFileStore(getContext()), LayoutInflater.from(getContext()), slides, mWidth / 6, mHeight / 6);
             popup.setAdapter(slideAdapter);
             popup.setWidth(mWidth/6);
             popup.setOnItemClickListener(new AdapterView.OnItemClickListener() {

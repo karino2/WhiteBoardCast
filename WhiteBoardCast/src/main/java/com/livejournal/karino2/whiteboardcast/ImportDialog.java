@@ -30,14 +30,17 @@ public class ImportDialog extends ProgressDialog {
 
     boolean copying = false;
 
-    public static File getSlideListDirectory() throws IOException {
-        return SlideList.getSlideListDirectory();
+    private WorkFileStore fileStore = null;
+    public WorkFileStore getFileStore() {
+        if(fileStore == null)
+            fileStore = new WorkFileStore(getContext());
+        return fileStore;
     }
 
     private void copyImage(String path) {
         Uri imageUri = Uri.fromFile(new File(path));
         try {
-            File result = new File(getSlideListDirectory(), getNewSequentialFile());
+            File result = new File(getFileStore().getSlideListDirectory(), getNewSequentialFile());
 
             int resizeFactor = getResizeFactor(imageUri);
             BitmapFactory.Options options;
@@ -50,7 +53,7 @@ public class ImportDialog extends ProgressDialog {
                 Bitmap bitmap = BitmapFactory.decodeStream(is, null, options);
                 // currently, always resize even though it sometime not necessary.
                 saveWithResized(result, bitmap, screenWidth, screenHeight);
-                File thumbnail = getThumbnailFile(result);
+                File thumbnail = getFileStore().getThumbnailFile(result);
                 saveWithResized(thumbnail, bitmap, screenWidth/6, screenHeight/6);
                 // TODO: check whether this line is necessary
                 // slideList.add(result);
@@ -66,8 +69,8 @@ public class ImportDialog extends ProgressDialog {
 
     }
 
-    public static Bitmap getThumbnailBitmap(File parent, CacheEngine cacheEngine) throws IOException {
-        File thumbnail = getThumbnailFile(parent);
+    public static Bitmap getThumbnailBitmap(WorkFileStore fileStore, File parent, CacheEngine cacheEngine) throws IOException {
+        File thumbnail = fileStore.getThumbnailFile(parent);
         Bitmap bmp = cacheEngine.lookup(thumbnail.getAbsolutePath());
         if(bmp == null) {
             if(thumbnail.exists()) {
@@ -91,16 +94,6 @@ public class ImportDialog extends ProgressDialog {
 
 
 
-    public static File getThumbnailFile(File parent) throws IOException {
-        File thumbnailDir = getThumbnailDirectory();
-        return new File(thumbnailDir, parent.getName());
-    }
-
-    public static File getThumbnailDirectory() throws IOException {
-        File thumbnailDir =  new File(getSlideListDirectory(), "thumbnail");
-        WhiteBoardCastActivity.ensureDirExist(thumbnailDir);
-        return thumbnailDir;
-    }
 
     private int getResizeFactor(Uri imageUri) throws IOException {
         InputStream is = getContentResolver().openInputStream(imageUri);

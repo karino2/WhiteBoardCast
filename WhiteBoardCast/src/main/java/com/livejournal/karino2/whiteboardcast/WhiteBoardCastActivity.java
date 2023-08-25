@@ -1,7 +1,5 @@
 package com.livejournal.karino2.whiteboardcast;
 
-import com.livejournal.karino2.multigallery.MultiGalleryActivity;
-
 import android.Manifest;
 import android.annotation.TargetApi;
 import android.app.Activity;
@@ -9,6 +7,7 @@ import android.app.AlertDialog;
 import android.app.Dialog;
 import android.content.ContentResolver;
 import android.content.ContentValues;
+import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
@@ -32,8 +31,16 @@ import android.webkit.WebView;
 import android.widget.Button;
 import android.widget.Toast;
 
+import androidx.annotation.NonNull;
+
+import com.livejournal.karino2.multigallery.MultiGalleryActivity;
+
+import java.io.BufferedInputStream;
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
@@ -47,7 +54,19 @@ public class WhiteBoardCastActivity extends Activity implements EncoderTask.Erro
     static final int REQUEST_PICK_IMAGE = 10;
     static final int REQUEST_PERMISSION = 11;
 
-    private Presentation presen = new Presentation();
+    private WorkFileStore fileStore = null;
+    public WorkFileStore getFileStore() {
+        if(fileStore == null)
+            fileStore = new WorkFileStore(this);
+        return fileStore;
+    }
+
+    private Presentation presen = null;
+    public Presentation getPresen() {
+        if(presen == null)
+            presen = new Presentation(getFileStore());
+        return presen;
+    }
 
     public void postErrorMessage(final String msg) {
         handler.postDelayed(new Runnable(){
@@ -79,6 +98,11 @@ public class WhiteBoardCastActivity extends Activity implements EncoderTask.Erro
 
     }
 
+    static SharedPreferences getPreferences(Context ctx) { return PreferenceManager.getDefaultSharedPreferences(ctx); }
+
+    SharedPreferences getPrefs() { return getPreferences(this); }
+
+
     boolean encoderInitDone = false;
     Handler handler = new Handler();
     PageScrollAnimator animator;
@@ -96,13 +120,29 @@ public class WhiteBoardCastActivity extends Activity implements EncoderTask.Erro
             afterPermissionGranted();
             return;
         }
-        if(this.checkSelfPermission(Manifest.permission.RECORD_AUDIO) == PackageManager.PERMISSION_GRANTED &&
-                this.checkSelfPermission(Manifest.permission.WRITE_EXTERNAL_STORAGE) == PackageManager.PERMISSION_GRANTED) {
-            afterPermissionGranted();
-            return;
-        } else {
-            requestPermissions(new String[]{Manifest.permission.RECORD_AUDIO, Manifest.permission.WRITE_EXTERNAL_STORAGE}, REQUEST_PERMISSION);
+
+        // Need WRITE_EXTERNAL_STORAGE to write to media store for Android 9 or older.
+        if(Build.VERSION.SDK_INT <= Build.VERSION_CODES.P)
+        {
+            if(this.checkSelfPermission(Manifest.permission.RECORD_AUDIO) == PackageManager.PERMISSION_GRANTED &&
+                    this.checkSelfPermission(Manifest.permission.WRITE_EXTERNAL_STORAGE) == PackageManager.PERMISSION_GRANTED) {
+                afterPermissionGranted();
+                return;
+            } else {
+                requestPermissions(new String[]{Manifest.permission.RECORD_AUDIO, Manifest.permission.WRITE_EXTERNAL_STORAGE}, REQUEST_PERMISSION);
+            }
         }
+        else
+        {
+            if(this.checkSelfPermission(Manifest.permission.RECORD_AUDIO) == PackageManager.PERMISSION_GRANTED) {
+                afterPermissionGranted();
+                return;
+            } else {
+                requestPermissions(new String[]{Manifest.permission.RECORD_AUDIO}, REQUEST_PERMISSION);
+            }
+
+        }
+
     }
 
     @TargetApi(23)
@@ -110,11 +150,22 @@ public class WhiteBoardCastActivity extends Activity implements EncoderTask.Erro
     public void onRequestPermissionsResult(int requestCode,String[] permissions, int[] grantResults) {
         switch(requestCode) {
             case REQUEST_PERMISSION: {
-                if(grantResults.length == 2) {
-                    if(grantResults[0] == PackageManager.PERMISSION_GRANTED &&
-                            grantResults[1] ==PackageManager.PERMISSION_GRANTED) {
-                        afterPermissionGranted();
-                        return;
+                if(Build.VERSION.SDK_INT <= Build.VERSION_CODES.P) {
+                    if (grantResults.length == 2) {
+                        if (grantResults[0] == PackageManager.PERMISSION_GRANTED &&
+                                grantResults[1] == PackageManager.PERMISSION_GRANTED) {
+                            afterPermissionGranted();
+                            return;
+                        }
+                    }
+                }
+                else
+                {
+                    if (grantResults.length == 1) {
+                        if (grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+                            afterPermissionGranted();
+                            return;
+                        }
                     }
                 }
                 showMessage("Not enough permission to run. Finish app.");
@@ -137,7 +188,7 @@ public class WhiteBoardCastActivity extends Activity implements EncoderTask.Erro
         setContentView(R.layout.activity_whiteboardcast);
         readDebuggableSetting();
         getWhiteBoardCanvas().enableDebug(debuggable);
-        animator = new PageScrollAnimator(presen.getScheduleExecutor(), getWhiteBoardCanvas());
+        animator = new PageScrollAnimator(getPresen().getScheduleExecutor(), getWhiteBoardCanvas());
 
         checkPermissionAndStart();
     }
@@ -173,7 +224,7 @@ public class WhiteBoardCastActivity extends Activity implements EncoderTask.Erro
 
         try {
             // This takes some milsec. Block UI thread...
-            presen.newEncoderTask(wb, wb.getBitmap(), getWorkVideoPath(), this);
+            getPresen().newEncoderTask(wb, wb.getBitmap(), getWorkVideoPath(), this);
             encoderInitDone = true;
             wb.changeRecStatus();
             return true;
@@ -187,16 +238,11 @@ public class WhiteBoardCastActivity extends Activity implements EncoderTask.Erro
     }
 
     private boolean workingFileExists() {
-        try {
-            File workVideo = new File(getWorkVideoPath());
-            if(workVideo.exists()) {
-                return 0 != workVideo.length();
-            }
-            return false;
-        } catch (IOException e) {
-            showError("IO Exception while working file check: " + e.getMessage());
-            return false;
+        File workVideo = new File(getWorkVideoPath());
+        if(workVideo.exists()) {
+            return 0 != workVideo.length();
         }
+        return false;
     }
 
     boolean debuggable = false;
@@ -208,12 +254,12 @@ public class WhiteBoardCastActivity extends Activity implements EncoderTask.Erro
             {
                 debuggable = true;
             }
-        } catch (PackageManager.NameNotFoundException e) {
+        } catch (PackageManager.NameNotFoundException ignored) {
         }
     }
 
     public boolean slideAvailable() {
-         return presen.slideAvailable();
+         return getPresen().slideAvailable();
     }
 
     public boolean isPointerMode() {
@@ -239,33 +285,35 @@ public class WhiteBoardCastActivity extends Activity implements EncoderTask.Erro
         duringAnimation = animation;
     }
 
+    Thread thread = null;
 
     public void stopRecord() {
         if(!canStop()) {
-            Log.d("WhiteBoardCast", "stopForFinalize record called but not recording. " + presen.recordStatus());
+            Log.d("WhiteBoardCast", "stopForFinalize record called but not recording. " + getPresen().recordStatus());
             return;
         }
         // under processing.
-        presen.stopRecordBegin();
+        getPresen().stopRecordBegin();
         getWhiteBoardCanvas().changeRecStatus();
         getWhiteBoardCanvas().stopTimeDraw();
         showMessage("record end, start post process...");
 
-        presen.stopRecord();
+        getPresen().stopRecord();
 
-        new Thread(new Runnable() {
+        thread = new Thread(new Runnable() {
             @Override
             public void run() {
-                presen.afterStop();
+                getPresen().afterStop();
                 postShowMessage("post process done.");
                 afterEncodeDone();
             }
-        }).start();
+        });
+        thread.start();
     }
 
 
     public boolean canStop() {
-        return presen.canStopRecord();
+        return getPresen().canStopRecord();
     }
 
     public boolean canRedo() {
@@ -292,12 +340,12 @@ public class WhiteBoardCastActivity extends Activity implements EncoderTask.Erro
     public Presentation.RecordStatus getRecStats() {
         if(!encoderInitDone)
             return Presentation.RecordStatus.SETUP;
-        return presen.recordStatus();
+        return getPresen().recordStatus();
     }
 
 
     public void pauseRecord() {
-        presen.pauseRecord();
+        getPresen().pauseRecord();
         getWhiteBoardCanvas().changeRecStatus();
         getWhiteBoardCanvas().stopTimeDraw();
 
@@ -305,10 +353,10 @@ public class WhiteBoardCastActivity extends Activity implements EncoderTask.Erro
     }
 
     public void resumeRecord() {
-        presen.resumeRecord();
+        getPresen().resumeRecord();
 
         WhiteBoardCanvas wb = getWhiteBoardCanvas();
-        wb.notifyBeginMillChanged(presen.getBeginMill());
+        wb.notifyBeginMillChanged(getPresen().getBeginMill());
         wb.changeRecStatus();
         wb.startTimeDraw();
 
@@ -318,11 +366,11 @@ public class WhiteBoardCastActivity extends Activity implements EncoderTask.Erro
 
 
     public void startRecord() {
-        if(!presen.canStartRecord()) {
-            Log.d("WhiteBoardCast", "record start but status is not dormant: " + presen.recordStatus());
+        if(!getPresen().canStartRecord()) {
+            Log.d("WhiteBoardCast", "record start but status is not dormant: " + getPresen().recordStatus());
             return;
         }
-        presen.startRecordFirstPhase();
+        getPresen().startRecordFirstPhase();
         getWhiteBoardCanvas().changeRecStatus();
         handler.post(new Runnable() {
             @Override
@@ -350,27 +398,27 @@ public class WhiteBoardCastActivity extends Activity implements EncoderTask.Erro
 
 
         try {
-            presen.ensureEncoderTask(wb, wb.getBitmap(), getWorkVideoPath(), this);
+            getPresen().ensureEncoderTask(wb, wb.getBitmap(), getWorkVideoPath(), this);
         } catch (IOException e) {
             showError("Can't create working folder.");
             return;
         }
         long currentMill = System.currentTimeMillis();
-        presen.startEncoder(currentMill);
+        getPresen().startEncoder(currentMill);
 
         if(debuggable)
-            presen.getEncoderTask().setFpsListener(getWhiteBoardCanvas().getEncoderFpsCounter());
+            getPresen().getEncoderTask().setFpsListener(getWhiteBoardCanvas().getEncoderFpsCounter());
 
-        presen.newRecorder(currentMill);
+        getPresen().newRecorder(currentMill);
         wb.notifyBeginMillChanged(currentMill);
         try {
-            presen.prepareAudioRecorder();
+            getPresen().prepareAudioRecorder();
         } catch (IOException e) {
             showError("IOException: MediaRecoder prepare fail: " + e.getMessage());
             return;
         }
 
-        presen.startRecord();
+        getPresen().startRecord();
         wb.changeRecStatus();
         wb.startTimeDraw();
         showMessage("record start");
@@ -380,29 +428,18 @@ public class WhiteBoardCastActivity extends Activity implements EncoderTask.Erro
         return (WhiteBoardCanvas)findViewById(R.id.fullscreen_content);
     }
 
-    public static void ensureDirExist(File dir) throws IOException {
-        if(!dir.exists()) {
-            if(!dir.mkdir()){
-                throw new IOException();
-            }
-        }
-    }
-    public static File getFileStoreDirectory() throws IOException {
-        File dir = new File(Environment.getExternalStorageDirectory(), "WhiteBoardCast");
-        ensureDirExist(dir);
-        return dir;
+    private String getWorkVideoPath() {
+        return getFileStore().getWorkVideoPath();
     }
 
 
+    private void copyTo( OutputStream os, File src ) {
+        byte[] buffer = new byte[1024];
 
 
-    private String getWorkVideoPath() throws IOException {
-        return getFileStoreDirectory().getAbsolutePath() + "/temp.mp4";
     }
 
-
-
-    private Uri insertLastResultToContentResolver() {
+    private Uri insertLastResultToContentResolver() throws IOException {
         SimpleDateFormat timeStampFormat = new SimpleDateFormat("yyyy-MM-dd-HH:mm");
         String title = timeStampFormat.format(new Date()) + " recorded";
 
@@ -413,9 +450,29 @@ public class WhiteBoardCastActivity extends Activity implements EncoderTask.Erro
         content.put(MediaStore.Video.VideoColumns.DATE_ADDED,
                 System.currentTimeMillis() / 1000);
         content.put(MediaStore.Video.Media.MIME_TYPE, "video/mp4");
-        content.put(MediaStore.Video.Media.DATA, presen.getResultFile().getAbsolutePath());
+
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q)
+        {
+            content.put(MediaStore.Video.Media.RELATIVE_PATH, Environment.DIRECTORY_MOVIES + "/WhiteBoardCast/");
+        }
+
         ContentResolver resolver = getBaseContext().getContentResolver();
-        return resolver.insert(MediaStore.Video.Media.EXTERNAL_CONTENT_URI, content);
+        Uri uri =  resolver.insert(MediaStore.Video.Media.EXTERNAL_CONTENT_URI, content);
+
+        try(OutputStream os = resolver.openOutputStream(uri, "w");
+            InputStream is = new BufferedInputStream(
+                    new FileInputStream(getPresen().getResultFile())))
+        {
+            byte[] buffer = new byte[1024];
+
+            int readLen = is.read(buffer);
+            while(readLen > 0) {
+                os.write(buffer, 0, readLen);
+                readLen = is.read(buffer);
+            }
+        }
+
+        return uri;
     }
 
     private void exportPDF() {
@@ -454,8 +511,8 @@ public class WhiteBoardCastActivity extends Activity implements EncoderTask.Erro
     void startDetailActivity()
     {
         Intent intent = new Intent(this, DetailActivity.class);
-        intent.putExtra("VIDEO_PATH", presen.getResultFile().getAbsolutePath());
-        intent.putExtra("VIDEO_URI", presen.getResultUri().toString());
+        intent.putExtra("VIDEO_PATH", getPresen().getResultFile().toString());
+        intent.putExtra("VIDEO_URI", getPresen().getResultUri().toString());
         intent.putExtra("PDF_PATH", pdfFile.getAbsolutePath());
         startActivity(intent);
     }
@@ -463,16 +520,16 @@ public class WhiteBoardCastActivity extends Activity implements EncoderTask.Erro
     private void renameAndDeleteWorkFiles() throws IOException {
         File workVideo = new File(getWorkVideoPath());
 
-        presen.setResult(getDateNameFile(".mp4"));
-        workVideo.renameTo(presen.getResultFile());
+        getPresen().setResult(getDateNameFile(".mp4"));
+        workVideo.renameTo(getPresen().getResultFile());
 
-        presen.setResultUri(insertLastResultToContentResolver());
+        getPresen().setResultUri(insertLastResultToContentResolver());
 
 
     }
 
-    private File getDateNameFile(String extension) throws IOException {
-        File folder = getFileStoreDirectory();
+    private File getDateNameFile(String extension) {
+        File folder = getFileStore().getFileStoreDirectory();
         return getDateNameFile(folder, extension);
     }
 
@@ -482,10 +539,7 @@ public class WhiteBoardCastActivity extends Activity implements EncoderTask.Erro
     }
 
     private File getTemporaryPdfFolder() throws IOException {
-        File parent = getFileStoreDirectory();
-        File dir = new File(parent, "temporaryPdf");
-        ensureDirExist(dir);
-        return dir;
+        return getFileStore().getTemporaryPdfFolder();
     }
 
     private File getDateNameFile(File folder, String extension) {
@@ -546,11 +600,12 @@ public class WhiteBoardCastActivity extends Activity implements EncoderTask.Erro
         return true;
     }
 
+
     @Override
     protected void onResume() {
         super.onResume();
 
-        SharedPreferences pref = PreferenceManager.getDefaultSharedPreferences(this);
+        SharedPreferences pref = getPrefs();
         getWhiteBoardCanvas().setDisableTouch(pref.getBoolean("DISABLE_TOUCH", false));
     }
 
@@ -567,7 +622,7 @@ public class WhiteBoardCastActivity extends Activity implements EncoderTask.Erro
     }
 
     @Override
-    public boolean onMenuItemSelected(int featureId, MenuItem item) {
+    public boolean onOptionsItemSelected(@NonNull MenuItem item) {
         int itemId = item.getItemId();
         if (itemId == R.id.menu_id_about) {
             showDialog(DIALOG_ID_ABOUT);
@@ -585,7 +640,7 @@ public class WhiteBoardCastActivity extends Activity implements EncoderTask.Erro
             startActivity(intent);
             return true;
         }
-        return super.onMenuItemSelected(featureId, item);
+        return super.onOptionsItemSelected(item);
     }
 
     @Override
@@ -638,7 +693,7 @@ public class WhiteBoardCastActivity extends Activity implements EncoderTask.Erro
     }
 
     private void newPresentation() {
-        presen = new Presentation();
+        presen = new Presentation(getFileStore());
         getWhiteBoardCanvas().newPresentation();
     }
 
@@ -658,7 +713,7 @@ public class WhiteBoardCastActivity extends Activity implements EncoderTask.Erro
                         data != null &&
                         data.getStringArrayListExtra("all_path").size() != 0){
                     try {
-                        presen.clearSlides();
+                        getPresen().clearSlides();
                         startImportTask(data.getStringArrayListExtra("all_path"));
                     } catch (IOException e) {
                         showMessage("Fail to clear slides: " + e.getMessage());
@@ -721,8 +776,8 @@ public class WhiteBoardCastActivity extends Activity implements EncoderTask.Erro
     private void setupSlidePresentation() throws IOException {
         newPresentation();
 
-        presen.enableSlide();
-        getWhiteBoardCanvas().setSlides(presen.getSlideFiles());
+        getPresen().enableSlide();
+        getWhiteBoardCanvas().setSlides(getPresen().getSlideFiles());
     }
 
     @Override
@@ -795,4 +850,5 @@ public class WhiteBoardCastActivity extends Activity implements EncoderTask.Erro
     public void togglePointerMode() {
         getWhiteBoardCanvas().togglePointerMode();
     }
+
 }

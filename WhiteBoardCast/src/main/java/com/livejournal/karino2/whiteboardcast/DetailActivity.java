@@ -108,6 +108,13 @@ public class DetailActivity extends Activity {
         btn.setText(newName);
     }
 
+    private WorkFileStore fileStore = null;
+    public WorkFileStore getFileStore() {
+        if (fileStore == null)
+            fileStore = new WorkFileStore(this);
+        return fileStore;
+    }
+
     File videoFile;
     Uri videoUri;
     File pdfFile;
@@ -176,7 +183,7 @@ public class DetailActivity extends Activity {
 
     private void copyPdf() throws IOException {
         Button btn = (Button)findViewById(R.id.buttonVideoName);
-        File targetPdf = new File(WhiteBoardCastActivity.getFileStoreDirectory(), btn.getText().toString() + ".pdf");
+        File targetPdf = new File(getFileStore().getFileStoreDirectory(), btn.getText().toString() + ".pdf");
         copyFile(pdfFile, targetPdf);
         showMessage("Export to: " + targetPdf.getAbsolutePath());
     }
@@ -282,4 +289,5 @@ public class DetailActivity extends Activity {
         Button button = (Button)dialog.findViewById(id);
         button.setOnClickListener(onclick);
     }
+
 }

@@ -1,55 +1,52 @@
 package com.livejournal.karino2.whiteboardcast;
 
 import android.graphics.Bitmap;
+import android.graphics.pdf.PdfDocument;
 
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 
+import crl.android.pdfwriter.PDFDocument;
 import crl.android.pdfwriter.PDFWriter;
 
 /**
  * Created by karino on 6/13/15.
  */
 public class ImagePDFWriter {
-    PDFWriter writer;
+    PdfDocument document;
     File output;
     FileOutputStream outputStream;
+
+
+    int width;
+    int height;
 
     public ImagePDFWriter(File outFile, int width, int height, int pageNum) throws IOException {
         output = outFile;
         output.createNewFile();
         outputStream = new FileOutputStream(output);
-        writer = new PDFWriter(width, height, outputStream);
+        document = new PdfDocument();
+        this.width = width;
+        this.height = height;
 
-        writer.writeHeader();
-        writer.writeCatalogStream();
-        writer.writePagesHeader(pageNum);
 
     }
 
     public void done() throws IOException {
-        writer.writeFooter();
+        document.writeTo(outputStream);
+        document.close();
         outputStream.close();
         outputStream = null;
     }
 
-    int currentPage = 0;
-
-    public void writePage(byte[] deflatedImage, int width, int height) throws IOException {
-        if(currentPage != 0)
-            writer.newOrphanPage();
-
-        currentPage++;
-        writer.writeDeflatedImagePage(deflatedImage, width, height);
-    }
+    int currentPage = 1;
 
     public void writePage(Bitmap image) throws IOException {
-        if(currentPage != 0)
-            writer.newOrphanPage();
-
+        PdfDocument.Page curPage = document.startPage( new PdfDocument.PageInfo.Builder(width, height, currentPage).create() );
+        curPage.getCanvas().drawBitmap(image, 0.0f, 0.0f, null);
+        document.finishPage(curPage);
         currentPage++;
-        writer.writeImagePage(image, true);
     }
 
 }

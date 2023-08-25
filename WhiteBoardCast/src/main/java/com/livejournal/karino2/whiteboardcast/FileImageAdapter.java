@@ -49,11 +49,13 @@ public class FileImageAdapter extends BaseAdapter implements ListAdapter {
         return idGen.reverseLookUp(id);
     }
 
+    WorkFileStore fileStore;
 
     List<File> files;
     LayoutInflater inflater;
     int width, height;
-    public FileImageAdapter(LayoutInflater inflater1, List<File> fs, int itemWidth, int itemHeight) {
+    public FileImageAdapter(WorkFileStore fstore, LayoutInflater inflater1, List<File> fs, int itemWidth, int itemHeight) {
+        fileStore = fstore;
         inflater = inflater1;
         files = fs;
         width = itemWidth;
@@ -83,6 +85,7 @@ public class FileImageAdapter extends BaseAdapter implements ListAdapter {
 
     CacheEngine cacheEngine = new CacheEngine(10);
 
+
     @Override
     public View getView(int i, View convertView, ViewGroup viewGroup) {
         ImageView iv;
@@ -98,7 +101,7 @@ public class FileImageAdapter extends BaseAdapter implements ListAdapter {
         File f = files.get(i);
         try {
             // a little slow.
-            Bitmap bmp = ImportDialog.getThumbnailBitmap(f, cacheEngine);
+            Bitmap bmp = ImportDialog.getThumbnailBitmap(fileStore, f, cacheEngine);
             iv.setImageBitmap(bmp);
         } catch (IOException e) {
             Log.d("WhiteBoardCast", "cant create thumbnail on FileImageAdapter: " + e.getMessage());
