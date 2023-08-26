@@ -11,8 +11,6 @@ import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.ListAdapter;
 
-import com.livejournal.karino2.multigallery.CacheEngine;
-
 import java.io.File;
 import java.io.IOException;
 import java.util.HashMap;

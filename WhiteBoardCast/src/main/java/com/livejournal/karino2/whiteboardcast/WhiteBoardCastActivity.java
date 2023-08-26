@@ -33,8 +33,6 @@ import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 
-import com.livejournal.karino2.multigallery.MultiGalleryActivity;
-
 import java.io.BufferedInputStream;
 import java.io.File;
 import java.io.FileInputStream;

@@ -8,8 +8,6 @@ import android.graphics.BitmapFactory;
 import android.net.Uri;
 import android.os.AsyncTask;
 
-import com.livejournal.karino2.multigallery.CacheEngine;
-
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
