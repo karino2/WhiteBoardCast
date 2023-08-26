@@ -44,6 +44,7 @@ import java.io.OutputStream;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
+import java.util.List;
 
 public class WhiteBoardCastActivity extends Activity implements EncoderTask.ErrorListener, PanelColor.ColorListener {
 
@@ -480,7 +481,7 @@ public class WhiteBoardCastActivity extends Activity implements EncoderTask.Erro
         ImagePDFWriter writer = null;
         try {
             File dir = getTemporaryPdfFolder();
-            SlideList.deleteAllFiles(dir);
+            WorkFileStore.Companion.deleteAllFiles(dir);
 
             pdfFile = createTemporaryPDF();
             writer = new ImagePDFWriter(pdfFile, boardList.getWidth(), boardList.getHeight(), boardList.size());
@@ -657,21 +658,6 @@ public class WhiteBoardCastActivity extends Activity implements EncoderTask.Erro
         return super.onCreateDialog(id);
     }
 
-    private void startImportTask(ArrayList<String> imagePaths) {
-        ImportDialog imp = new ImportDialog(this);
-        imp.prepareCopy(getContentResolver(), getCanvasWidth(),
-                getCanvasHeight(), imagePaths, new ImportDialog.FinishListener() {
-                    @Override
-                    public void onFinish() {
-                        try {
-                            setupSlidePresentation();
-                        } catch (IOException e) {
-                            showError("Fail to setup presentation: " + e.getMessage());
-                        }
-                    }
-                });
-    }
-
     private int getCanvasHeight() {
         int height = getWhiteBoardCanvas().getStoredHeight();
         if(height == 0)
@@ -698,7 +684,9 @@ public class WhiteBoardCastActivity extends Activity implements EncoderTask.Erro
     }
 
     private void startNewSlidesPresentation() {
-        Intent intent = new Intent(this, MultiGalleryActivity.class);
+        Intent intent = new Intent(this, ImageImportActivity.class);
+        intent.putExtra("CANVAS_WIDTH", getCanvasWidth());
+        intent.putExtra("CANVAS_HEIGHT", getCanvasHeight());
         startActivityForResult(intent, REQUEST_PICK_IMAGE);
         newDialog.dismiss();
     }
@@ -713,8 +701,12 @@ public class WhiteBoardCastActivity extends Activity implements EncoderTask.Erro
                         data != null &&
                         data.getStringArrayListExtra("all_path").size() != 0){
                     try {
-                        getPresen().clearSlides();
-                        startImportTask(data.getStringArrayListExtra("all_path"));
+                        ArrayList<File> files = new ArrayList<>();
+                        ArrayList<String> paths = data.getStringArrayListExtra("all_path");
+                        for(String path : paths) {
+                            files.add(new File(path));
+                        }
+                        setupSlidePresentation(files);
                     } catch (IOException e) {
                         showMessage("Fail to clear slides: " + e.getMessage());
                     }
@@ -773,11 +765,11 @@ public class WhiteBoardCastActivity extends Activity implements EncoderTask.Erro
 
     File pdfFile;
 
-    private void setupSlidePresentation() throws IOException {
+    private void setupSlidePresentation(List<File> files) throws IOException {
         newPresentation();
 
         getPresen().enableSlide();
-        getWhiteBoardCanvas().setSlides(getPresen().getSlideFiles());
+        getWhiteBoardCanvas().setSlides(files);
     }
 
     @Override

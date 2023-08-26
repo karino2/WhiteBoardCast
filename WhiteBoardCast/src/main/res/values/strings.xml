@@ -38,5 +38,6 @@
     <string name="summary_disable_touch">Disable finger touch and respond to stylus only. For stylus equipped devices mode.</string>
     <string name="label_export_pdf">Export PDF</string>
     <string name="title_activity_detail">DetailActivity</string>
+    <string name="pick_image_label">Image</string>
 
 </resources>

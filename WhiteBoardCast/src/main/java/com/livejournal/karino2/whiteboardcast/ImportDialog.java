@@ -19,6 +19,7 @@ import java.io.OutputStream;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
+import java.util.List;
 
 /**
  * Created by karino on 12/3/13.
@@ -29,6 +30,8 @@ public class ImportDialog extends ProgressDialog {
     }
 
     boolean copying = false;
+    ArrayList<File> imported = new ArrayList<>();
+    List<File> getImportedFiles() { return imported; }
 
     private WorkFileStore fileStore = null;
     public WorkFileStore getFileStore() {
@@ -38,7 +41,7 @@ public class ImportDialog extends ProgressDialog {
     }
 
     private void copyImage(String path) {
-        Uri imageUri = Uri.fromFile(new File(path));
+        Uri imageUri = Uri.parse(path);
         try {
             File result = new File(getFileStore().getSlideListDirectory(), getNewSequentialFile());
 
@@ -60,6 +63,7 @@ public class ImportDialog extends ProgressDialog {
             }finally {
                 is.close();
             }
+            imported.add(result);
 
         } catch (FileNotFoundException e) {
             e.printStackTrace();
@@ -135,11 +139,12 @@ public class ImportDialog extends ProgressDialog {
 
     ContentResolver getContentResolver() { return resolver; }
 
-    public void prepareCopy(ContentResolver resolver, int screenWidth, int screenHeight, final ArrayList<String> all_path,  FinishListener onFinish) {
+    public void prepareCopy(ContentResolver resolver, int screenWidth, int screenHeight, final List<String> all_path, FinishListener onFinish) {
         finishListener = onFinish;
         this.resolver = resolver;
         this.screenWidth = screenWidth;
         this.screenHeight = screenHeight;
+        imported.clear();
         (new AsyncTask<Void, Integer, Void>(){
             @Override
             protected Void doInBackground(Void... params) {

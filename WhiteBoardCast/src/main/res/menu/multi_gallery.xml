@@ -1,10 +1,18 @@
 <menu xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     tools:context=".MultiGalleryActivity" >
-    
+
+    <item
+        android:id="@+id/action_pick_image"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:icon="@android:drawable/ic_menu_gallery"
+        app:showAsAction="ifRoom"
+        android:title="@string/pick_image_label" />
     <item android:id="@+id/action_done"
         android:title="@string/label_done"
         android:orderInCategory="100"
         android:icon="@drawable/ic_menu_start"
-        android:showAsAction="always" />
+        app:showAsAction="always" />
 </menu>
