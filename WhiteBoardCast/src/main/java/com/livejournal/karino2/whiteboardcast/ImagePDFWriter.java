@@ -7,9 +7,6 @@ import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 
-import crl.android.pdfwriter.PDFDocument;
-import crl.android.pdfwriter.PDFWriter;
-
 /**
  * Created by karino on 6/13/15.
  */
