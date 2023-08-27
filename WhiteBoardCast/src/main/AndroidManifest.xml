@@ -32,17 +32,13 @@
             </intent-filter>
         </activity>
         <activity
-            android:name="com.livejournal.karino2.multigallery.MultiGalleryActivity"
-            android:exported="false"
-            android:label="@string/title_activity_multi_gallery"></activity>
-        <activity
             android:name=".SettingsActivity"
             android:exported="false"
             android:label="Settings" />
         <activity
             android:name=".DetailActivity"
             android:exported="false"
-            android:label="@string/title_activity_detail"></activity>
+            android:label="@string/title_activity_detail" />
     </application>
 
 </manifest>
