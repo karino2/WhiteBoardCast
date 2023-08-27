@@ -31,6 +31,7 @@ import java.nio.channels.FileChannel;
 
 public class DetailActivity extends Activity {
     final int DIALOG_ID_FILE_RENAME = 1;
+    final int REQUEST_CREATE_FILE_ID = 2;
 
     // only support ".mp4" for a while.
     private static String baseName(String name) {
@@ -139,6 +140,37 @@ public class DetailActivity extends Activity {
         return true;
     }
 
+    private void requestExportFile()
+    {
+        Button btn = (Button)findViewById(R.id.buttonVideoName);
+        String pdfFileName =  btn.getText().toString() + ".pdf";
+
+
+        Intent intent = new Intent(Intent.ACTION_CREATE_DOCUMENT);
+        intent.addCategory(Intent.CATEGORY_OPENABLE);
+        intent.setType("application/pdf");
+        intent.putExtra(Intent.EXTRA_TITLE, pdfFileName);
+
+        startActivityForResult(intent, REQUEST_CREATE_FILE_ID);
+    }
+
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+        if(requestCode == REQUEST_CREATE_FILE_ID && resultCode == RESULT_OK) {
+            if (data != null && data.getData() != null) {
+                try {
+                    copyPdfTo(data.getData());
+                } catch(IOException ie) {
+                    showMessage("Fail to write pdf file.");
+                }
+            }
+            else {
+                showMessage("Can't get uri of selected pdf file.");
+            }
+        }
+        super.onActivityResult(requestCode, resultCode, data);
+    }
+
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
         int id = item.getItemId();
@@ -147,11 +179,7 @@ public class DetailActivity extends Activity {
             shareVideoIntent();
             return true;
         } else if (id == R.id.action_export) {
-            try {
-                copyPdf();
-            } catch (IOException e) {
-                showMessage("Fail to copy pdf file: " + e.getMessage());
-            }
+            requestExportFile();
             return true;
         } else if (id == android.R.id.home) {
             finish();
@@ -161,34 +189,11 @@ public class DetailActivity extends Activity {
         return super.onOptionsItemSelected(item);
     }
 
-
-    private void copyFile(File src, File dest) throws IOException {
-        dest.createNewFile();
-        FileChannel source = null;
-        FileChannel destination = null;
-
-        try {
-            source = new FileInputStream(src).getChannel();
-            destination = new FileOutputStream(dest).getChannel();
-            destination.transferFrom(source, 0, source.size());
-        }
-        finally {
-            if(source != null) {
-                source.close();
-            }
-            if(destination != null) {
-                destination.close();
-            }
-        }
+    private void copyPdfTo(Uri targetUri) throws IOException {
+        WhiteBoardCastActivity.copyFileTo(getContentResolver(), pdfFile, targetUri);
+        showMessage("Export pdf done");
     }
 
-
-    private void copyPdf() throws IOException {
-        Button btn = (Button)findViewById(R.id.buttonVideoName);
-        File targetPdf = new File(getFileStore().getFileStoreDirectory(), btn.getText().toString() + ".pdf");
-        copyFile(pdfFile, targetPdf);
-        showMessage("Export to: " + targetPdf.getAbsolutePath());
-    }
 
 
     @Override

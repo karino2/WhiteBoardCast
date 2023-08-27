@@ -450,9 +450,15 @@ public class WhiteBoardCastActivity extends Activity implements EncoderTask.Erro
         ContentResolver resolver = getBaseContext().getContentResolver();
         Uri uri =  resolver.insert(MediaStore.Video.Media.EXTERNAL_CONTENT_URI, content);
 
-        try(OutputStream os = resolver.openOutputStream(uri, "w");
+        copyFileTo(resolver, getPresen().getResultFile(), uri);
+
+        return uri;
+    }
+
+    public static void copyFileTo(ContentResolver resolver, File src, Uri uriTo) throws IOException {
+        try(OutputStream os = resolver.openOutputStream(uriTo, "w");
             InputStream is = new BufferedInputStream(
-                    new FileInputStream(getPresen().getResultFile())))
+                    new FileInputStream(src)))
         {
             byte[] buffer = new byte[1024];
 
@@ -462,9 +468,8 @@ public class WhiteBoardCastActivity extends Activity implements EncoderTask.Erro
                 readLen = is.read(buffer);
             }
         }
-
-        return uri;
     }
+
 
     private void exportPDF() {
         BoardList boardList = getWhiteBoardCanvas().getBoardList();
