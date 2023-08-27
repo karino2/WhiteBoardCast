@@ -16,6 +16,7 @@
         <activity
             android:name=".ImageImportActivity"
             android:theme="@style/Theme.AppCompat.DayNight.DarkActionBar"
+            android:screenOrientation="portrait"
             android:exported="false" />
         <activity
             android:name=".WhiteBoardCastActivity"
