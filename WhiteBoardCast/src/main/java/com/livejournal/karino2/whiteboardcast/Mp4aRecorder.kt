@@ -86,7 +86,7 @@ class Mp4aRecorder(val muxer: AudioVideoMuxer, beginMil: Long) : Runnable {
 
         var buffer_size = SAMPLES_PER_FRAME * 2
         if (buffer_size < min_buffer_size) {
-            buffer_size = (min_buffer_size / SAMPLES_PER_FRAME + 1) * SAMPLES_PER_FRAME * 2
+            buffer_size = (min_buffer_size / SAMPLES_PER_FRAME + 1) * SAMPLES_PER_FRAME
         }
 
         audioRecorder = AudioRecord(MediaRecorder.AudioSource.MIC,
