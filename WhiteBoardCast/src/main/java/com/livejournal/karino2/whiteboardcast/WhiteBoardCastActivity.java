@@ -517,6 +517,7 @@ public class WhiteBoardCastActivity extends Activity implements EncoderTask.Erro
     }
 
     private void renameAndDeleteWorkFiles() throws IOException {
+        fileStore.deletePreviousCreatedMovieFiles();
         File workVideo = new File(getWorkVideoPath());
 
         getPresen().setResult(getDateNameFile(".mp4"));

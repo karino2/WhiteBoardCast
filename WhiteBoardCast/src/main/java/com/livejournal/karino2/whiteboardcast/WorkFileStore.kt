@@ -49,6 +49,12 @@ class WorkFileStore(val fileStoreDirectory: File) {
         File(fileStoreDirectory, "temporaryPdf").apply { ensureDirExist(this) }
     }
 
+    // delete created mp4 files except for workVideoFiles.
+    fun deletePreviousCreatedMovieFiles() {
+        fileStoreDirectory.listFiles { fi-> fi.isFile && fi.path.endsWith(".mp4") && fi.name != "temp.mp4"}
+            .forEach{ file-> file.delete() }
+    }
+
     fun getThumbnailFile(parent: File) = File(thumbnailDirectory, parent.name)
 
     @Throws(IOException::class)
