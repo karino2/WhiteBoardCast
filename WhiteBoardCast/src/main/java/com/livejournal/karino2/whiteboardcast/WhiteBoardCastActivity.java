@@ -183,7 +183,6 @@ public class WhiteBoardCastActivity extends Activity implements EncoderTask.Erro
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-
         setContentView(R.layout.activity_whiteboardcast);
         readDebuggableSetting();
         getWhiteBoardCanvas().enableDebug(debuggable);
@@ -430,22 +429,15 @@ public class WhiteBoardCastActivity extends Activity implements EncoderTask.Erro
     private String getWorkVideoPath() {
         return getFileStore().getWorkVideoPath();
     }
-
-
-    private void copyTo( OutputStream os, File src ) {
-        byte[] buffer = new byte[1024];
-
-
-    }
-
+    
     private Uri insertLastResultToContentResolver() throws IOException {
         SimpleDateFormat timeStampFormat = new SimpleDateFormat("yyyy-MM-dd-HH:mm");
         String title = timeStampFormat.format(new Date()) + " recorded";
 
         ContentValues content = new ContentValues(4);
 
-
         content.put(MediaStore.Video.VideoColumns.TITLE, title);
+        content.put(MediaStore.Video.VideoColumns.DISPLAY_NAME, getPresen().getResultFile().getName());
         content.put(MediaStore.Video.VideoColumns.DATE_ADDED,
                 System.currentTimeMillis() / 1000);
         content.put(MediaStore.Video.Media.MIME_TYPE, "video/mp4");

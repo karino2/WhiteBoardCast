@@ -33,11 +33,10 @@ public class DetailActivity extends Activity {
     final int DIALOG_ID_FILE_RENAME = 1;
 
     // only support ".mp4" for a while.
-    String baseName(File file) {
-        String name = file.getName();
+    private static String baseName(String name) {
         if(!name.endsWith(".mp4"))
             throw new IllegalArgumentException("Not .mp4 extension: " + name);
-        return name.substring(0, name.length()-4);
+        return name.substring(0, name.length() - 4);
     }
 
     @Override
@@ -68,10 +67,11 @@ public class DetailActivity extends Activity {
         if(intent != null)
         {
             videoFile = new File(intent.getStringExtra("VIDEO_PATH"));
+            displayName = videoFile.getName();
             videoUri = Uri.parse(intent.getStringExtra("VIDEO_URI"));
             pdfFile = new File(intent.getStringExtra("PDF_PATH"));
 
-            setLabelToNameButton(baseName(videoFile));
+            setLabelToNameButton(baseName(displayName));
 
             Bitmap bmp = ThumbnailUtils.createVideoThumbnail(videoFile.getAbsolutePath(), MediaStore.Video.Thumbnails.MINI_KIND);
 
@@ -88,6 +88,7 @@ public class DetailActivity extends Activity {
     @Override
     protected void onSaveInstanceState(Bundle outState) {
         outState.putString("VIDEO_PATH", videoFile.getAbsolutePath());
+        outState.putString("DISP_NAME", displayName);
         outState.putString("VIDEO_URI", videoUri.toString());
         outState.putString("PDF_PATH", pdfFile.getAbsolutePath());
         super.onSaveInstanceState(outState);
@@ -97,9 +98,10 @@ public class DetailActivity extends Activity {
     protected void onRestoreInstanceState(Bundle savedInstanceState) {
         super.onRestoreInstanceState(savedInstanceState);
         videoFile = new File(savedInstanceState.getString("VIDEO_PATH"));
+        displayName = savedInstanceState.getString("DISP_NAME");
         videoUri = Uri.parse(savedInstanceState.getString("VIDEO_URI"));
         pdfFile = new File(savedInstanceState.getString("PDF_PATH"));
-        setLabelToNameButton(baseName(videoFile));
+        setLabelToNameButton(baseName(displayName));
     }
 
     private void setLabelToNameButton(String newName) {
@@ -116,6 +118,7 @@ public class DetailActivity extends Activity {
     }
 
     File videoFile;
+    String displayName;
     Uri videoUri;
     File pdfFile;
 
@@ -126,7 +129,6 @@ public class DetailActivity extends Activity {
     private void viewVideoIntent() {
         Intent i = new Intent(Intent.ACTION_VIEW);
         i.setDataAndType(videoUri, "video/*");
-        // i.setDataAndType(Uri.fromFile(videoFile), "video/*");
         i.putExtra(MediaStore.EXTRA_FINISH_ON_COMPLETION, false);
         startActivity(i);
     }
@@ -204,7 +206,7 @@ public class DetailActivity extends Activity {
             case DIALOG_ID_FILE_RENAME:
                 EditText et = (EditText)dialog.findViewById(R.id.edit_filename);
                 // back from another app but this app is already killed. just dismiss.
-                et.setText(baseName(videoFile));
+                et.setText(baseName(displayName));
 
                 setupFileNameViewListener(dialog);
 
@@ -220,28 +222,17 @@ public class DetailActivity extends Activity {
             return false;
         }
 
-        File newNameFile = new File(videoFile.getParentFile(), newName);
-        if(newNameFile.exists()) {
-            showMessage("File \"" + newNameFile.getAbsolutePath()+ "\" is already exists");
-            return false;
-        }
-
-        videoFile.renameTo(newNameFile);
-        videoFile = newNameFile;
-        updateNewFileNameToContentDB(videoFile);
+        displayName = newName;
+        updateDisplayNameToContentDB(newName);
         return true;
     }
 
-    private void updateNewFileNameToContentDB(File newFile) {
+    private void updateDisplayNameToContentDB(String newDisplayName) {
         ContentValues content = new ContentValues(2);
 
-        long id = ContentUris.parseId(videoUri);
-
-
-        content.put(MediaStore.Video.Media.DATA, newFile.getAbsolutePath());
-        content.put(MediaStore.Video.Media.DISPLAY_NAME, newFile.getName());
+        content.put(MediaStore.Video.Media.DISPLAY_NAME, newDisplayName);
         ContentResolver resolver = getBaseContext().getContentResolver();
-        resolver.update(MediaStore.Video.Media.EXTERNAL_CONTENT_URI, content, "_id = ?", new String[] {String.valueOf(id)});
+        resolver.update(videoUri, content, null, null);
     }
 
     private void shareVideoIntent() {
@@ -278,7 +269,7 @@ public class DetailActivity extends Activity {
                 EditText et = (EditText)fileRenameDialog.findViewById(R.id.edit_filename);
                 boolean success = renameFileNameTo(et.getText().toString() + ".mp4");
                 if(success) {
-                    setLabelToNameButton(baseName(videoFile));
+                    setLabelToNameButton(baseName(displayName));
                     fileRenameDialog.dismiss();
                 }
             }
