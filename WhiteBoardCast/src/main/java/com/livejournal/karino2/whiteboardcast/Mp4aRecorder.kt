@@ -115,9 +115,12 @@ class Mp4aRecorder(val muxer: AudioVideoMuxer, beginMil: Long) : Runnable {
             return
         val bufIndex = encoder.dequeueOutputBuffer(bufInfo, 0)
         if(bufIndex == MediaCodec.INFO_OUTPUT_FORMAT_CHANGED) {
-            trackIndex = muxer.addTrack(encoder.outputFormat)
-            muxer.requestStart()
-            requestStart = true
+            if (!muxer.isReady)
+            {
+                trackIndex = muxer.addTrack(encoder.outputFormat)
+                muxer.requestStart()
+                requestStart = true
+            }
             return
         }
 
